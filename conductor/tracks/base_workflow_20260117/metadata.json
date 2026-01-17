@@ -1,0 +1,8 @@
+{
+  "track_id": "base_workflow_20260117",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-01-17T11:20:00Z",
+  "updated_at": "2026-01-17T11:20:00Z",
+  "description": "Estrutura Base e Workflow de Fila com Tradução Assistida: Implementar o núcleo do app com Tauri, React e integração com Ollama."
+}
