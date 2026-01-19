@@ -36,3 +36,6 @@ models/
 
 # Conductor State
 conductor/setup_state.json
+
+#testes
+testes.txt
