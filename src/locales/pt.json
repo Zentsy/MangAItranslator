@@ -1,0 +1,40 @@
+{
+  "common": {
+    "back": "Voltar",
+    "export": "Exportar .txt",
+    "translate": "Traduzir Página",
+    "ollama": "Ollama",
+    "online": "Online",
+    "offline": "Offline",
+    "start": "Iniciar",
+    "next": "Próxima Página",
+    "previous": "Página Anterior",
+    "characters": "Caracteres"
+  },
+  "dashboard": {
+    "title": "MangAI",
+    "subtitle": "Terminal de Tradução Visiva v0.1",
+    "newTranslation": {
+      "title": "Nova Tradução",
+      "description": "Inicie o workflow de tradução carregando um novo capítulo.",
+      "button": "INICIAR PROJETO"
+    },
+    "history": {
+      "title": "Histórico",
+      "description": "Acesse capítulos traduzidos anteriormente (Em breve)."
+    }
+  },
+  "editor": {
+    "pageCounter": "Página {{current}} / {{total}}",
+    "signals": {
+      "rectangle": "[] Retângulo",
+      "outside": "{} Fora",
+      "thought": "() Pensamento",
+      "double": "// Duplo"
+    },
+    "placeholder": "A tradução aparecerá aqui usando o sistema de sinais...\nEx: [] O vento soprava forte naquela noite.\n{ (O som das folhas) }\n() Será que ele virá?",
+    "hints": {
+      "image": "Scroll para Zoom • Arraste para Mover"
+    }
+  }
+}

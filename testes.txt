@@ -1,0 +1,57 @@
+client:733 [vite] connecting...
+client:827 [vite] connected.
+react-dom_client.js?v=04195317:20103 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+(index):1 Denying load of chrome-extension://fhamhppabjaafimidmelnmpfangjdnhj/icons/pin-32.png. Resources must be listed in the web_accessible_resources manifest key in order to be loaded by pages outside the extension.
+(index):1 [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq)
+chrome-extension://invalid/:1  Failed to load resource: net::ERR_FAILED
+pinComponent.js:2 Empty token!
+zr @ pinComponent.js:2
+pinComponent.js:2  Uncaught (in promise) TypeError: Failed to fetch
+    at pinComponent.js:2:430404
+    at pinComponent.js:2:773436
+    at pinComponent.js:2:773439
+pinComponent.js:2 PIN Company Discounts Provider: Error: Invalid data
+(anonymous) @ pinComponent.js:2
+pinComponent.js:2 PIN Company Discounts Provider: Error: Is not same origin
+(anonymous) @ pinComponent.js:2
+pinComponent.js:2 PIN Company Discounts Provider: Error: Invalid data
+(anonymous) @ pinComponent.js:2
+EditorView.tsx?t=1768787057538:184 Uncaught TypeError: Cannot read properties of undefined (reading 'length')
+    at EditorView (EditorView.tsx?t=1768787057538:184:30)
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=04195317:18509:20)
+    at renderWithHooks (react-dom_client.js?v=04195317:5654:24)
+    at updateFunctionComponent (react-dom_client.js?v=04195317:7475:21)
+    at beginWork (react-dom_client.js?v=04195317:8525:20)
+    at runWithFiberInDEV (react-dom_client.js?v=04195317:997:72)
+    at performUnitOfWork (react-dom_client.js?v=04195317:12561:98)
+    at workLoopSync (react-dom_client.js?v=04195317:12424:43)
+    at renderRootSync (react-dom_client.js?v=04195317:12408:13)
+    at performWorkOnRoot (react-dom_client.js?v=04195317:11827:37)
+react-dom_client.js?v=04195317:6966 An error occurred in the <EditorView> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+defaultOnUncaughtError @ react-dom_client.js?v=04195317:6966
+client:810 [vite] hot updated: /src/index.css
+client:810 [vite] hot updated: /src/components/EditorView.tsx
+(index):1 [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq)
+client:810 [vite] hot updated: /src/components/EditorView.tsx
+client:810 [vite] hot updated: /src/index.css
+EditorView.tsx:77 Uncaught TypeError: Cannot read properties of undefined (reading 'length')
+    at EditorView (EditorView.tsx:77:33)
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=04195317:18509:20)
+    at renderWithHooks (react-dom_client.js?v=04195317:5654:24)
+    at updateFunctionComponent (react-dom_client.js?v=04195317:7475:21)
+    at beginWork (react-dom_client.js?v=04195317:8525:20)
+    at runWithFiberInDEV (react-dom_client.js?v=04195317:997:72)
+    at performUnitOfWork (react-dom_client.js?v=04195317:12561:98)
+    at workLoopSync (react-dom_client.js?v=04195317:12424:43)
+    at renderRootSync (react-dom_client.js?v=04195317:12408:13)
+    at performWorkOnRoot (react-dom_client.js?v=04195317:11827:37)
+react-dom_client.js?v=04195317:6966 An error occurred in the <EditorView> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+defaultOnUncaughtError @ react-dom_client.js?v=04195317:6966
