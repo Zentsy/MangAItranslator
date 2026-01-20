@@ -9,7 +9,10 @@
     "start": "Iniciar",
     "next": "Próxima Página",
     "previous": "Página Anterior",
-    "characters": "Caracteres"
+    "characters": "Caracteres",
+    "confirmDelete": "Deseja realmente excluir este projeto e todo o seu progresso?",
+    "cancel": "Cancelar",
+    "finish": "Finalizar"
   },
   "dashboard": {
     "title": "MangAI",
@@ -35,6 +38,11 @@
     "placeholder": "A tradução aparecerá aqui usando o sistema de sinais...\nEx: [] O vento soprava forte naquela noite.\n{ (O som das folhas) }\n() Será que ele virá?",
     "hints": {
       "image": "Scroll para Zoom • Arraste para Mover"
+    },
+    "finishModal": {
+      "title": "Finalizar Capítulo?",
+      "description": "Esta ação exportará sua tradução final e removerá os arquivos temporários para liberar espaço em disco. O projeto será removido da sua lista ativa.",
+      "confirm": "Finalizar e Limpar"
     }
   }
 }

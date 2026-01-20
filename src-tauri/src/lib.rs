@@ -56,7 +56,8 @@ async fn cache_image(app: AppHandle, project_id: String, image_path: String) -> 
     let target_path = cache_dir.join(file_name);
     fs::copy(&image_path, &target_path).map_err(|e| e.to_string())?;
 
-    Ok(target_path.to_string_lossy().into_owned())
+    // NORMALIZAÇÃO DO CAMINHO PARA O FRONTEND
+    Ok(target_path.to_string_lossy().replace("\\", "/"))
 }
 
 #[tauri::command]
@@ -112,6 +113,8 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations("sqlite:mangai.db", migrations)
@@ -123,6 +126,5 @@ pub fn run() {
             cache_image, 
             clear_project_cache
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!());
 }

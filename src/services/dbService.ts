@@ -1,4 +1,5 @@
 import Database from "@tauri-apps/plugin-sql";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { MangaPage } from "@/store/useMangaStore";
 
 const DB_PATH = "sqlite:mangai.db";
@@ -57,9 +58,17 @@ export const dbService = {
         "SELECT * FROM blocks WHERE page_id = $1 ORDER BY order_index ASC",
         [page.id]
       );
+      
+      const url = convertFileSrc(page.path);
+
       fullPages.push({
         ...page,
-        url: page.path, // O path salvo é o caminho do cache
+        id: page.id,
+        url: url,
+        path: page.path,
+        name: page.name,
+        translation: '',
+        status: page.status,
         blocks: blocks.map(b => ({ id: b.id, text: b.text, type: b.type }))
       });
     }
@@ -68,12 +77,13 @@ export const dbService = {
 
   async savePage(projectId: string, page: MangaPage, orderIndex: number) {
     const db = await this.getDb();
+    const rawPath = page.path || page.url;
+
     await db.execute(
       "INSERT OR REPLACE INTO pages (id, project_id, path, name, status, order_index) VALUES ($1, $2, $3, $4, $5, $6)",
-      [page.id, projectId, page.url, page.name, page.status, orderIndex]
+      [page.id, projectId, rawPath, page.name, page.status, orderIndex]
     );
 
-    // Remove blocos antigos para evitar lixo
     await db.execute("DELETE FROM blocks WHERE page_id = $1", [page.id]);
 
     if (page.blocks) {
@@ -85,5 +95,19 @@ export const dbService = {
         );
       }
     }
+  },
+
+  async deleteProject(id: string) {
+    const db = await this.getDb();
+    // O SQLite cuidará de deletar páginas e blocos por causa do ON DELETE CASCADE
+    await db.execute("DELETE FROM projects WHERE id = $1", [id]);
+  },
+
+  async updateProjectStatus(id: string, status: 'in_progress' | 'completed') {
+    const db = await this.getDb();
+    await db.execute(
+      "UPDATE projects SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+      [status, id]
+    );
   }
 };
