@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import MangaBackground from "@/components/MangaBackground";
 import EditorView from "@/components/EditorView";
@@ -32,6 +32,14 @@ const formatProjectDate = (value: string) => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(parsedDate);
+};
+
+const getThumbnailUrl = (thumbnailPath?: string | null) => {
+  if (!thumbnailPath) {
+    return null;
+  }
+
+  return convertFileSrc(thumbnailPath.replace(/\\/g, "/"));
 };
 
 function App() {
@@ -108,9 +116,9 @@ function App() {
         </aside>
 
         {/* Main Content Area */}
-        <div className="flex-1 relative overflow-hidden">
+        <div className="relative min-h-0 flex-1 overflow-hidden">
           {currentView === 'dashboard' && (
-            <main className="h-full flex flex-col p-8 relative">
+            <main className="relative flex h-full flex-col overflow-y-auto p-8 pb-10">
               <header className="flex justify-between items-center mb-12">
                 <div>
                   <h1 className="text-4xl font-black uppercase tracking-tighter italic">{t('dashboard.title')} <span className="text-white/40">Translator</span></h1>
@@ -149,7 +157,7 @@ function App() {
                 </div>
               </section>
 
-              <section className="mt-8">
+              <section className="mt-8 min-h-0">
                 <div className="mb-4 flex items-end justify-between">
                   <div>
                     <h2 className="text-2xl font-black uppercase tracking-tighter italic">
@@ -190,60 +198,137 @@ function App() {
                         key={project.id}
                         type="button"
                         onClick={() => handleOpenProject(project.id)}
-                        className={`group relative overflow-hidden rounded-3xl border p-6 text-left transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.09] ${
+                        className={`group relative min-w-0 overflow-hidden rounded-3xl border text-left transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.09] ${
                           index === 0
                             ? "border-white/15 bg-gradient-to-br from-white/10 via-white/5 to-transparent lg:col-span-2"
                             : "border-white/10 bg-white/5"
                         }`}
                       >
-                        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white/10 to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
+                        {index === 0 ? (
+                          <div className="grid gap-0 lg:grid-cols-[minmax(0,1.4fr)_300px]">
+                            <div className="relative flex h-full min-w-0 flex-col justify-between p-6">
+                              <div>
+                                <div className="mb-4 flex items-center justify-between gap-3">
+                                  <span
+                                    className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
+                                      project.status === "completed"
+                                        ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                        : "border border-white/10 bg-white/5 text-white/45"
+                                    }`}
+                                  >
+                                    {project.status === "completed" ? "Concluido" : "Em andamento"}
+                                  </span>
+                                  <span className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                                    {formatProjectDate(project.updated_at)}
+                                  </span>
+                                </div>
 
-                        <div className="relative flex h-full flex-col justify-between">
-                          <div>
-                            <div className="mb-4 flex items-center justify-between gap-3">
-                              <span
-                                className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
-                                  project.status === "completed"
-                                    ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                    : "border border-white/10 bg-white/5 text-white/45"
-                                }`}
-                              >
-                                {project.status === "completed" ? "Concluido" : "Em andamento"}
-                              </span>
-                              <span className="text-[10px] font-mono uppercase tracking-widest text-white/30">
-                                {formatProjectDate(project.updated_at)}
-                              </span>
+                                <h3 className="max-w-3xl break-words text-2xl font-black uppercase tracking-tight leading-tight">
+                                  {project.name}
+                                </h3>
+
+                                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/45">
+                                  Volte direto para o capitulo mais recente e continue refinando os blocos sem procurar no historico.
+                                </p>
+                              </div>
+
+                              <div className="relative mt-8">
+                                <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-white/35">
+                                  <span>Progresso salvo</span>
+                                  <span>{Math.round(project.progress || 0)}%</span>
+                                </div>
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+                                  <div
+                                    className="h-full bg-white transition-all duration-700"
+                                    style={{ width: `${project.progress || 0}%` }}
+                                  />
+                                </div>
+
+                                <div className="mt-5 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-white/30 transition-colors group-hover:text-white">
+                                  <span>Continuar traducao</span>
+                                  <Play size={12} />
+                                </div>
+                              </div>
                             </div>
 
-                            <h3 className="max-w-xl text-2xl font-black uppercase tracking-tight">
-                              {project.name}
-                            </h3>
-
-                            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/45">
-                              {index === 0
-                                ? "Volte direto para o capitulo mais recente e continue refinando os blocos sem procurar no historico."
-                                : "Projeto recente pronto para continuar do ponto em que voce parou."}
-                            </p>
+                            <div className="relative hidden min-h-[260px] overflow-hidden border-l border-white/10 lg:block">
+                              {getThumbnailUrl(project.thumbnail_path) ? (
+                                <img
+                                  src={getThumbnailUrl(project.thumbnail_path) || ""}
+                                  alt={`Preview de ${project.name}`}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                              ) : (
+                                <div className="flex h-full items-center justify-center bg-white/5 text-white/20">
+                                  <FileImage size={36} />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-l from-black/10 via-transparent to-black/60" />
+                            </div>
                           </div>
-
-                          <div className="relative mt-8">
-                            <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-white/35">
-                              <span>Progresso salvo</span>
-                              <span>{Math.round(project.progress || 0)}%</span>
+                        ) : (
+                          <div className="flex h-full min-w-0 flex-col p-6">
+                            <div className="relative mb-5 overflow-hidden rounded-2xl border border-white/10 bg-white/5 aspect-[16/10]">
+                              {getThumbnailUrl(project.thumbnail_path) ? (
+                                <img
+                                  src={getThumbnailUrl(project.thumbnail_path) || ""}
+                                  alt={`Preview de ${project.name}`}
+                                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                              ) : (
+                                <div className="flex h-full items-center justify-center text-white/20">
+                                  <FileImage size={32} />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                             </div>
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
-                              <div
-                                className="h-full bg-white transition-all duration-700"
-                                style={{ width: `${project.progress || 0}%` }}
-                              />
-                            </div>
 
-                            <div className="mt-5 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-white/30 transition-colors group-hover:text-white">
-                              <span>Continuar traducao</span>
-                              <Play size={12} />
+                            <div className="flex h-full min-w-0 flex-col justify-between">
+                              <div>
+                                <div className="mb-4 flex items-center justify-between gap-3">
+                                  <span
+                                    className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
+                                      project.status === "completed"
+                                        ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                        : "border border-white/10 bg-white/5 text-white/45"
+                                    }`}
+                                  >
+                                    {project.status === "completed" ? "Concluido" : "Em andamento"}
+                                  </span>
+                                  <span className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                                    {formatProjectDate(project.updated_at)}
+                                  </span>
+                                </div>
+
+                                <h3 className="break-words text-2xl font-black uppercase tracking-tight leading-tight">
+                                  {project.name}
+                                </h3>
+
+                                <p className="mt-3 text-sm leading-relaxed text-white/45">
+                                  Projeto recente pronto para continuar do ponto em que voce parou.
+                                </p>
+                              </div>
+
+                              <div className="relative mt-8">
+                                <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-white/35">
+                                  <span>Progresso salvo</span>
+                                  <span>{Math.round(project.progress || 0)}%</span>
+                                </div>
+                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+                                  <div
+                                    className="h-full bg-white transition-all duration-700"
+                                    style={{ width: `${project.progress || 0}%` }}
+                                  />
+                                </div>
+
+                                <div className="mt-5 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-white/30 transition-colors group-hover:text-white">
+                                  <span>Continuar traducao</span>
+                                  <Play size={12} />
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </button>
                     ))}
                   </div>

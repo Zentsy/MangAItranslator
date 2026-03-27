@@ -12,6 +12,7 @@ export interface DBProject {
   created_at: string;
   updated_at: string;
   progress?: number;
+  thumbnail_path?: string | null;
 }
 
 export const dbService = {
@@ -33,6 +34,7 @@ export const dbService = {
     const db = await this.getDb();
     const projects = await db.select<any[]>(`
       SELECT p.*,
+      (SELECT path FROM pages WHERE project_id = p.id ORDER BY order_index ASC LIMIT 1) as thumbnail_path,
       (SELECT COUNT(*) FROM pages WHERE project_id = p.id AND status = 'completed') as completed_pages,
       (SELECT COUNT(*) FROM pages WHERE project_id = p.id) as total_pages
       FROM projects p
