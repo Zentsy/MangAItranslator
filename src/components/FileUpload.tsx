@@ -5,9 +5,15 @@ import { dbService } from "@/services/dbService";
 import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Button } from "@/components/ui/button";
+import ChapterNameModal from "@/components/ChapterNameModal";
 
 interface FileUploadProps {
   onSuccess: () => void;
+}
+
+interface PendingImport {
+  imagePaths: string[];
+  suggestedName: string;
 }
 
 const normalizePath = (filePath: string) => filePath.replace(/\\/g, "/");
@@ -34,9 +40,10 @@ const buildPage = (cachedPath: string, originalPath: string) => ({
 
 const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   const { setPages, setProjectId } = useMangaStore();
 
-  const importChapter = async (imagePaths: string[]) => {
+  const importChapter = async (imagePaths: string[], projectName: string) => {
     if (imagePaths.length === 0) {
       alert("Nenhuma imagem suportada foi encontrada.");
       return;
@@ -46,9 +53,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
 
     try {
       const sortedPaths = sortPaths(imagePaths);
-      const detectedName = detectProjectName(sortedPaths[0]);
-      const projectName = prompt("Digite o nome da obra/capitulo:", detectedName) || detectedName;
-      const projectId = await dbService.createProject(projectName, "1");
+      const projectId = await dbService.createProject(projectName, projectName);
       const newPages = [];
 
       setProjectId(projectId);
@@ -75,6 +80,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
     }
   };
 
+  const queueImport = (imagePaths: string[]) => {
+    if (imagePaths.length === 0) {
+      alert("Nenhuma imagem suportada foi encontrada.");
+      return;
+    }
+
+    const sortedPaths = sortPaths(imagePaths);
+    setPendingImport({
+      imagePaths: sortedPaths,
+      suggestedName: detectProjectName(sortedPaths[0]),
+    });
+  };
+
   const handlePickFolder = async () => {
     const selected = await open({
       directory: true,
@@ -89,7 +107,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
 
     try {
       const imagePaths = await invoke<string[]>("list_chapter_images", { sourcePath: selected });
-      await importChapter(imagePaths);
+      queueImport(imagePaths);
     } catch (error) {
       console.error("Erro ao ler a pasta selecionada:", error);
       alert("Nao foi possivel ler a pasta selecionada.");
@@ -114,7 +132,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
 
     try {
       const imagePaths = await invoke<string[]>("list_chapter_images", { sourcePath: selected });
-      await importChapter(imagePaths);
+      queueImport(imagePaths);
     } catch (error) {
       console.error("Erro ao descobrir paginas vizinhas:", error);
       alert("Nao foi possivel carregar as outras paginas da pasta.");
@@ -178,6 +196,22 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
           </div>
         )}
       </div>
+
+      <ChapterNameModal
+        isOpen={Boolean(pendingImport)}
+        defaultName={pendingImport?.suggestedName || ""}
+        onClose={() => setPendingImport(null)}
+        onConfirm={(projectName) => {
+          const currentImport = pendingImport;
+          setPendingImport(null);
+
+          if (!currentImport) {
+            return;
+          }
+
+          void importChapter(currentImport.imagePaths, projectName);
+        }}
+      />
     </div>
   );
 };

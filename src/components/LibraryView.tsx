@@ -1,19 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { dbService, DBProject } from "@/services/dbService";
 import { useMangaStore } from "@/store/useMangaStore";
-import { ask } from "@tauri-apps/plugin-dialog";
+import ConfirmModal from "@/components/ConfirmModal";
 import { Search, FolderOpen, Clock, Trash2, ChevronRight } from "lucide-react";
 
 interface LibraryViewProps {
   onOpenProject: (projectId: string) => void;
 }
 
+const formatProjectDate = (value: string) => {
+  const parsedDate = new Date(value.includes("T") ? value : value.replace(" ", "T"));
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Atualizado recentemente";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsedDate);
+};
+
 const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
-  const { t } = useTranslation();
   const [projects, setProjects] = useState<DBProject[]>([]);
   const [searchTerm, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [projectToDelete, setProjectToDelete] = useState<DBProject | null>(null);
 
   const { currentProjectId, clearStore, cancelPendingSaves } = useMangaStore();
 
@@ -33,17 +46,17 @@ const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
     loadProjects();
   }, []);
 
-  const handleDelete = async (id: string, event: React.MouseEvent) => {
+  const handleDeleteClick = (project: DBProject, event: React.MouseEvent) => {
     event.stopPropagation();
+    setProjectToDelete(project);
+  };
 
-    const confirmed = await ask(t("common.confirmDelete"), {
-      title: "MangAI Translator",
-      kind: "warning",
-    });
-
-    if (!confirmed) {
+  const confirmDelete = async () => {
+    if (!projectToDelete) {
       return;
     }
+
+    const id = projectToDelete.id;
 
     if (id === currentProjectId) {
       cancelPendingSaves();
@@ -55,6 +68,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
       clearStore();
     }
 
+    setProjectToDelete(null);
     await loadProjects();
   };
 
@@ -113,7 +127,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
                     {project.status === "completed" ? "Concluido" : "Em Progresso"}
                   </div>
                   <button
-                    onClick={(event) => handleDelete(project.id, event)}
+                    onClick={(event) => handleDeleteClick(project, event)}
                     className="relative z-30 rounded-lg p-1.5 text-white/10 opacity-0 transition-all hover:bg-rose-500/10 hover:text-rose-500 group-hover:opacity-100"
                   >
                     <Trash2 size={14} />
@@ -125,7 +139,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
                 </h3>
                 <div className="mb-6 flex items-center gap-2 text-[10px] font-mono uppercase text-white/30">
                   <Clock size={12} />
-                  <span>Capitulo {project.chapter}</span>
+                  <span>{formatProjectDate(project.updated_at)}</span>
                 </div>
 
                 <div className="space-y-2">
@@ -149,6 +163,22 @@ const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(projectToDelete)}
+        onClose={() => setProjectToDelete(null)}
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        title="Excluir Capitulo?"
+        description={
+          projectToDelete
+            ? `Isso vai remover "${projectToDelete.name}" do historico local e apagar o cache salvo deste projeto.`
+            : ""
+        }
+        confirmText="Excluir do Historico"
+        variant="destructive"
+      />
     </div>
   );
 };

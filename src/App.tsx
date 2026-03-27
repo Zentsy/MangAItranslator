@@ -6,15 +6,39 @@ import EditorView from "@/components/EditorView";
 import LibraryView from "@/components/LibraryView";
 import FileUpload from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
-import CyberLoading from "@/components/CyberLoading";
 import { useMangaStore } from "@/store/useMangaStore";
-import { dbService } from "@/services/dbService";
-import { LayoutGrid, FileImage, Settings, Key, Library, ChevronRight } from "lucide-react";
+import { dbService, DBProject } from "@/services/dbService";
+import {
+  LayoutGrid,
+  FileImage,
+  Settings,
+  Key,
+  Library,
+  ChevronRight,
+  Clock3,
+  History,
+  Play,
+} from "lucide-react";
+
+const formatProjectDate = (value: string) => {
+  const parsedDate = new Date(value.includes("T") ? value : value.replace(" ", "T"));
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Atualizado recentemente";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsedDate);
+};
 
 function App() {
   const { t } = useTranslation();
   const [ollamaStatus, setOllamaStatus] = useState<boolean | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'editor' | 'library'>('dashboard');
+  const [recentProjects, setRecentProjects] = useState<DBProject[]>([]);
   const { apiKey, setApiKey, setPages, setProjectId, currentProjectId } = useMangaStore();
 
   async function checkOllama() {
@@ -26,9 +50,24 @@ function App() {
     }
   }
 
+  async function loadRecentProjects() {
+    try {
+      const projects = await dbService.getProjects();
+      setRecentProjects(projects.slice(0, 3));
+    } catch (error) {
+      console.error("Erro ao carregar projetos recentes:", error);
+    }
+  }
+
   useEffect(() => {
     checkOllama();
   }, []);
+
+  useEffect(() => {
+    if (currentView === 'dashboard' || currentView === 'library') {
+      void loadRecentProjects();
+    }
+  }, [currentView]);
 
   const handleOpenProject = async (projectId: string) => {
     try {
@@ -108,6 +147,107 @@ function App() {
                       Acessar Biblioteca <ChevronRight size={12} />
                    </div>
                 </div>
+              </section>
+
+              <section className="mt-8">
+                <div className="mb-4 flex items-end justify-between">
+                  <div>
+                    <h2 className="text-2xl font-black uppercase tracking-tighter italic">
+                      Retomar <span className="text-white/20">Traducoes</span>
+                    </h2>
+                    <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-white/35">
+                      Continue rapido sem precisar abrir a aba de historico
+                    </p>
+                  </div>
+
+                  {recentProjects.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setCurrentView('library')}
+                      className="gap-2 text-white/50 hover:bg-white/5 hover:text-white"
+                    >
+                      <History size={14} />
+                      Ver Tudo
+                    </Button>
+                  )}
+                </div>
+
+                {recentProjects.length === 0 ? (
+                  <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-white/35">
+                    <div className="flex items-center gap-3 text-sm font-bold uppercase tracking-wide">
+                      <Clock3 size={18} className="text-white/20" />
+                      Nenhuma traducao recente ainda
+                    </div>
+                    <p className="mt-2 text-sm leading-relaxed text-white/30">
+                      Assim que voce importar um capitulo, ele aparece aqui para voce continuar do ponto em que parou.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    {recentProjects.map((project, index) => (
+                      <button
+                        key={project.id}
+                        type="button"
+                        onClick={() => handleOpenProject(project.id)}
+                        className={`group relative overflow-hidden rounded-3xl border p-6 text-left transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.09] ${
+                          index === 0
+                            ? "border-white/15 bg-gradient-to-br from-white/10 via-white/5 to-transparent lg:col-span-2"
+                            : "border-white/10 bg-white/5"
+                        }`}
+                      >
+                        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white/10 to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
+
+                        <div className="relative flex h-full flex-col justify-between">
+                          <div>
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                              <span
+                                className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
+                                  project.status === "completed"
+                                    ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                    : "border border-white/10 bg-white/5 text-white/45"
+                                }`}
+                              >
+                                {project.status === "completed" ? "Concluido" : "Em andamento"}
+                              </span>
+                              <span className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                                {formatProjectDate(project.updated_at)}
+                              </span>
+                            </div>
+
+                            <h3 className="max-w-xl text-2xl font-black uppercase tracking-tight">
+                              {project.name}
+                            </h3>
+
+                            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/45">
+                              {index === 0
+                                ? "Volte direto para o capitulo mais recente e continue refinando os blocos sem procurar no historico."
+                                : "Projeto recente pronto para continuar do ponto em que voce parou."}
+                            </p>
+                          </div>
+
+                          <div className="relative mt-8">
+                            <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-white/35">
+                              <span>Progresso salvo</span>
+                              <span>{Math.round(project.progress || 0)}%</span>
+                            </div>
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+                              <div
+                                className="h-full bg-white transition-all duration-700"
+                                style={{ width: `${project.progress || 0}%` }}
+                              />
+                            </div>
+
+                            <div className="mt-5 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-white/30 transition-colors group-hover:text-white">
+                              <span>Continuar traducao</span>
+                              <Play size={12} />
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </section>
             </main>
           )}
