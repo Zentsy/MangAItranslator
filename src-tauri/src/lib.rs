@@ -1,8 +1,41 @@
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use serde::Deserialize;
+use sqlx::{Connection, SqliteConnection};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_sql::{Migration, MigrationKind};
+
+#[derive(Deserialize)]
+struct PersistedBlockInput {
+    id: String,
+    text: String,
+    #[serde(rename = "type")]
+    block_type: String,
+}
+
+#[derive(Deserialize)]
+struct PersistedPageInput {
+    id: String,
+    path: String,
+    name: String,
+    status: String,
+    blocks: Vec<PersistedBlockInput>,
+}
+
+fn database_url(app: &AppHandle) -> Result<String, String> {
+    let app_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    fs::create_dir_all(&app_dir).map_err(|e| e.to_string())?;
+    let db_path = app_dir.join("mangai.db");
+    Ok(format!("sqlite:{}", db_path.to_string_lossy()))
+}
+
+fn is_supported_image(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| matches!(ext.to_ascii_lowercase().as_str(), "png" | "jpg" | "jpeg" | "webp"))
+        .unwrap_or(false)
+}
 
 #[tauri::command]
 fn check_ollama_status() -> Result<bool, String> {
@@ -72,6 +105,118 @@ async fn clear_project_cache(app: AppHandle, project_id: String) -> Result<(), S
     Ok(())
 }
 
+#[tauri::command]
+fn list_chapter_images(source_path: String) -> Result<Vec<String>, String> {
+    let source = Path::new(&source_path);
+    let directory = if source.is_dir() {
+        source
+    } else {
+        source
+            .parent()
+            .ok_or("Nao foi possivel localizar a pasta da pagina selecionada")?
+    };
+
+    let mut images = Vec::new();
+    let entries = fs::read_dir(directory).map_err(|e| e.to_string())?;
+
+    for entry in entries {
+        let path = entry.map_err(|e| e.to_string())?.path();
+        if path.is_file() && is_supported_image(&path) {
+            images.push(path.to_string_lossy().replace("\\", "/"));
+        }
+    }
+
+    Ok(images)
+}
+
+#[tauri::command]
+async fn save_page_atomic(
+    app: AppHandle,
+    project_id: String,
+    page: PersistedPageInput,
+    order_index: i64,
+) -> Result<(), String> {
+    let database_url = database_url(&app)?;
+    let mut connection = SqliteConnection::connect(&database_url)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    sqlx::query("PRAGMA foreign_keys = ON")
+        .execute(&mut connection)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut transaction = connection.begin().await.map_err(|e| e.to_string())?;
+
+    sqlx::query(
+        "INSERT OR REPLACE INTO pages (id, project_id, path, name, status, order_index) VALUES (?, ?, ?, ?, ?, ?)",
+    )
+    .bind(&page.id)
+    .bind(&project_id)
+    .bind(&page.path)
+    .bind(&page.name)
+    .bind(&page.status)
+    .bind(order_index)
+    .execute(&mut *transaction)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    sqlx::query("DELETE FROM blocks WHERE page_id = ?")
+        .bind(&page.id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    for (index, block) in page.blocks.iter().enumerate() {
+        sqlx::query(
+            "INSERT INTO blocks (id, page_id, text, type, order_index) VALUES (?, ?, ?, ?, ?)",
+        )
+        .bind(&block.id)
+        .bind(&page.id)
+        .bind(&block.text)
+        .bind(&block.block_type)
+        .bind(index as i64)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| e.to_string())?;
+    }
+
+    sqlx::query("UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+        .bind(&project_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    transaction.commit().await.map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn delete_project_data(app: AppHandle, project_id: String) -> Result<(), String> {
+    let database_url = database_url(&app)?;
+    let mut connection = SqliteConnection::connect(&database_url)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    sqlx::query("PRAGMA foreign_keys = ON")
+        .execute(&mut connection)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut transaction = connection.begin().await.map_err(|e| e.to_string())?;
+
+    sqlx::query("DELETE FROM projects WHERE id = ?")
+        .bind(&project_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    transaction.commit().await.map_err(|e| e.to_string())?;
+
+    clear_project_cache(app, project_id).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let migrations = vec![
@@ -124,7 +269,11 @@ pub fn run() {
             check_ollama_status, 
             start_ollama, 
             cache_image, 
-            clear_project_cache
+            clear_project_cache,
+            list_chapter_images,
+            save_page_atomic,
+            delete_project_data
         ])
-        .run(tauri::generate_context!());
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

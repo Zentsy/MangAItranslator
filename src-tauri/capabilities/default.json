@@ -12,6 +12,7 @@
     "dialog:allow-open",
     "dialog:allow-confirm",
     "dialog:allow-ask",
+    "fs:allow-read-dir",
     "fs:allow-read-file",
     "fs:allow-write-file",
     "fs:allow-exists",

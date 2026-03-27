@@ -1,8 +1,26 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { dbService } from '@/services/dbService';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { dbService } from "@/services/dbService";
 
-export type BlockType = 'rect' | 'outside' | 'thought' | 'double' | 'none';
+const SAVE_DEBOUNCE_MS = 450;
+const pendingSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+const clearPendingSave = (pageId: string) => {
+  const timeout = pendingSaveTimers.get(pageId);
+  if (!timeout) {
+    return;
+  }
+
+  clearTimeout(timeout);
+  pendingSaveTimers.delete(pageId);
+};
+
+const clearAllPendingSaves = () => {
+  pendingSaveTimers.forEach((timeout) => clearTimeout(timeout));
+  pendingSaveTimers.clear();
+};
+
+export type BlockType = "rect" | "outside" | "thought" | "double" | "none";
 
 export interface TranslationBlock {
   id: string;
@@ -13,10 +31,11 @@ export interface TranslationBlock {
 export interface MangaPage {
   id: string;
   url: string;
+  path: string;
   name: string;
   translation: string;
   blocks: TranslationBlock[];
-  status: 'pending' | 'completed';
+  status: "pending" | "completed";
 }
 
 interface MangaStore {
@@ -25,23 +44,25 @@ interface MangaStore {
   apiKey: string;
   useConvention: boolean;
   currentProjectId: string | null;
-  
+
   setApiKey: (key: string) => void;
-  setUseConvention: (val: boolean) => void;
+  setUseConvention: (value: boolean) => void;
   setProjectId: (id: string | null) => void;
   setPages: (pages: MangaPage[]) => void;
   nextPage: () => void;
   prevPage: () => void;
-  
+
   updatePage: (id: string, updates: Partial<MangaPage>) => void;
   updateBlock: (pageId: string, blockId: string, updates: Partial<TranslationBlock>) => void;
   reorderBlocks: (pageId: string, fromIndex: number, toIndex: number) => void;
   addBlock: (pageId: string) => void;
   removeBlock: (pageId: string, blockId: string) => void;
-  
+
   setPageIndex: (index: number) => void;
   clearStore: () => void;
-  saveCurrentPageToDb: () => Promise<void>;
+  queuePageSave: (pageId: string) => void;
+  savePageToDb: (pageId: string) => Promise<void>;
+  cancelPendingSaves: () => void;
 }
 
 export const useMangaStore = create<MangaStore>()(
@@ -49,98 +70,150 @@ export const useMangaStore = create<MangaStore>()(
     (set, get) => ({
       pages: [],
       currentPageIndex: 0,
-      apiKey: '',
+      apiKey: "",
       useConvention: true,
       currentProjectId: null,
 
       setApiKey: (apiKey) => set({ apiKey }),
       setUseConvention: (useConvention) => set({ useConvention }),
       setProjectId: (currentProjectId) => set({ currentProjectId }),
-      setPages: (pages) => set({ pages, currentPageIndex: 0 }),
-      
+      setPages: (pages) => {
+        clearAllPendingSaves();
+        set({ pages, currentPageIndex: 0 });
+      },
+
       updatePage: (id, updates) => {
         set((state) => ({
-          pages: state.pages.map(p => p.id === id ? { ...p, ...updates } : p)
+          pages: state.pages.map((page) => (page.id === id ? { ...page, ...updates } : page)),
         }));
-        get().saveCurrentPageToDb();
+        get().queuePageSave(id);
       },
 
       updateBlock: (pageId, blockId, updates) => {
         set((state) => ({
-          pages: state.pages.map(p => {
-            if (p.id !== pageId) return p;
+          pages: state.pages.map((page) => {
+            if (page.id !== pageId) {
+              return page;
+            }
+
             return {
-              ...p,
-              blocks: p.blocks.map(b => b.id === blockId ? { ...b, ...updates } : b)
+              ...page,
+              blocks: page.blocks.map((block) =>
+                block.id === blockId ? { ...block, ...updates } : block
+              ),
             };
-          })
+          }),
         }));
-        get().saveCurrentPageToDb();
+        get().queuePageSave(pageId);
       },
 
       reorderBlocks: (pageId, fromIndex, toIndex) => {
         set((state) => ({
-          pages: state.pages.map(p => {
-            if (p.id !== pageId) return p;
-            const newBlocks = [...p.blocks];
+          pages: state.pages.map((page) => {
+            if (page.id !== pageId) {
+              return page;
+            }
+
+            const newBlocks = [...page.blocks];
             const [moved] = newBlocks.splice(fromIndex, 1);
             newBlocks.splice(toIndex, 0, moved);
-            return { ...p, blocks: newBlocks };
-          })
+            return { ...page, blocks: newBlocks };
+          }),
         }));
-        get().saveCurrentPageToDb();
+        get().queuePageSave(pageId);
       },
 
       addBlock: (pageId) => {
         set((state) => ({
-          pages: state.pages.map(p => {
-            if (p.id !== pageId) return p;
+          pages: state.pages.map((page) => {
+            if (page.id !== pageId) {
+              return page;
+            }
+
             return {
-              ...p,
-              blocks: [...p.blocks, { id: Math.random().toString(36).substring(7), text: '', type: 'none' }]
+              ...page,
+              blocks: [
+                ...page.blocks,
+                { id: Math.random().toString(36).substring(7), text: "", type: "none" },
+              ],
             };
-          })
+          }),
         }));
-        get().saveCurrentPageToDb();
+        get().queuePageSave(pageId);
       },
 
       removeBlock: (pageId, blockId) => {
         set((state) => ({
-          pages: state.pages.map(p => {
-            if (p.id !== pageId) return p;
-            return { ...p, blocks: p.blocks.filter(b => b.id !== blockId) };
-          })
+          pages: state.pages.map((page) => {
+            if (page.id !== pageId) {
+              return page;
+            }
+
+            return {
+              ...page,
+              blocks: page.blocks.filter((block) => block.id !== blockId),
+            };
+          }),
         }));
-        get().saveCurrentPageToDb();
+        get().queuePageSave(pageId);
       },
 
-      saveCurrentPageToDb: async () => {
-        const { currentProjectId, pages, currentPageIndex } = get();
-        if (currentProjectId && pages[currentPageIndex]) {
-          await dbService.savePage(currentProjectId, pages[currentPageIndex], currentPageIndex);
+      queuePageSave: (pageId) => {
+        clearPendingSave(pageId);
+        const timeout = setTimeout(() => {
+          pendingSaveTimers.delete(pageId);
+          void get().savePageToDb(pageId);
+        }, SAVE_DEBOUNCE_MS);
+
+        pendingSaveTimers.set(pageId, timeout);
+      },
+
+      savePageToDb: async (pageId) => {
+        clearPendingSave(pageId);
+
+        const { currentProjectId, pages } = get();
+        if (!currentProjectId) {
+          return;
         }
+
+        const pageIndex = pages.findIndex((page) => page.id === pageId);
+        if (pageIndex === -1) {
+          return;
+        }
+
+        await dbService.savePage(currentProjectId, pages[pageIndex], pageIndex);
       },
 
-      nextPage: () => set((state) => ({
-        currentPageIndex: Math.min(state.currentPageIndex + 1, state.pages.length - 1)
-      })),
+      cancelPendingSaves: () => {
+        clearAllPendingSaves();
+      },
 
-      prevPage: () => set((state) => ({
-        currentPageIndex: Math.max(state.currentPageIndex - 1, 0)
-      })),
+      nextPage: () =>
+        set((state) => ({
+          currentPageIndex: Math.min(state.currentPageIndex + 1, state.pages.length - 1),
+        })),
 
-      setPageIndex: (index) => set((state) => ({
-        currentPageIndex: Math.max(0, Math.min(index, state.pages.length - 1))
-      })),
+      prevPage: () =>
+        set((state) => ({
+          currentPageIndex: Math.max(state.currentPageIndex - 1, 0),
+        })),
 
-      clearStore: () => set({ pages: [], currentPageIndex: 0, currentProjectId: null }),
+      setPageIndex: (index) =>
+        set((state) => ({
+          currentPageIndex: Math.max(0, Math.min(index, state.pages.length - 1)),
+        })),
+
+      clearStore: () => {
+        clearAllPendingSaves();
+        set({ pages: [], currentPageIndex: 0, currentProjectId: null });
+      },
     }),
     {
-      name: 'manga-storage',
-      partialize: (state) => ({ 
-        apiKey: state.apiKey, 
+      name: "manga-storage",
+      partialize: (state) => ({
+        apiKey: state.apiKey,
         useConvention: state.useConvention,
-        currentProjectId: state.currentProjectId
+        currentProjectId: state.currentProjectId,
       }),
     }
   )
