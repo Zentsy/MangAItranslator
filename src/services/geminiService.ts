@@ -1,13 +1,29 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+const MAX_RETRIES = 2;
+
+const cleanJson = (text: string) => {
+  try {
+    // Tenta encontrar o bloco de JSON se a IA enviou markdown (```json ... ```)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return jsonMatch[0];
+    }
+    return text;
+  } catch (e) {
+    return text;
+  }
+};
+
 export const translateWithGemini = async (
   apiKey: string,
   base64Image: string,
-  onResult: (blocks: { text: string }[]) => void
-) => {
+  onResult: (blocks: { text: string }[]) => void,
+  retryCount = 0
+): Promise<void> => {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.5-flash",
+    model: "gemini-2.0-flash", // Atualizado para o modelo mais recente e estável
   });
 
   const systemPrompt = `Você é um extrator de dados JSON para tradução de mangás.
@@ -37,19 +53,35 @@ MODELO DE RESPOSTA (JSON PURO):
     ]);
 
     const responseText = result.response.text();
+    const cleaned = cleanJson(responseText);
     
-    // Função para limpar a resposta caso a IA envie markdown ou texto extra
-    const cleanJson = (text: string) => {
-      const match = text.match(/\{[\s\S]*\}/); // Pega apenas o que estiver entre chaves
-      return match ? match[0] : text;
-    };
-
-    const json = JSON.parse(cleanJson(responseText));
-    if (json.translations) {
-      onResult(json.translations);
+    try {
+      const json = JSON.parse(cleaned);
+      if (json.translations && Array.isArray(json.translations)) {
+        onResult(json.translations);
+      } else {
+        throw new Error("Formato de JSON inválido: campo translations ausente.");
+      }
+    } catch (parseError) {
+      if (retryCount < MAX_RETRIES) {
+        console.warn(`Falha no parse (tentativa ${retryCount + 1}). Tentando novamente...`);
+        return translateWithGemini(apiKey, base64Image, onResult, retryCount + 1);
+      }
+      throw parseError;
     }
   } catch (error: any) {
-    console.error("Erro na API do Gemini:", error);
+    // Se for erro de quota (429), NÃO faz retry automático.
+    const isRateLimit = error.message?.includes("429") || error.status === 429;
+    
+    if (retryCount < MAX_RETRIES && !error.message?.includes("API key") && !isRateLimit) {
+      return translateWithGemini(apiKey, base64Image, onResult, retryCount + 1);
+    }
+    
+    if (isRateLimit) {
+      throw new Error("Limite de requisições atingido (429). Aguarde alguns segundos antes de tentar novamente.");
+    }
+    
+    console.error("Erro na API do Gemini após retries:", error);
     throw error;
   }
 };

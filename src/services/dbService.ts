@@ -3,6 +3,21 @@ import Database from "@tauri-apps/plugin-sql";
 import { MangaPage } from "@/store/useMangaStore";
 
 const DB_PATH = "sqlite:mangai.db";
+const ASSET_PROTOCOL_PATTERN = /^(asset:|https?:\/\/asset\.localhost)/i;
+
+const normalizeStoredPath = (path: string) => path.replace(/\\/g, "/");
+
+export const resolveAssetUrl = (path?: string | null) => {
+  if (!path) {
+    return null;
+  }
+
+  if (ASSET_PROTOCOL_PATTERN.test(path)) {
+    return path;
+  }
+
+  return convertFileSrc(normalizeStoredPath(path));
+};
 
 export interface DBProject {
   id: string;
@@ -63,7 +78,7 @@ export const dbService = {
 
       fullPages.push({
         id: page.id,
-        url: convertFileSrc(page.path),
+        url: resolveAssetUrl(page.path) || "",
         path: page.path,
         name: page.name,
         translation: "",
@@ -91,6 +106,10 @@ export const dbService = {
 
   async deleteProject(id: string) {
     await invoke("delete_project_data", { projectId: id });
+  },
+
+  async wipeAllData() {
+    await invoke("wipe_all_data");
   },
 
   async updateProjectStatus(id: string, status: "in_progress" | "completed") {

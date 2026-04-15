@@ -43,14 +43,14 @@ const ChapterNameModal: React.FC<ChapterNameModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="rounded-3xl border-white/10 bg-[#0a0a0a] text-slate-200 backdrop-blur-xl sm:max-w-md">
+      <DialogContent className="rounded-3xl border-app-border bg-app-surface text-app-text-primary backdrop-blur-xl sm:max-w-md shadow-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tighter italic">
-              <FolderPlus size={20} className="text-white" />
+            <DialogTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tighter italic text-app-text-primary">
+              <FolderPlus size={20} className="text-app-text-primary" />
               Nome do Capitulo
             </DialogTitle>
-            <DialogDescription className="mt-2 text-[10px] font-mono uppercase tracking-widest text-white/40">
+            <DialogDescription className="mt-2 text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
               O nome sugerido vem da pasta selecionada, mas voce pode ajustar antes de importar.
             </DialogDescription>
           </DialogHeader>
@@ -61,7 +61,7 @@ const ChapterNameModal: React.FC<ChapterNameModalProps> = ({
               onChange={(event) => setName(event.target.value)}
               placeholder="Ex: One Piece - Cap 1111"
               autoFocus
-              className="h-12 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-white/30"
+              className="h-12 w-full rounded-xl border border-app-border bg-app-bg/40 px-4 text-sm text-app-text-primary outline-none transition-colors placeholder:text-app-text-secondary/20 focus:border-app-accent/50"
             />
           </div>
 
@@ -70,14 +70,14 @@ const ChapterNameModal: React.FC<ChapterNameModalProps> = ({
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="text-[10px] font-bold uppercase hover:bg-white/5"
+              className="text-app-text-secondary hover:text-app-text-primary text-[10px] font-bold uppercase hover:bg-app-surface/50"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={!name.trim()}
-              className="bg-white text-[10px] font-bold uppercase text-black hover:bg-white/90"
+              className="bg-app-text-primary text-[10px] font-bold uppercase text-app-bg hover:opacity-90 shadow-lg"
             >
               Iniciar Traducao
             </Button>

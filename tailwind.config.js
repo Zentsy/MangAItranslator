@@ -13,6 +13,14 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+        app: {
+          bg: "rgb(var(--app-bg) / <alpha-value>)",
+          surface: "rgb(var(--app-surface) / <alpha-value>)",
+          accent: "rgb(var(--app-accent) / <alpha-value>)",
+          "text-primary": "rgb(var(--app-text-primary) / <alpha-value>)",
+          "text-secondary": "rgb(var(--app-text-secondary) / <alpha-value>)",
+          border: "rgb(var(--app-border) / <alpha-value>)",
+        },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

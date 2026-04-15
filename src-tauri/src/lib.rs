@@ -217,6 +217,46 @@ async fn delete_project_data(app: AppHandle, project_id: String) -> Result<(), S
     clear_project_cache(app, project_id).await
 }
 
+#[tauri::command]
+async fn wipe_all_data(app: AppHandle) -> Result<(), String> {
+    let database_url = database_url(&app)?;
+    let mut connection = SqliteConnection::connect(&database_url)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    sqlx::query("PRAGMA foreign_keys = ON")
+        .execute(&mut connection)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut transaction = connection.begin().await.map_err(|e| e.to_string())?;
+
+    sqlx::query("DELETE FROM blocks")
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    sqlx::query("DELETE FROM pages")
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    sqlx::query("DELETE FROM projects")
+        .execute(&mut *transaction)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    transaction.commit().await.map_err(|e| e.to_string())?;
+
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let cache_dir = app_data_dir.join("cache");
+    if cache_dir.exists() {
+        fs::remove_dir_all(cache_dir).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let migrations = vec![
@@ -272,7 +312,8 @@ pub fn run() {
             clear_project_cache,
             list_chapter_images,
             save_page_atomic,
-            delete_project_data
+            delete_project_data,
+            wipe_all_data
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

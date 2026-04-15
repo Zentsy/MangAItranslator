@@ -25,23 +25,23 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#0a0a0a] border-white/10 text-slate-200 rounded-3xl sm:max-w-md backdrop-blur-xl">
+      <DialogContent className="bg-app-surface border-app-border text-app-text-primary rounded-3xl sm:max-w-md backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tighter italic">
             <AlertCircle className={variant === 'destructive' ? "text-rose-500" : "text-emerald-500"} size={20} />
             {title}
           </DialogTitle>
-          <DialogDescription className="text-white/40 font-mono text-[10px] uppercase tracking-widest mt-2 leading-relaxed">
+          <DialogDescription className="text-app-text-secondary font-mono text-[10px] uppercase tracking-widest mt-2 leading-relaxed">
             {description}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-8 gap-2">
-          <Button variant="ghost" onClick={onClose} className="hover:bg-white/5 text-[10px] font-bold uppercase">
+          <Button variant="ghost" onClick={onClose} className="hover:bg-app-surface/50 text-app-text-secondary hover:text-app-text-primary text-[10px] font-bold uppercase">
             Cancelar
           </Button>
           <Button 
             onClick={() => { onConfirm(); onClose(); }}
-            className={`text-[10px] font-bold uppercase ${variant === 'destructive' ? 'bg-rose-500 hover:bg-rose-600' : 'bg-white text-black hover:bg-white/90'}`}
+            className={`text-[10px] font-bold uppercase ${variant === 'destructive' ? 'bg-rose-500 hover:bg-rose-600 text-white' : 'bg-app-text-primary text-app-bg hover:opacity-90 shadow-lg'}`}
           >
             {confirmText}
           </Button>

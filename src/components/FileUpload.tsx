@@ -6,6 +6,7 @@ import { invoke, convertFileSrc } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Button } from "@/components/ui/button";
 import ChapterNameModal from "@/components/ChapterNameModal";
+import StatusModal, { StatusType } from "@/components/StatusModal";
 
 interface FileUploadProps {
   onSuccess: () => void;
@@ -41,11 +42,27 @@ const buildPage = (cachedPath: string, originalPath: string) => ({
 const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    type: StatusType;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    type: "info",
+  });
   const { setPages, setProjectId } = useMangaStore();
 
   const importChapter = async (imagePaths: string[], projectName: string) => {
     if (imagePaths.length === 0) {
-      alert("Nenhuma imagem suportada foi encontrada.");
+      setStatusModal({
+        isOpen: true,
+        title: "Pasta Vazia",
+        description: "Nenhuma imagem suportada foi encontrada.",
+        type: "warning",
+      });
       return;
     }
 
@@ -74,7 +91,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
       onSuccess();
     } catch (error) {
       console.error("Erro no upload nativo:", error);
-      alert("Falha ao processar arquivos.");
+      setStatusModal({
+        isOpen: true,
+        title: "Erro no Processamento",
+        description: "Falha ao processar os arquivos e copiar para o cache.",
+        type: "error",
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -82,7 +104,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
 
   const queueImport = (imagePaths: string[]) => {
     if (imagePaths.length === 0) {
-      alert("Nenhuma imagem suportada foi encontrada.");
+      setStatusModal({
+        isOpen: true,
+        title: "Imagens não encontradas",
+        description: "Certifique-se de que a pasta contém imagens suportadas (JPG, PNG).",
+        type: "warning",
+      });
       return;
     }
 
@@ -110,7 +137,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
       queueImport(imagePaths);
     } catch (error) {
       console.error("Erro ao ler a pasta selecionada:", error);
-      alert("Nao foi possivel ler a pasta selecionada.");
+      setStatusModal({
+        isOpen: true,
+        title: "Erro de Leitura",
+        description: "Nao foi possivel ler a pasta selecionada.",
+        type: "error",
+      });
     }
   };
 
@@ -135,7 +167,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
       queueImport(imagePaths);
     } catch (error) {
       console.error("Erro ao descobrir paginas vizinhas:", error);
-      alert("Nao foi possivel carregar as outras paginas da pasta.");
+      setStatusModal({
+        isOpen: true,
+        title: "Erro de Vizinhos",
+        description: "Não foi possível carregar as outras páginas da pasta.",
+        type: "error",
+      });
     }
   };
 
@@ -143,24 +180,24 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
     <div
       className={`
         group relative rounded-3xl border-2 border-dashed p-10 transition-all duration-300
-        border-white/10 bg-white/5 hover:border-white/30 hover:bg-white/[0.08]
+        border-app-border bg-app-surface/30 hover:border-app-accent/30 hover:bg-app-surface/50
         ${isProcessing ? "cursor-wait opacity-50" : ""}
       `}
     >
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5 transition-transform group-hover:scale-110">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-app-border bg-app-surface/50 transition-transform group-hover:scale-110">
           {isProcessing ? (
-            <Loader2 className="h-8 w-8 animate-spin text-white" />
+            <Loader2 className="h-8 w-8 animate-spin text-app-text-primary" />
           ) : (
-            <FolderOpen className="h-8 w-8 text-white/40 transition-colors group-hover:text-white" />
+            <FolderOpen className="h-8 w-8 text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary" />
           )}
         </div>
 
         <div>
-          <h3 className="text-xl font-bold uppercase tracking-tight">
+          <h3 className="text-xl font-bold uppercase tracking-tight text-app-text-primary">
             {isProcessing ? "Copiando para o Cache..." : "Selecionar Capitulo"}
           </h3>
-          <p className="mt-1 max-w-[300px] text-sm text-white/40">
+          <p className="mt-1 max-w-[300px] text-sm text-app-text-secondary/60">
             {isProcessing
               ? "Isso economizara seu SSD no futuro"
               : "Abra a pasta inteira do capitulo ou selecione uma pagina para puxar automaticamente as vizinhas."}
@@ -172,7 +209,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
             <Button
               type="button"
               onClick={handlePickFolder}
-              className="gap-2 bg-white text-black hover:bg-white/90"
+              className="gap-2 bg-app-text-primary text-app-bg hover:opacity-90 shadow-lg"
             >
               <FolderOpen size={16} />
               Selecionar Pasta
@@ -181,7 +218,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
               type="button"
               variant="outline"
               onClick={handlePickSinglePage}
-              className="gap-2 border-white/10 text-white/70 hover:bg-white/5"
+              className="gap-2 border-app-border text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
             >
               <Images size={16} />
               Selecionar Uma Pagina
@@ -190,7 +227,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
         )}
 
         {!isProcessing && (
-          <div className="mt-2 flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest text-white/30">
+          <div className="mt-2 flex items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
             <FileImage size={12} />
             SQLite + Cache Local Ativos
           </div>
@@ -211,6 +248,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
 
           void importChapter(currentImport.imagePaths, projectName);
         }}
+      />
+
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal({ ...statusModal, isOpen: false })}
+        title={statusModal.title}
+        description={statusModal.description}
+        type={statusModal.type}
       />
     </div>
   );

@@ -21,6 +21,8 @@ const clearAllPendingSaves = () => {
 };
 
 export type BlockType = "rect" | "outside" | "thought" | "double" | "none";
+export type TranslationEngine = "gemini" | "ollama";
+export type AppTheme = "dark-organic" | "paper-light";
 
 export interface TranslationBlock {
   id: string;
@@ -44,11 +46,18 @@ interface MangaStore {
   apiKey: string;
   useConvention: boolean;
   currentProjectId: string | null;
+  translationEngine: TranslationEngine;
+  hasFinishedOnboarding: boolean;
+  theme: AppTheme;
 
   setApiKey: (key: string) => void;
   setUseConvention: (value: boolean) => void;
   setProjectId: (id: string | null) => void;
   setPages: (pages: MangaPage[]) => void;
+  setTranslationEngine: (engine: TranslationEngine) => void;
+  setHasFinishedOnboarding: (value: boolean) => void;
+  setTheme: (theme: AppTheme) => void;
+  resetOnboarding: () => void;
   nextPage: () => void;
   prevPage: () => void;
 
@@ -73,10 +82,17 @@ export const useMangaStore = create<MangaStore>()(
       apiKey: "",
       useConvention: true,
       currentProjectId: null,
+      translationEngine: "gemini",
+      hasFinishedOnboarding: false,
+      theme: "dark-organic",
 
       setApiKey: (apiKey) => set({ apiKey }),
       setUseConvention: (useConvention) => set({ useConvention }),
       setProjectId: (currentProjectId) => set({ currentProjectId }),
+      setTranslationEngine: (translationEngine) => set({ translationEngine }),
+      setHasFinishedOnboarding: (hasFinishedOnboarding) => set({ hasFinishedOnboarding }),
+      setTheme: (theme) => set({ theme }),
+      resetOnboarding: () => set({ hasFinishedOnboarding: false }),
       setPages: (pages) => {
         clearAllPendingSaves();
         set({ pages, currentPageIndex: 0 });
@@ -205,7 +221,16 @@ export const useMangaStore = create<MangaStore>()(
 
       clearStore: () => {
         clearAllPendingSaves();
-        set({ pages: [], currentPageIndex: 0, currentProjectId: null });
+        set({
+          pages: [],
+          currentPageIndex: 0,
+          currentProjectId: null,
+          apiKey: "",
+          useConvention: true,
+          translationEngine: "gemini",
+          hasFinishedOnboarding: false,
+          theme: "dark-organic",
+        });
       },
     }),
     {
@@ -214,6 +239,9 @@ export const useMangaStore = create<MangaStore>()(
         apiKey: state.apiKey,
         useConvention: state.useConvention,
         currentProjectId: state.currentProjectId,
+        translationEngine: state.translationEngine,
+        hasFinishedOnboarding: state.hasFinishedOnboarding,
+        theme: state.theme,
       }),
     }
   )
