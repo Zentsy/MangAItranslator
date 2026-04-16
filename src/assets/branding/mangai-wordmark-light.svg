@@ -1,0 +1,17 @@
+<svg width="640" height="160" viewBox="0 0 640 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mangaiWordmarkLightStroke" x1="20" y1="12" x2="112" y2="118" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C1917"/>
+      <stop offset="1" stop-color="#57534E"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(8 12)">
+    <circle cx="88" cy="22" r="14" fill="#2563EB" fill-opacity="0.14"/>
+    <circle cx="88" cy="22" r="8" fill="#2563EB"/>
+    <path d="M22 82V28L40 50L56 34L72 50L90 28V82" stroke="url(#mangaiWordmarkLightStroke)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M26 92H86" stroke="url(#mangaiWordmarkLightStroke)" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="138" y="76" fill="#1C1917" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="900" letter-spacing="3">MANGAI</text>
+  <text x="358" y="76" fill="#6B7280" font-family="Segoe UI, Arial, sans-serif" font-size="42" font-weight="900" font-style="italic" letter-spacing="1">TRANSLATOR</text>
+  <text x="140" y="108" fill="#78716C" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="4">TERMINAL DE LOCALIZACAO ASSISTIDA</text>
+</svg>

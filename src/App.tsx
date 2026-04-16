@@ -167,18 +167,9 @@ function App() {
     <MangaBackground>
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="relative z-20 flex w-[108px] flex-col border-r border-app-border bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.01))] px-3 py-5 backdrop-blur-md">
-          <div className="mb-5 flex justify-center">
+        <aside className="relative z-20 flex w-[112px] flex-col border-r border-app-border bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.01))] px-3 py-6 backdrop-blur-md">
+          <div className="mb-6 flex justify-center">
             <BrandMark compact />
-          </div>
-
-          <div className="mb-5 text-center">
-            <div className="text-[9px] font-black uppercase tracking-[0.35em] text-app-text-secondary/45">
-              MangAI
-            </div>
-            <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-app-text-secondary/35">
-              Scan flow
-            </div>
           </div>
 
           <nav className="flex flex-1 flex-col gap-2.5">
@@ -219,32 +210,6 @@ function App() {
             })}
           </nav>
 
-          <div className="mt-3 min-w-0 overflow-hidden rounded-[1.45rem] border border-app-border bg-app-surface/30 p-2.5 shadow-[0_18px_35px_-24px_rgba(0,0,0,0.85)]">
-            <div className="mb-2 flex items-center gap-1.5 text-[7px] font-black uppercase tracking-[0.24em] text-app-text-secondary/45">
-              {translationEngine === "gemini" ? <Sparkles size={12} /> : <HardDrive size={12} />}
-              Engine
-            </div>
-
-            {translationEngine === "gemini" ? (
-              <div className="min-w-0">
-                <div className="flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[6px] font-bold uppercase tracking-[0.14em] text-emerald-400">
-                  <span className="truncate whitespace-nowrap">Padrao</span>
-                </div>
-                <div className="mt-2 truncate text-[9px] font-bold uppercase tracking-[0.08em] text-app-text-primary">
-                  Gemini
-                </div>
-              </div>
-            ) : (
-              <div className="min-w-0">
-                <div className="flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-[6px] font-bold uppercase tracking-[0.14em] text-amber-400">
-                  <span className="truncate whitespace-nowrap">Local</span>
-                </div>
-                <div className="mt-2 break-words text-[8px] font-semibold leading-snug text-app-text-primary [overflow-wrap:anywhere]">
-                  {selectedOllamaModel.label}
-                </div>
-              </div>
-            )}
-          </div>
         </aside>
 
         {/* Main Content Area */}
@@ -256,17 +221,19 @@ function App() {
           )}
 
           {currentView === 'dashboard' && (
-            <main className="relative flex h-full flex-col overflow-y-auto p-6 pb-8">
+            <main className="relative flex h-full flex-col overflow-y-auto px-8 py-8 pb-10">
               <OnboardingOverlay />
-              <div className="mx-auto flex w-full max-w-[1520px] flex-col">
-              <header className="mb-8 flex items-start justify-between gap-6">
-                <div className="min-w-0">
-                  <h1 className="text-3xl font-black uppercase tracking-tighter leading-none italic text-app-text-primary">{t('dashboard.title')} <span className="text-app-text-secondary/40">Translator</span></h1>
-                  <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-app-text-secondary/65">{t('dashboard.subtitle')}</p>
+              <div className="mx-auto flex w-full max-w-[1680px] flex-col">
+              <header className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+                <div className="max-w-[720px]">
+                  <BrandMark />
+                  <p className="mt-5 max-w-[620px] text-[14px] leading-relaxed text-app-text-secondary/62">
+                    Traduza capitulos com um fluxo editorial mais limpo: importe, gere o draft, refine os blocos e exporte sem perder contexto.
+                  </p>
                 </div>
 
-                <div className="flex flex-wrap justify-end gap-3">
-                   <div className="flex flex-col gap-2 rounded-[1.35rem] border border-app-border bg-app-surface/50 px-3 py-2">
+                <div className="flex flex-wrap items-start justify-start gap-3 xl:max-w-[760px] xl:justify-end">
+                   <div className="flex flex-col gap-2 rounded-[1.6rem] border border-app-border bg-app-surface/50 px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => setTranslationEngine("gemini")}
@@ -287,7 +254,7 @@ function App() {
                             <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-emerald-400">
                               Recomendado
                             </span>
-                            <span className="text-app-text-secondary/50">
+                            <span className="max-w-[260px] text-app-text-secondary/50">
                               Melhor qualidade e fluxo principal do app
                             </span>
                           </>
@@ -296,7 +263,7 @@ function App() {
                             <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-amber-400">
                               Experimental
                             </span>
-                            <span className="text-app-text-secondary/50">
+                            <span className="max-w-[260px] text-app-text-secondary/50">
                               Local/offline, mas pode ser lento ou inconsistente
                             </span>
                           </>
@@ -304,19 +271,19 @@ function App() {
                       </div>
                    </div>
                    {translationEngine === "gemini" && (
-                     <div className="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
                         <Key size={14} className="text-app-text-secondary" />
                         <input 
                           type="password" 
                           placeholder="Gemini API Key"
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
-                         className="bg-transparent border-none outline-none text-[10px] w-32 font-mono text-app-text-primary placeholder:text-app-text-secondary/30"
+                         className="w-36 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
                         />
                      </div>
                    )}
                    {translationEngine === "ollama" && (
-                     <div className="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
                         <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
                           Modelo
                         </span>
@@ -325,34 +292,34 @@ function App() {
                         </span>
                      </div>
                    )}
-                  <div className={`flex h-11 items-center gap-3 rounded-full border px-4 py-2 ${ollamaStatus ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-rose-500/20 bg-rose-500/5 text-rose-500'} transition-all`}>
+                  <div className={`flex h-12 items-center gap-3 rounded-full border px-4 py-2 ${ollamaStatus ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-rose-500/20 bg-rose-500/5 text-rose-500'} transition-all`}>
                     <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Ollama: {ollamaStatus ? t('common.online') : t('common.offline')}</span>
                   </div>
                 </div>
               </header>
 
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
                 <FileUpload onSuccess={() => setCurrentView('editor')} />
                 
                 <div 
                   onClick={() => setCurrentView('library')}
-                  className="group relative cursor-pointer overflow-hidden rounded-[1.75rem] border border-app-border bg-app-surface/50 p-5 transition-all hover:bg-app-surface"
+                  className="group relative cursor-pointer overflow-hidden rounded-[2rem] border border-app-border bg-app-surface/50 p-7 transition-all hover:bg-app-surface"
                 >
-                   <h3 className="mb-2 text-lg font-bold uppercase italic text-app-text-primary">{t('dashboard.history.title')}</h3>
-                   <p className="text-[13px] leading-relaxed text-app-text-secondary">{t('dashboard.history.description')}</p>
-                   <div className="mt-5 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-widest text-app-text-secondary/40 transition-all group-hover:text-app-text-primary">
+                   <h3 className="mb-3 text-xl font-bold uppercase italic text-app-text-primary">{t('dashboard.history.title')}</h3>
+                   <p className="max-w-[420px] text-[14px] leading-relaxed text-app-text-secondary">{t('dashboard.history.description')}</p>
+                   <div className="mt-8 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-widest text-app-text-secondary/40 transition-all group-hover:text-app-text-primary">
                       Acessar Biblioteca <ChevronRight size={12} />
                    </div>
                 </div>
               </section>
 
-              <section className="mt-6 min-h-0">
+              <section className="mt-10 min-h-0">
                 <div className="mb-4 flex items-end justify-between">
                   <div>
-                    <h2 className="text-xl font-black uppercase tracking-tighter italic text-app-text-primary">
+                    <h2 className="text-[1.8rem] font-black uppercase tracking-tighter italic text-app-text-primary">
                       Retomar <span className="text-app-text-secondary/40">Traducoes</span>
                     </h2>
-                    <p className="mt-1 text-[9px] font-mono uppercase tracking-widest text-app-text-secondary/60">
+                    <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.22em] text-app-text-secondary/60">
                       Continue rapido sem precisar abrir a aba de historico
                     </p>
                   </div>
@@ -371,12 +338,12 @@ function App() {
                 </div>
 
                 {recentProjects.length === 0 ? (
-                  <div className="rounded-3xl border border-app-border bg-app-surface/30 p-6 text-app-text-secondary/60">
+                  <div className="rounded-[2rem] border border-app-border bg-app-surface/30 p-8 text-app-text-secondary/60">
                     <div className="flex items-center gap-3 text-sm font-bold uppercase tracking-wide">
                       <Clock3 size={18} className="text-app-text-secondary/40" />
                       Nenhuma traducao recente ainda
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed">
+                    <p className="mt-3 max-w-[760px] text-[15px] leading-relaxed">
                       Assim que voce importar um capitulo, ele aparece aqui para voce continuar do ponto em que parou.
                     </p>
                   </div>
