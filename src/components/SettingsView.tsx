@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getOllamaModelOption, getOllamaProfileLabel, OLLAMA_MODEL_OPTIONS } from '@/config/ollamaModels';
 import { useMangaStore } from '@/store/useMangaStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { dbService } from '@/services/dbService';
@@ -23,11 +24,16 @@ interface SettingsViewProps {
 const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
   const { 
     apiKey, 
+    translationEngine,
+    setTranslationEngine,
+    ollamaModel,
+    setOllamaModel,
     resetOnboarding, 
     clearStore
   } = useMangaStore();
 
   const { theme, setTheme } = useTheme();
+  const selectedOllamaModel = getOllamaModelOption(ollamaModel);
 
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [statusModal, setStatusModal] = useState<{
@@ -105,24 +111,153 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
             <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">Motor de Tradução</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-6 bg-app-surface/40 border border-app-border rounded-3xl">
+            <button
+              type="button"
+              onClick={() => setTranslationEngine("gemini")}
+              className={`p-6 rounded-3xl border text-left transition-all ${
+                translationEngine === "gemini"
+                  ? "border-app-accent/30 bg-app-surface/70"
+                  : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+              }`}
+            >
               <div className="flex justify-between items-start mb-4">
-                <span className="px-2 py-1 bg-app-surface/50 rounded text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">Ativo no momento</span>
+                <span className="px-2 py-1 bg-app-surface/50 rounded text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
+                  {translationEngine === "gemini" ? "Ativo no momento" : "Disponivel"}
+                </span>
                 <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-emerald-500' : 'bg-rose-500'} shadow-[0_0_10px_rgba(16,185,129,0.5)]`} />
               </div>
               <h4 className="font-bold text-lg mb-1 italic text-app-text-primary">Google Gemini</h4>
-              <p className="text-xs text-app-text-secondary/60 leading-relaxed mb-4">Uso de API externa (requer chave). Ideal para rascunhos rápidos e precisos.</p>
+              <p className="text-xs text-app-text-secondary/60 leading-relaxed mb-4">
+                Uso de API externa com bom rascunho de primeira passada. Continua sendo a rota mais simples se voce quer qualidade sem rodar modelo local.
+              </p>
               <div className="flex items-center gap-2 px-4 py-2 bg-app-bg/40 rounded-xl border border-app-border">
                 <ShieldCheck size={14} className="text-emerald-500" />
-                <span className="text-[10px] font-mono text-app-text-secondary/60">Suas chaves são salvas apenas localmente.</span>
+                <span className="text-[10px] font-mono text-app-text-secondary/60">
+                  Suas chaves sao salvas apenas localmente.
+                </span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTranslationEngine("ollama")}
+              className={`p-6 rounded-3xl border text-left transition-all ${
+                translationEngine === "ollama"
+                  ? "border-app-accent/30 bg-app-surface/70"
+                  : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+              }`}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <span className="px-2 py-1 bg-app-surface/50 rounded text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
+                  {translationEngine === "ollama" ? "Ativo no momento" : "Local/offline"}
+                </span>
+                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
+                  {selectedOllamaModel.sizeLabel}
+                </span>
+              </div>
+              <h4 className="font-bold text-lg mb-1 italic text-app-text-primary">Ollama Local</h4>
+              <p className="text-xs text-app-text-secondary/60 leading-relaxed mb-4">
+                Melhor para privacidade e custo zero por pagina. Modelo atual: <span className="text-app-text-primary">{selectedOllamaModel.label}</span>.
+              </p>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-app-border bg-app-bg/40 px-4 py-3">
+                <div>
+                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
+                    Perfil
+                  </div>
+                  <div className="text-xs text-app-text-primary">
+                    {getOllamaProfileLabel(selectedOllamaModel.profile)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
+                    Requer
+                  </div>
+                  <div className="text-xs text-app-text-primary">
+                    Ollama {selectedOllamaModel.requiresOllama}
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div className="mt-4 rounded-3xl border border-app-border bg-app-surface/20 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-bold uppercase tracking-widest text-app-text-secondary/60">
+                  Modelos Vision para Ollama
+                </h4>
+                <p className="mt-1 text-xs text-app-text-secondary/50">
+                  Selecione um default leve para o seu PC ou suba a qualidade quando estiver sobrando maquina.
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40">
+                  Pull atual
+                </div>
+                <code className="text-[11px] text-app-text-primary">{selectedOllamaModel.installCommand}</code>
               </div>
             </div>
 
-            <div className="p-6 bg-app-surface/20 border border-app-border/50 rounded-3xl opacity-40">
-              <h4 className="font-bold text-lg mb-1 italic text-app-text-secondary">Novos Modelos</h4>
-              <p className="text-xs text-app-text-secondary/40 leading-relaxed">Em breve: Suporte para DeepSeek, OpenRouter e Anthropic.</p>
-              <div className="mt-4 flex items-center gap-1 text-[9px] font-bold text-app-text-secondary/20 uppercase">
-                Em desenvolvimento <ChevronRight size={10} />
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {OLLAMA_MODEL_OPTIONS.map((model) => {
+                const isSelected = ollamaModel === model.id;
+
+                return (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() => {
+                      setOllamaModel(model.id);
+                      setTranslationEngine("ollama");
+                    }}
+                    className={`rounded-2xl border p-4 text-left transition-all ${
+                      isSelected
+                        ? "border-app-accent/30 bg-app-surface/80"
+                        : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+                    }`}
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h5 className="font-bold text-sm text-app-text-primary">{model.label}</h5>
+                          {model.recommended && (
+                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                              Recomendado
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                          {model.id}
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
+                        {model.sizeLabel}
+                      </span>
+                    </div>
+
+                    <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
+                      {model.description}
+                    </p>
+
+                    <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
+                      <span className="text-app-text-secondary/50">
+                        {getOllamaProfileLabel(model.profile)}
+                      </span>
+                      <span className={`${isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}`}>
+                        {isSelected ? "Selecionado" : "Usar modelo"}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-app-border bg-app-bg/30 px-4 py-3">
+              <div className="text-xs text-app-text-secondary/60">
+                Dica pratica: para a maioria das maquinas, comece com <span className="text-app-text-primary">Qwen 3 VL 4B</span>. Se o PC sofrer, desca para <span className="text-app-text-primary">Qwen 3 VL 2B</span>.
+              </div>
+              <div className="flex items-center gap-1 text-[9px] font-bold uppercase text-app-text-secondary/30">
+                Lista curada para MVP <ChevronRight size={10} />
               </div>
             </div>
           </div>

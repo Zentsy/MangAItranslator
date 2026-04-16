@@ -78,6 +78,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     updatePage,
     apiKey,
     translationEngine,
+    ollamaModel,
     currentProjectId,
     clearStore,
     cancelPendingSaves,
@@ -195,11 +196,11 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setIsTranslating(true);
     try {
       const base64 = imgBase64.split(",")[1];
-      await translatePage(translationEngine, apiKey, base64, (results) => {
+      await translatePage(translationEngine, apiKey, ollamaModel, base64, (results) => {
         const newBlocks = results.map((res) => ({
           id: Math.random().toString(36).substring(7),
           text: res.text,
-          type: "none" as BlockType,
+          type: (res.type ?? "none") as BlockType,
         }));
         updatePage(currentPage.id, {
           blocks: [...(currentPage.blocks || []), ...newBlocks],
@@ -216,6 +217,10 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         friendlyMessage = "Limite de uso atingido ou muitas requisições. Tente novamente em um minuto.";
       } else if (errorStr.includes("network") || errorStr.includes("fetch")) {
         friendlyMessage = "Erro de conexão. Verifique sua internet ou o status dos servidores da IA.";
+      } else if (errorStr.includes("ollama nao encontrado") || errorStr.includes("failed to fetch")) {
+        friendlyMessage = "Nao consegui falar com o Ollama. Verifique se ele esta aberto e rodando na sua maquina.";
+      } else if (errorStr.includes("modelo do ollama nao encontrado") || errorStr.includes("not found")) {
+        friendlyMessage = `O modelo ${ollamaModel} ainda nao foi baixado. Rode "ollama pull ${ollamaModel}" no terminal.`;
       }
 
       setStatusModal({

@@ -9,6 +9,7 @@ import FileUpload from "@/components/FileUpload";
 import StatusModal, { StatusType } from "@/components/StatusModal";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
 import { Button } from "@/components/ui/button";
+import { getOllamaModelOption } from "@/config/ollamaModels";
 import { useMangaStore } from "@/store/useMangaStore";
 import { dbService, DBProject, resolveAssetUrl } from "@/services/dbService";
 import {
@@ -84,8 +85,10 @@ function App() {
     setPageIndex,
     currentProjectId, 
     translationEngine, 
-    setTranslationEngine 
+    setTranslationEngine,
+    ollamaModel,
   } = useMangaStore();
+  const selectedOllamaModel = getOllamaModelOption(ollamaModel);
 
   async function checkOllama() {
     try {
@@ -212,8 +215,18 @@ function App() {
                           placeholder="Gemini API Key"
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
-                          className="bg-transparent border-none outline-none text-[10px] w-32 font-mono text-app-text-primary placeholder:text-app-text-secondary/30"
+                         className="bg-transparent border-none outline-none text-[10px] w-32 font-mono text-app-text-primary placeholder:text-app-text-secondary/30"
                         />
+                     </div>
+                   )}
+                   {translationEngine === "ollama" && (
+                     <div className="flex items-center gap-2 px-4 py-1 bg-app-surface/50 border border-app-border rounded-full animate-in fade-in slide-in-from-right-2 duration-300">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
+                          Modelo
+                        </span>
+                        <span className="text-[10px] font-mono text-app-text-primary">
+                          {selectedOllamaModel.label}
+                        </span>
                      </div>
                    )}
                   <div className={`flex items-center gap-3 px-4 py-2 rounded-full border ${ollamaStatus ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-rose-500/20 bg-rose-500/5 text-rose-500'} transition-all`}>

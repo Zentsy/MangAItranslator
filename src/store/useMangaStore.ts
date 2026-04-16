@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { DEFAULT_OLLAMA_MODEL } from "@/config/ollamaModels";
 import { dbService } from "@/services/dbService";
 
 const SAVE_DEBOUNCE_MS = 450;
@@ -47,6 +48,7 @@ interface MangaStore {
   useConvention: boolean;
   currentProjectId: string | null;
   translationEngine: TranslationEngine;
+  ollamaModel: string;
   hasFinishedOnboarding: boolean;
   theme: AppTheme;
 
@@ -55,6 +57,7 @@ interface MangaStore {
   setProjectId: (id: string | null) => void;
   setPages: (pages: MangaPage[]) => void;
   setTranslationEngine: (engine: TranslationEngine) => void;
+  setOllamaModel: (model: string) => void;
   setHasFinishedOnboarding: (value: boolean) => void;
   setTheme: (theme: AppTheme) => void;
   resetOnboarding: () => void;
@@ -83,6 +86,7 @@ export const useMangaStore = create<MangaStore>()(
       useConvention: true,
       currentProjectId: null,
       translationEngine: "gemini",
+      ollamaModel: DEFAULT_OLLAMA_MODEL,
       hasFinishedOnboarding: false,
       theme: "dark-organic",
 
@@ -90,6 +94,7 @@ export const useMangaStore = create<MangaStore>()(
       setUseConvention: (useConvention) => set({ useConvention }),
       setProjectId: (currentProjectId) => set({ currentProjectId }),
       setTranslationEngine: (translationEngine) => set({ translationEngine }),
+      setOllamaModel: (ollamaModel) => set({ ollamaModel }),
       setHasFinishedOnboarding: (hasFinishedOnboarding) => set({ hasFinishedOnboarding }),
       setTheme: (theme) => set({ theme }),
       resetOnboarding: () => set({ hasFinishedOnboarding: false }),
@@ -228,6 +233,7 @@ export const useMangaStore = create<MangaStore>()(
           apiKey: "",
           useConvention: true,
           translationEngine: "gemini",
+          ollamaModel: DEFAULT_OLLAMA_MODEL,
           hasFinishedOnboarding: false,
           theme: "dark-organic",
         });
@@ -240,6 +246,7 @@ export const useMangaStore = create<MangaStore>()(
         useConvention: state.useConvention,
         currentProjectId: state.currentProjectId,
         translationEngine: state.translationEngine,
+        ollamaModel: state.ollamaModel,
         hasFinishedOnboarding: state.hasFinishedOnboarding,
         theme: state.theme,
       }),
