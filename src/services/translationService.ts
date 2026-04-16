@@ -1,5 +1,5 @@
 import { translateWithGemini } from "./geminiService";
-import { translateImage as translateWithOllama } from "./ollamaService";
+import { OllamaStatusUpdate, translateImage as translateWithOllama } from "./ollamaService";
 import { BlockType, TranslationEngine } from "@/store/useMangaStore";
 
 export interface TranslationResult {
@@ -13,7 +13,8 @@ export const translatePage = async (
   ollamaModel: string,
   base64Image: string,
   onResult: (results: TranslationResult[]) => void,
-  onProgress?: (chunk: string) => void
+  onProgress?: (chunk: string) => void,
+  onStatusChange?: (update: OllamaStatusUpdate) => void
 ) => {
   if (engine === "gemini") {
     if (!apiKey) {
@@ -21,7 +22,7 @@ export const translatePage = async (
     }
     await translateWithGemini(apiKey, base64Image, onResult);
   } else {
-    const results = await translateWithOllama(base64Image, ollamaModel, onProgress);
+    const results = await translateWithOllama(base64Image, ollamaModel, onProgress, onStatusChange);
     onResult(
       results.map((result) => ({
         text: result.text,

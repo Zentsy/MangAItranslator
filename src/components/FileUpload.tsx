@@ -179,25 +179,25 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
   return (
     <div
       className={`
-        group relative rounded-3xl border-2 border-dashed p-10 transition-all duration-300
+        group relative rounded-[1.75rem] border-2 border-dashed p-7 transition-all duration-300
         border-app-border bg-app-surface/30 hover:border-app-accent/30 hover:bg-app-surface/50
         ${isProcessing ? "cursor-wait opacity-50" : ""}
       `}
     >
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-app-border bg-app-surface/50 transition-transform group-hover:scale-110">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-[1.1rem] border border-app-border bg-app-surface/50 transition-transform group-hover:scale-105">
           {isProcessing ? (
-            <Loader2 className="h-8 w-8 animate-spin text-app-text-primary" />
+            <Loader2 className="h-6 w-6 animate-spin text-app-text-primary" />
           ) : (
-            <FolderOpen className="h-8 w-8 text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary" />
+            <FolderOpen className="h-6 w-6 text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary" />
           )}
         </div>
 
         <div>
-          <h3 className="text-xl font-bold uppercase tracking-tight text-app-text-primary">
+          <h3 className="text-lg font-bold uppercase tracking-tight text-app-text-primary">
             {isProcessing ? "Copiando para o Cache..." : "Selecionar Capitulo"}
           </h3>
-          <p className="mt-1 max-w-[300px] text-sm text-app-text-secondary/60">
+          <p className="mt-1 max-w-[280px] text-[13px] leading-relaxed text-app-text-secondary/60">
             {isProcessing
               ? "Isso economizara seu SSD no futuro"
               : "Abra a pasta inteira do capitulo ou selecione uma pagina para puxar automaticamente as vizinhas."}
@@ -205,29 +205,29 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
         </div>
 
         {!isProcessing && (
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-1 flex flex-col gap-2 sm:flex-row">
             <Button
               type="button"
               onClick={handlePickFolder}
-              className="gap-2 bg-app-text-primary text-app-bg hover:opacity-90 shadow-lg"
+              className="h-10 gap-2 bg-app-text-primary px-4 text-app-bg hover:opacity-90 shadow-lg"
             >
-              <FolderOpen size={16} />
+              <FolderOpen size={14} />
               Selecionar Pasta
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={handlePickSinglePage}
-              className="gap-2 border-app-border text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
+              className="h-10 gap-2 border-app-border px-4 text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
             >
-              <Images size={16} />
+              <Images size={14} />
               Selecionar Uma Pagina
             </Button>
           </div>
         )}
 
         {!isProcessing && (
-          <div className="mt-2 flex items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+          <div className="mt-1 flex items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-3 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-app-text-secondary/40">
             <FileImage size={12} />
             SQLite + Cache Local Ativos
           </div>

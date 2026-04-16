@@ -122,13 +122,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
             >
               <div className="flex justify-between items-start mb-4">
                 <span className="px-2 py-1 bg-app-surface/50 rounded text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
-                  {translationEngine === "gemini" ? "Ativo no momento" : "Disponivel"}
+                  {translationEngine === "gemini" ? "Ativo no momento" : "Recomendado"}
                 </span>
                 <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-emerald-500' : 'bg-rose-500'} shadow-[0_0_10px_rgba(16,185,129,0.5)]`} />
               </div>
               <h4 className="font-bold text-lg mb-1 italic text-app-text-primary">Google Gemini</h4>
               <p className="text-xs text-app-text-secondary/60 leading-relaxed mb-4">
-                Uso de API externa com bom rascunho de primeira passada. Continua sendo a rota mais simples se voce quer qualidade sem rodar modelo local.
+                Uso de API externa com melhor equilibrio entre velocidade e qualidade. Este e o motor recomendado para o MVP e para a maioria dos usuarios.
               </p>
               <div className="flex items-center gap-2 px-4 py-2 bg-app-bg/40 rounded-xl border border-app-border">
                 <ShieldCheck size={14} className="text-emerald-500" />
@@ -149,7 +149,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
             >
               <div className="flex justify-between items-start mb-4">
                 <span className="px-2 py-1 bg-app-surface/50 rounded text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
-                  {translationEngine === "ollama" ? "Ativo no momento" : "Local/offline"}
+                  {translationEngine === "ollama" ? "Ativo no momento" : "Experimental/local"}
                 </span>
                 <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
                   {selectedOllamaModel.sizeLabel}
@@ -157,7 +157,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
               </div>
               <h4 className="font-bold text-lg mb-1 italic text-app-text-primary">Ollama Local</h4>
               <p className="text-xs text-app-text-secondary/60 leading-relaxed mb-4">
-                Melhor para privacidade e custo zero por pagina. Modelo atual: <span className="text-app-text-primary">{selectedOllamaModel.label}</span>.
+                Melhor para privacidade e custo zero por pagina, mas a qualidade e a velocidade dependem muito da maquina do usuario. Modelo atual: <span className="text-app-text-primary">{selectedOllamaModel.label}</span>.
               </p>
               <div className="flex items-center justify-between gap-3 rounded-xl border border-app-border bg-app-bg/40 px-4 py-3">
                 <div>
@@ -254,10 +254,10 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
 
             <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-app-border bg-app-bg/30 px-4 py-3">
               <div className="text-xs text-app-text-secondary/60">
-                Dica pratica: para a maioria das maquinas, comece com <span className="text-app-text-primary">Qwen 3 VL 4B</span>. Se o PC sofrer, desca para <span className="text-app-text-primary">Qwen 3 VL 2B</span>.
+                Dica pratica: no MVP, priorize <span className="text-app-text-primary">Gemini</span> como rota principal. Se quiser testar modo local, comece por <span className="text-app-text-primary">Qwen 3 VL 2B</span> em maquinas mais fracas.
               </div>
               <div className="flex items-center gap-1 text-[9px] font-bold uppercase text-app-text-secondary/30">
-                Lista curada para MVP <ChevronRight size={10} />
+                Ollama fica como modo opcional <ChevronRight size={10} />
               </div>
             </div>
           </div>

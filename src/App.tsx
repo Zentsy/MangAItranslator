@@ -8,6 +8,7 @@ import SettingsView from "@/components/SettingsView";
 import FileUpload from "@/components/FileUpload";
 import StatusModal, { StatusType } from "@/components/StatusModal";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
+import BrandMark from "@/components/BrandMark";
 import { Button } from "@/components/ui/button";
 import { getOllamaModelOption } from "@/config/ollamaModels";
 import { useMangaStore } from "@/store/useMangaStore";
@@ -22,7 +23,19 @@ import {
   Clock3,
   History,
   Play,
+  HardDrive,
+  Sparkles,
 } from "lucide-react";
+
+type AppView = "dashboard" | "editor" | "library" | "settings";
+
+interface NavItem {
+  id: AppView;
+  label: string;
+  caption: string;
+  icon: typeof LayoutGrid;
+  disabled?: boolean;
+}
 
 const formatProjectDate = (value: string) => {
   const parsedDate = new Date(value.includes("T") ? value : value.replace(" ", "T"));
@@ -64,7 +77,7 @@ const ProjectThumbnail: React.FC<{
 function App() {
   const { t } = useTranslation();
   const [ollamaStatus, setOllamaStatus] = useState<boolean | null>(null);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'editor' | 'library' | 'settings'>('dashboard');
+  const [currentView, setCurrentView] = useState<AppView>('dashboard');
   const [recentProjects, setRecentProjects] = useState<DBProject[]>([]);
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean;
@@ -89,6 +102,12 @@ function App() {
     ollamaModel,
   } = useMangaStore();
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
+  const navItems: NavItem[] = [
+    { id: "dashboard", label: "Dashboard", caption: "Inicio", icon: LayoutGrid },
+    { id: "library", label: "Biblioteca", caption: "Historico", icon: Library },
+    { id: "editor", label: "Editor", caption: currentProjectId ? "Projeto ativo" : "Sem projeto", icon: FileImage, disabled: !currentProjectId },
+    { id: "settings", label: "Ajustes", caption: "Engine e tema", icon: Settings },
+  ];
 
   async function checkOllama() {
     try {
@@ -148,67 +167,144 @@ function App() {
     <MangaBackground>
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-20 border-r border-app-border flex flex-col items-center py-8 gap-8 bg-app-surface/40 backdrop-blur-md relative z-20">
-          <div className="w-12 h-12 bg-app-surface/50 rounded-xl border border-app-border flex items-center justify-center mb-4">
-            <span className="text-xl font-bold italic tracking-tighter text-app-text-primary">MA</span>
+        <aside className="relative z-20 flex w-[108px] flex-col border-r border-app-border bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.01))] px-3 py-5 backdrop-blur-md">
+          <div className="mb-5 flex justify-center">
+            <BrandMark compact />
           </div>
-          
-          <nav className="flex flex-col gap-6 flex-1">
-            <Button variant="ghost" size="icon" onClick={() => setCurrentView('dashboard')} className={`hover:bg-app-surface/50 transition-all ${currentView === 'dashboard' ? 'text-app-text-primary bg-app-surface' : 'text-app-text-secondary'}`}>
-              <LayoutGrid size={24} />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => setCurrentView('library')} className={`hover:bg-app-surface/50 transition-all ${currentView === 'library' ? 'text-app-text-primary bg-app-surface' : 'text-app-text-secondary'}`}>
-              <Library size={24} />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => { if(currentProjectId) setCurrentView('editor'); }} className={`hover:bg-app-surface/50 transition-all ${currentView === 'editor' ? 'text-app-text-primary bg-app-surface' : 'text-app-text-secondary'} ${!currentProjectId ? 'opacity-20 cursor-not-allowed' : ''}`}>
-              <FileImage size={24} />
-            </Button>
+
+          <div className="mb-5 text-center">
+            <div className="text-[9px] font-black uppercase tracking-[0.35em] text-app-text-secondary/45">
+              MangAI
+            </div>
+            <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-app-text-secondary/35">
+              Scan flow
+            </div>
+          </div>
+
+          <nav className="flex flex-1 flex-col gap-2.5">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    if (item.disabled) {
+                      return;
+                    }
+
+                    setCurrentView(item.id);
+                  }}
+                  className={`group flex flex-col items-center gap-2 rounded-[1.45rem] border px-2.5 py-3 text-center transition-all ${
+                    isActive
+                      ? "border-app-accent/30 bg-app-surface/80 text-app-text-primary shadow-[0_18px_35px_-22px_rgba(0,0,0,0.8)]"
+                      : "border-app-border bg-app-surface/25 text-app-text-secondary hover:bg-app-surface/45 hover:text-app-text-primary"
+                  } ${item.disabled ? "cursor-not-allowed opacity-35" : ""}`}
+                >
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-[1rem] border ${isActive ? "border-app-accent/20 bg-app-bg/55" : "border-app-border bg-app-bg/35"} transition-all`}>
+                    <Icon size={18} />
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-black uppercase tracking-[0.16em]">
+                      {item.label}
+                    </div>
+                    <div className="mt-0.5 text-[7px] font-mono uppercase tracking-[0.16em] text-app-text-secondary/45 group-hover:text-app-text-secondary/70">
+                      {item.caption}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </nav>
 
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setCurrentView('settings')}
-            className={`hover:bg-app-surface/50 transition-all mt-auto ${currentView === 'settings' ? 'text-app-text-primary bg-app-surface' : 'text-app-text-secondary'}`}
-          >
-            <Settings size={24} />
-          </Button>
+          <div className="mt-3 min-w-0 overflow-hidden rounded-[1.45rem] border border-app-border bg-app-surface/30 p-2.5 shadow-[0_18px_35px_-24px_rgba(0,0,0,0.85)]">
+            <div className="mb-2 flex items-center gap-1.5 text-[7px] font-black uppercase tracking-[0.24em] text-app-text-secondary/45">
+              {translationEngine === "gemini" ? <Sparkles size={12} /> : <HardDrive size={12} />}
+              Engine
+            </div>
+
+            {translationEngine === "gemini" ? (
+              <div className="min-w-0">
+                <div className="flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[6px] font-bold uppercase tracking-[0.14em] text-emerald-400">
+                  <span className="truncate whitespace-nowrap">Padrao</span>
+                </div>
+                <div className="mt-2 truncate text-[9px] font-bold uppercase tracking-[0.08em] text-app-text-primary">
+                  Gemini
+                </div>
+              </div>
+            ) : (
+              <div className="min-w-0">
+                <div className="flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-[6px] font-bold uppercase tracking-[0.14em] text-amber-400">
+                  <span className="truncate whitespace-nowrap">Local</span>
+                </div>
+                <div className="mt-2 break-words text-[8px] font-semibold leading-snug text-app-text-primary [overflow-wrap:anywhere]">
+                  {selectedOllamaModel.label}
+                </div>
+              </div>
+            )}
+          </div>
         </aside>
 
         {/* Main Content Area */}
         <div className="relative min-h-0 flex-1 overflow-hidden bg-app-bg text-app-text-primary">
           {currentView === 'settings' && (
-            <div className="h-full p-8 overflow-y-auto">
+            <div className="h-full overflow-y-auto p-6">
               <SettingsView onBack={() => setCurrentView('dashboard')} />
             </div>
           )}
 
           {currentView === 'dashboard' && (
-            <main className="relative flex h-full flex-col overflow-y-auto p-8 pb-10">
+            <main className="relative flex h-full flex-col overflow-y-auto p-6 pb-8">
               <OnboardingOverlay />
-              <header className="flex justify-between items-center mb-12">
-                <div>
-                  <h1 className="text-4xl font-black uppercase tracking-tighter italic text-app-text-primary">{t('dashboard.title')} <span className="text-app-text-secondary/40">Translator</span></h1>
-                  <p className="text-app-text-secondary text-sm font-mono tracking-widest mt-1 uppercase">{t('dashboard.subtitle')}</p>
+              <div className="mx-auto flex w-full max-w-[1520px] flex-col">
+              <header className="mb-8 flex items-start justify-between gap-6">
+                <div className="min-w-0">
+                  <h1 className="text-3xl font-black uppercase tracking-tighter leading-none italic text-app-text-primary">{t('dashboard.title')} <span className="text-app-text-secondary/40">Translator</span></h1>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-app-text-secondary/65">{t('dashboard.subtitle')}</p>
                 </div>
 
-                <div className="flex gap-4">
-                   <div className="flex items-center gap-2 px-2 py-1 bg-app-surface/50 border border-app-border rounded-full">
-                      <button 
-                        onClick={() => setTranslationEngine("gemini")}
-                        className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "gemini" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
-                      >
-                        Gemini
-                      </button>
-                      <button 
-                        onClick={() => setTranslationEngine("ollama")}
-                        className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "ollama" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
-                      >
-                        Ollama
-                      </button>
+                <div className="flex flex-wrap justify-end gap-3">
+                   <div className="flex flex-col gap-2 rounded-[1.35rem] border border-app-border bg-app-surface/50 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setTranslationEngine("gemini")}
+                          className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "gemini" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
+                        >
+                          Gemini
+                        </button>
+                        <button 
+                          onClick={() => setTranslationEngine("ollama")}
+                          className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "ollama" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
+                        >
+                          Ollama
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-[0.16em]">
+                        {translationEngine === "gemini" ? (
+                          <>
+                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-emerald-400">
+                              Recomendado
+                            </span>
+                            <span className="text-app-text-secondary/50">
+                              Melhor qualidade e fluxo principal do app
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-amber-400">
+                              Experimental
+                            </span>
+                            <span className="text-app-text-secondary/50">
+                              Local/offline, mas pode ser lento ou inconsistente
+                            </span>
+                          </>
+                        )}
+                      </div>
                    </div>
                    {translationEngine === "gemini" && (
-                     <div className="flex items-center gap-2 px-4 py-1 bg-app-surface/50 border border-app-border rounded-full animate-in fade-in slide-in-from-right-2 duration-300">
+                     <div className="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
                         <Key size={14} className="text-app-text-secondary" />
                         <input 
                           type="password" 
@@ -220,7 +316,7 @@ function App() {
                      </div>
                    )}
                    {translationEngine === "ollama" && (
-                     <div className="flex items-center gap-2 px-4 py-1 bg-app-surface/50 border border-app-border rounded-full animate-in fade-in slide-in-from-right-2 duration-300">
+                     <div className="flex h-11 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
                         <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
                           Modelo
                         </span>
@@ -229,34 +325,34 @@ function App() {
                         </span>
                      </div>
                    )}
-                  <div className={`flex items-center gap-3 px-4 py-2 rounded-full border ${ollamaStatus ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-rose-500/20 bg-rose-500/5 text-rose-500'} transition-all`}>
-                    <span className="text-xs font-bold uppercase tracking-widest">Ollama: {ollamaStatus ? t('common.online') : t('common.offline')}</span>
+                  <div className={`flex h-11 items-center gap-3 rounded-full border px-4 py-2 ${ollamaStatus ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-rose-500/20 bg-rose-500/5 text-rose-500'} transition-all`}>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Ollama: {ollamaStatus ? t('common.online') : t('common.offline')}</span>
                   </div>
                 </div>
               </header>
 
-              <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <FileUpload onSuccess={() => setCurrentView('editor')} />
                 
                 <div 
                   onClick={() => setCurrentView('library')}
-                  className="group relative p-6 bg-app-surface/50 border border-app-border rounded-2xl hover:bg-app-surface transition-all cursor-pointer overflow-hidden"
+                  className="group relative cursor-pointer overflow-hidden rounded-[1.75rem] border border-app-border bg-app-surface/50 p-5 transition-all hover:bg-app-surface"
                 >
-                   <h3 className="text-xl font-bold mb-2 uppercase italic text-app-text-primary">{t('dashboard.history.title')}</h3>
-                   <p className="text-sm text-app-text-secondary leading-relaxed">{t('dashboard.history.description')}</p>
-                   <div className="mt-6 flex items-center justify-end text-[10px] font-bold text-app-text-secondary/40 group-hover:text-app-text-primary transition-all uppercase tracking-widest gap-1">
+                   <h3 className="mb-2 text-lg font-bold uppercase italic text-app-text-primary">{t('dashboard.history.title')}</h3>
+                   <p className="text-[13px] leading-relaxed text-app-text-secondary">{t('dashboard.history.description')}</p>
+                   <div className="mt-5 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-widest text-app-text-secondary/40 transition-all group-hover:text-app-text-primary">
                       Acessar Biblioteca <ChevronRight size={12} />
                    </div>
                 </div>
               </section>
 
-              <section className="mt-8 min-h-0">
+              <section className="mt-6 min-h-0">
                 <div className="mb-4 flex items-end justify-between">
                   <div>
-                    <h2 className="text-2xl font-black uppercase tracking-tighter italic text-app-text-primary">
+                    <h2 className="text-xl font-black uppercase tracking-tighter italic text-app-text-primary">
                       Retomar <span className="text-app-text-secondary/40">Traducoes</span>
                     </h2>
-                    <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
+                    <p className="mt-1 text-[9px] font-mono uppercase tracking-widest text-app-text-secondary/60">
                       Continue rapido sem precisar abrir a aba de historico
                     </p>
                   </div>
@@ -298,8 +394,8 @@ function App() {
                         }`}
                       >
                         {index === 0 ? (
-                          <div className="grid gap-0 lg:grid-cols-[minmax(0,1.4fr)_300px]">
-                            <div className="relative flex h-full min-w-0 flex-col justify-between p-6">
+                          <div className="grid gap-0 lg:grid-cols-[minmax(0,1.4fr)_240px]">
+                            <div className="relative flex h-full min-w-0 flex-col justify-between p-5">
                               <div>
                                 <div className="mb-4 flex items-center justify-between gap-3">
                                   <span
@@ -316,16 +412,16 @@ function App() {
                                   </span>
                                 </div>
 
-                                <h3 className="max-w-3xl break-words text-2xl font-black uppercase tracking-tight leading-tight text-app-text-primary">
+                                <h3 className="max-w-3xl break-words text-[1.7rem] font-black uppercase tracking-tight leading-tight text-app-text-primary">
                                   {project.name}
                                 </h3>
 
-                                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-app-text-secondary">
+                                <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-app-text-secondary">
                                   Volte direto para o capitulo mais recente e continue refinando os blocos sem procurar no historico.
                                 </p>
                               </div>
 
-                              <div className="relative mt-8">
+                              <div className="relative mt-6">
                                 <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
                                   <span>Progresso salvo</span>
                                   <span>{Math.round(project.progress || 0)}%</span>
@@ -337,14 +433,14 @@ function App() {
                                   />
                                 </div>
 
-                                <div className="mt-5 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
+                                <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
                                   <span>Continuar traducao</span>
                                   <Play size={12} />
                                 </div>
                               </div>
                             </div>
 
-                            <div className="relative hidden min-h-[260px] overflow-hidden border-l border-app-border lg:block">
+                            <div className="relative hidden min-h-[220px] overflow-hidden border-l border-app-border lg:block">
                               <ProjectThumbnail
                                 thumbnailPath={project.thumbnail_path}
                                 alt={`Preview de ${project.name}`}
@@ -356,8 +452,8 @@ function App() {
                             </div>
                           </div>
                         ) : (
-                          <div className="flex h-full min-w-0 flex-col p-6">
-                            <div className="relative mb-5 overflow-hidden rounded-2xl border border-app-border bg-app-surface/50 aspect-[16/10]">
+                          <div className="flex h-full min-w-0 flex-col p-5">
+                            <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-2xl border border-app-border bg-app-surface/50">
                               <ProjectThumbnail
                                 thumbnailPath={project.thumbnail_path}
                                 alt={`Preview de ${project.name}`}
@@ -385,16 +481,16 @@ function App() {
                                   </span>
                                 </div>
 
-                                <h3 className="break-words text-2xl font-black uppercase tracking-tight leading-tight text-app-text-primary">
+                                <h3 className="break-words text-[1.65rem] font-black uppercase tracking-tight leading-tight text-app-text-primary">
                                   {project.name}
                                 </h3>
 
-                                <p className="mt-3 text-sm leading-relaxed text-app-text-secondary">
+                                <p className="mt-3 text-[13px] leading-relaxed text-app-text-secondary">
                                   Projeto recente pronto para continuar do ponto em que voce parou.
                                 </p>
                               </div>
 
-                              <div className="relative mt-8">
+                              <div className="relative mt-6">
                                 <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
                                   <span>Progresso salvo</span>
                                   <span>{Math.round(project.progress || 0)}%</span>
@@ -406,7 +502,7 @@ function App() {
                                   />
                                 </div>
 
-                                <div className="mt-5 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.25em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
+                                <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
                                   <span>Continuar traducao</span>
                                   <Play size={12} />
                                 </div>
@@ -419,6 +515,7 @@ function App() {
                   </div>
                 )}
               </section>
+              </div>
             </main>
           )}
 

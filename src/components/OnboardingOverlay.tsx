@@ -14,7 +14,7 @@ const OnboardingOverlay: React.FC = () => {
 
   if (hasFinishedOnboarding) return null;
 
-  // Passo 1: Configurar a Chave (Apenas se usar Gemini)
+  // Passo 1: Configurar a Chave (Gemini e o fluxo recomendado do MVP)
   const needsApiKey = translationEngine === 'gemini' && !apiKey;
 
   return (
@@ -39,7 +39,7 @@ const OnboardingOverlay: React.FC = () => {
                 <div>
                   <h4 className="font-black uppercase tracking-tighter text-sm italic">Primeiro Passo</h4>
                   <p className="text-[11px] leading-relaxed font-medium mt-1">
-                    Cole sua <span className="underline underline-offset-2 decoration-2 decoration-amber-500">Chave do Gemini</span> no campo acima para liberar o rascunho por IA.
+                    Cole sua <span className="underline underline-offset-2 decoration-2 decoration-amber-500">Chave do Gemini</span> no campo acima para liberar o rascunho por IA. Este e o motor recomendado para a melhor experiencia inicial.
                   </p>
                 </div>
               </div>
@@ -88,7 +88,7 @@ const OnboardingOverlay: React.FC = () => {
               <h4 className="font-black uppercase tracking-tighter text-3xl italic mb-3">Tudo Pronto!</h4>
               <p className="text-sm leading-relaxed mb-8 opacity-90 font-medium">
                 Sua chave está ativa e o sistema está online. <br/>
-                <span className="bg-white/20 px-2 py-0.5 rounded">Importe seu primeiro capítulo</span> e deixe a IA fazer o trabalho pesado.
+                <span className="bg-white/20 px-2 py-0.5 rounded">Importe seu primeiro capítulo</span> e deixe o Gemini cuidar do rascunho inicial.
               </p>
 
               <Button 

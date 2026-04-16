@@ -1,8 +1,35 @@
 const VALID_BLOCK_TYPES = new Set(["rect", "outside", "thought", "double", "none"]);
+const OLLAMA_REQUEST_TIMEOUT_MS = 8 * 60 * 1000;
+
+const OLLAMA_TRANSLATION_SCHEMA = {
+  type: "object",
+  properties: {
+    translations: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          text: { type: "string" },
+          type: {
+            type: "string",
+            enum: ["rect", "outside", "thought", "double", "none"],
+          },
+        },
+        required: ["text", "type"],
+      },
+    },
+  },
+  required: ["translations"],
+};
 
 export interface OllamaTranslationBlock {
   text: string;
   type?: string;
+}
+
+export interface OllamaStatusUpdate {
+  stage: "connecting" | "processing" | "parsing";
+  message: string;
 }
 
 const OLLAMA_SYSTEM_PROMPT = `Voce e um extrator de texto para traducao de manga.
@@ -19,7 +46,7 @@ REGRAS:
   - "double" para balao duplo/sobreposto
   - "none" quando nao tiver certeza
 
-MODELO:
+SCHEMA JSON OBRIGATORIO:
 {
   "translations": [
     { "text": "fala 1", "type": "none" },
@@ -30,7 +57,9 @@ MODELO:
 Se a pagina nao tiver texto traduzivel, retorne {"translations": []}.`;
 
 const OLLAMA_USER_PROMPT =
-  "Analise esta pagina de manga e retorne somente o JSON solicitado.";
+  `Analise esta pagina de manga e retorne somente o JSON solicitado.
+Siga exatamente este schema:
+${JSON.stringify(OLLAMA_TRANSLATION_SCHEMA)}`;
 
 const cleanJson = (text: string) => {
   const trimmed = text.trim();
@@ -146,34 +175,71 @@ const parseOllamaResponse = (rawText: string): OllamaTranslationBlock[] => {
   return fallbackParseBlocks(rawText);
 };
 
-const extractStreamText = (line: string) => {
-  try {
-    const json = JSON.parse(line) as {
-      message?: { content?: string };
-    };
-    return json.message?.content ?? "";
-  } catch (error) {
-    console.warn("Linha de stream do Ollama ignorada.", error);
-    return "";
+const salvageBlocksFromBrokenJson = (rawText: string): OllamaTranslationBlock[] => {
+  const blocks: OllamaTranslationBlock[] = [];
+  const regex =
+    /"text"\s*:\s*"((?:\\.|[^"\\])*)"(?:[\s\S]*?"type"\s*:\s*"((?:\\.|[^"\\])*)")?/g;
+
+  for (const match of rawText.matchAll(regex)) {
+    const text = JSON.parse(`"${match[1]}"`) as string;
+    const maybeType = match[2] ? (JSON.parse(`"${match[2]}"`) as string) : undefined;
+
+    if (!text.trim()) {
+      continue;
+    }
+
+    blocks.push({
+      text: text.trim(),
+      type: maybeType && VALID_BLOCK_TYPES.has(maybeType) ? maybeType : "none",
+    });
   }
+
+  return blocks;
 };
 
 export const translateImage = async (
   base64Image: string,
   model: string,
-  onChunk?: (chunk: string) => void
+  onChunk?: (chunk: string) => void,
+  onStatusChange?: (update: OllamaStatusUpdate) => void
 ) => {
+  const requestLabel = `[ollama] ${model} #${Date.now()}`;
+  let timerRunning = false;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const endTimer = () => {
+    if (!timerRunning) {
+      return;
+    }
+
+    console.timeEnd(requestLabel);
+    timerRunning = false;
+  };
+
   try {
-    const response = await fetch("http://localhost:11434/api/chat", {
+    onStatusChange?.({
+      stage: "connecting",
+      message: `Preparando o envio da imagem para ${model}...`,
+    });
+    console.time(requestLabel);
+    timerRunning = true;
+
+    const controller = new AbortController();
+    timeoutId = setTimeout(() => controller.abort(), OLLAMA_REQUEST_TIMEOUT_MS);
+
+    const fetchPromise = fetch("http://localhost:11434/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      signal: controller.signal,
       body: JSON.stringify({
         model,
-        stream: true,
+        stream: false,
+        think: false,
+        format: OLLAMA_TRANSLATION_SCHEMA,
         options: {
-          temperature: 0.1,
+          temperature: 0,
         },
         messages: [
           {
@@ -189,8 +255,18 @@ export const translateImage = async (
       }),
     });
 
+    onStatusChange?.({
+      stage: "processing",
+      message: `${model} recebeu a imagem. Agora ele esta pensando localmente, o que pode demorar bastante em CPU.`,
+    });
+
+    console.info(`${requestLabel} imagem enviada, aguardando resposta completa...`);
+
+    const response = await fetchPromise;
+
     if (!response.ok) {
       const errorText = await response.text();
+      endTimer();
 
       if (errorText.toLowerCase().includes("not found")) {
         throw new Error(`Modelo do Ollama nao encontrado. Execute: ollama pull ${model}`);
@@ -199,51 +275,52 @@ export const translateImage = async (
       throw new Error(`Erro no Ollama (${response.status}): ${errorText}`);
     }
 
-    const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
-    let fullResponse = "";
-    let pendingChunk = "";
+    const payload = (await response.json()) as {
+      message?: { content?: string };
+      response?: string;
+    };
+    console.info(`${requestLabel} resposta completa recebida.`);
 
-    if (!reader) {
-      return [];
+    const fullResponse = payload.message?.content ?? payload.response ?? "";
+    if (fullResponse) {
+      onChunk?.(fullResponse);
     }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
+    onStatusChange?.({
+      stage: "parsing",
+      message: "Resposta recebida. Organizando os blocos da pagina...",
+    });
 
-      pendingChunk += decoder.decode(value, { stream: true });
-      const lines = pendingChunk.split("\n");
-      pendingChunk = lines.pop() ?? "";
-
-      for (const line of lines) {
-        if (!line.trim()) {
-          continue;
-        }
-
-        const parsedLine = extractStreamText(line);
-        if (!parsedLine) {
-          continue;
-        }
-
-        fullResponse += parsedLine;
-        onChunk?.(parsedLine);
+    let parsed = parseOllamaResponse(fullResponse);
+    if (parsed.length === 0 && fullResponse.trim()) {
+      const salvaged = salvageBlocksFromBrokenJson(fullResponse);
+      if (salvaged.length > 0) {
+        console.warn(`${requestLabel} JSON veio quebrado; recuperando ${salvaged.length} bloco(s) via salvage.`);
+        parsed = salvaged;
+      } else {
+        console.warn(`${requestLabel} resposta bruta sem blocos parseados:`, fullResponse.slice(0, 1200));
       }
     }
 
-    if (pendingChunk.trim()) {
-      const parsedLine = extractStreamText(pendingChunk);
-      if (parsedLine) {
-        fullResponse += parsedLine;
-        onChunk?.(parsedLine);
-      }
-    }
-
-    return parseOllamaResponse(fullResponse);
+    endTimer();
+    console.info(`${requestLabel} retornou ${parsed.length} bloco(s).`);
+    return parsed;
   } catch (error) {
+    endTimer();
+
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(
+        `Tempo limite excedido ao aguardar o Ollama (${Math.round(
+          OLLAMA_REQUEST_TIMEOUT_MS / 60000
+        )} min).`
+      );
+    }
+
     console.error("Erro na traducao com Ollama:", error);
     throw error;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
   }
 };

@@ -1,0 +1,23 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="brandGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 44) rotate(90) scale(180)">
+      <stop stop-color="white" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="brandStroke" x1="40" y1="36" x2="212" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7F6F2"/>
+      <stop offset="1" stop-color="#B8B8B2"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="18" y="18" width="220" height="220" rx="60" fill="#111111"/>
+  <rect x="18" y="18" width="220" height="220" rx="60" fill="url(#brandGlow)"/>
+  <rect x="34" y="34" width="188" height="188" rx="44" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="2"/>
+
+  <path d="M44 74L126 198" stroke="#F7F6F2" stroke-opacity="0.08" stroke-width="3"/>
+  <path d="M138 48L218 166" stroke="#F7F6F2" stroke-opacity="0.08" stroke-width="3"/>
+
+  <path d="M60 178V72L103 122L128 86L153 122L196 72V178" stroke="url(#brandStroke)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M70 198H186" stroke="url(#brandStroke)" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="188" cy="60" r="15" fill="#F7F6F2"/>
+</svg>

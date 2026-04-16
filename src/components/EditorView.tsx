@@ -31,6 +31,41 @@ import {
   Flag,
 } from "lucide-react";
 
+const MAX_AI_IMAGE_WIDTH = 1600;
+const AI_IMAGE_QUALITY = 0.88;
+
+const optimizeImageForAi = async (dataUrl: string) => {
+  if (!dataUrl) {
+    return "";
+  }
+
+  return new Promise<string>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = image.width > MAX_AI_IMAGE_WIDTH ? MAX_AI_IMAGE_WIDTH / image.width : 1;
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d");
+      if (!context) {
+        reject(new Error("Nao foi possivel preparar a imagem para a IA."));
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+      const optimizedDataUrl = canvas.toDataURL("image/jpeg", AI_IMAGE_QUALITY);
+      resolve(optimizedDataUrl.split(",")[1] ?? "");
+    };
+
+    image.onerror = () => reject(new Error("Falha ao otimizar imagem para a IA."));
+    image.src = dataUrl;
+  });
+};
+
 const ZoomControls = () => {
   const { zoomIn, zoomOut, resetTransform } = useControls();
   return (
@@ -89,6 +124,9 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const currentPage = pages[currentPageIndex];
   const isLastPage = currentPageIndex === pages.length - 1;
   const [isTranslating, setIsTranslating] = useState(false);
+  const [translationStatus, setTranslationStatus] = useState("Preparando traducao...");
+  const [translationStartedAt, setTranslationStartedAt] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [imgBase64, setImgBase64] = useState<string>("");
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -105,6 +143,19 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   });
 
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+
+  useEffect(() => {
+    if (!isTranslating || !translationStartedAt) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - translationStartedAt) / 1000));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [isTranslating, translationStartedAt]);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -194,19 +245,48 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       return;
     }
     setIsTranslating(true);
+    setTranslationStartedAt(Date.now());
+    setTranslationStatus(
+      translationEngine === "ollama"
+        ? `Otimizando imagem para ${ollamaModel}...`
+        : "Enviando imagem para o Gemini..."
+    );
     try {
-      const base64 = imgBase64.split(",")[1];
-      await translatePage(translationEngine, apiKey, ollamaModel, base64, (results) => {
-        const newBlocks = results.map((res) => ({
-          id: Math.random().toString(36).substring(7),
-          text: res.text,
-          type: (res.type ?? "none") as BlockType,
-        }));
-        updatePage(currentPage.id, {
-          blocks: [...(currentPage.blocks || []), ...newBlocks],
-          status: "completed",
-        });
-      });
+      const base64 = await optimizeImageForAi(imgBase64);
+      await translatePage(
+        translationEngine,
+        apiKey,
+        ollamaModel,
+        base64,
+        (results) => {
+          if (results.length === 0) {
+            setStatusModal({
+              isOpen: true,
+              title: "Resposta Vazia da IA",
+              description:
+                translationEngine === "ollama"
+                  ? "O modelo local respondeu, mas nao devolveu blocos utilizaveis. Isso e comum em modelos pequenos/CPU-only. Tente outra pagina ou use Gemini."
+                  : "A IA respondeu sem blocos utilizaveis para esta pagina.",
+              type: "warning",
+            });
+            return;
+          }
+
+          const newBlocks = results.map((res) => ({
+            id: Math.random().toString(36).substring(7),
+            text: res.text,
+            type: (res.type ?? "none") as BlockType,
+          }));
+          updatePage(currentPage.id, {
+            blocks: [...(currentPage.blocks || []), ...newBlocks],
+            status: "completed",
+          });
+        },
+        undefined,
+        (status) => {
+          setTranslationStatus(status.message);
+        }
+      );
     } catch (error: any) {
       let friendlyMessage = "Ocorreu um erro inesperado ao processar a página.";
       const errorStr = error.toString().toLowerCase();
@@ -217,6 +297,8 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         friendlyMessage = "Limite de uso atingido ou muitas requisições. Tente novamente em um minuto.";
       } else if (errorStr.includes("network") || errorStr.includes("fetch")) {
         friendlyMessage = "Erro de conexão. Verifique sua internet ou o status dos servidores da IA.";
+      } else if (errorStr.includes("tempo limite") || errorStr.includes("timeout")) {
+        friendlyMessage = "O Ollama demorou demais para responder. Em CPU isso pode acontecer; tente uma pagina mais simples ou use Gemini.";
       } else if (errorStr.includes("ollama nao encontrado") || errorStr.includes("failed to fetch")) {
         friendlyMessage = "Nao consegui falar com o Ollama. Verifique se ele esta aberto e rodando na sua maquina.";
       } else if (errorStr.includes("modelo do ollama nao encontrado") || errorStr.includes("not found")) {
@@ -231,6 +313,8 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       });
     } finally {
       setIsTranslating(false);
+      setTranslationStartedAt(null);
+      setTranslationStatus("Preparando traducao...");
     }
   };
 
@@ -421,9 +505,22 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           {isTranslating && (
             <div className="absolute inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-app-bg/60">
               <CyberLoading />
-              <span className="animate-pulse text-[10px] font-mono uppercase tracking-[0.4em] text-app-text-primary">
-                AI Engine Processing
-              </span>
+              <div className="flex max-w-md flex-col items-center gap-2 text-center">
+                <span className="animate-pulse text-[10px] font-mono uppercase tracking-[0.4em] text-app-text-primary">
+                  AI Engine Processing
+                </span>
+                <span className="text-xs text-app-text-secondary">
+                  {translationStatus}
+                </span>
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-app-text-secondary/70">
+                  {elapsedSeconds}s decorridos
+                </span>
+                {translationEngine === "ollama" && (
+                  <span className="text-[10px] text-app-text-secondary/60">
+                    Ollama local em CPU pode levar 1-5 minutos por pagina.
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
