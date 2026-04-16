@@ -72,7 +72,7 @@ export const OLLAMA_MODEL_OPTIONS: OllamaModelOption[] = [
     label: "TranslateGemma 4B",
     sizeLabel: "3.3 GB",
     profile: "legacy",
-    description: "Focado em traducao, mas eu deixei como opcao secundaria por ter ficado mais lento no seu fluxo.",
+    description: "Opcao voltada para traducao. Vale o teste se voce quiser comparar com os modelos mais novos.",
     installCommand: "ollama pull translategemma:4b",
     requiresOllama: "recente",
   },
