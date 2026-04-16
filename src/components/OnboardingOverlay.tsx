@@ -1,66 +1,62 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useMangaStore } from '@/store/useMangaStore';
-import { Lightbulb, X, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMangaStore } from "@/store/useMangaStore";
+import { Lightbulb, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const OnboardingOverlay: React.FC = () => {
-  const { 
-    apiKey, 
-    hasFinishedOnboarding, 
-    setHasFinishedOnboarding,
-    translationEngine
-  } = useMangaStore();
+  const { apiKey, hasFinishedOnboarding, setHasFinishedOnboarding, translationEngine } =
+    useMangaStore();
 
   if (hasFinishedOnboarding) return null;
 
-  // Passo 1: Configurar a Chave (Gemini e o fluxo recomendado do MVP)
-  const needsApiKey = translationEngine === 'gemini' && !apiKey;
+  const needsApiKey = translationEngine === "gemini" && !apiKey;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] pointer-events-none flex items-center justify-center">
+      <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center">
         {needsApiKey ? (
-          /* Ajustado para right-[11rem] para tentar centralizar sob o input da API Key */
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute top-28 right-[11rem] w-80 pointer-events-auto"
+            className="pointer-events-auto absolute right-[11rem] top-28 w-80"
           >
-            <div className="bg-app-surface text-app-text-primary p-6 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative border border-app-border">
-              {/* Seta (tail) do balão apontando para o campo ACIMA */}
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-app-surface border-t border-l border-app-border rotate-45" />
-              
-              <div className="flex items-start gap-3 mb-3">
-                <div className="p-2 bg-amber-500/10 rounded-xl">
+            <div className="relative rounded-[2.5rem] border border-app-border bg-app-surface p-6 text-app-text-primary shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+              <div className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-app-border bg-app-surface" />
+
+              <div className="mb-3 flex items-start gap-3">
+                <div className="rounded-xl bg-amber-500/10 p-2">
                   <Lightbulb className="text-amber-600" size={20} />
                 </div>
                 <div>
-                  <h4 className="font-black uppercase tracking-tighter text-sm italic">Primeiro Passo</h4>
-                  <p className="text-[11px] leading-relaxed font-medium mt-1">
-                    Cole sua <span className="underline underline-offset-2 decoration-2 decoration-amber-500">Chave do Gemini</span> no campo acima para liberar o rascunho por IA. Este e o motor recomendado para a melhor experiencia inicial.
+                  <h4 className="text-sm font-black uppercase tracking-tighter italic">
+                    Primeiro passo
+                  </h4>
+                  <p className="mt-1 text-[11px] font-medium leading-relaxed">
+                    Cole sua{" "}
+                    <span className="underline decoration-2 decoration-amber-500 underline-offset-2">
+                      chave do Gemini
+                    </span>{" "}
+                    no campo acima para liberar o rascunho por IA. Se estiver testando o app pela
+                    primeira vez, este costuma ser o caminho mais simples.
                   </p>
                 </div>
               </div>
 
-              {/* Link para o futuro tutorial */}
-              <div className="mt-3 px-3 py-2 bg-amber-500/5 rounded-2xl border border-amber-500/10">
-                <a 
-                  href="#" 
-                  onClick={(e) => e.preventDefault()} 
-                  className="flex items-center justify-between group cursor-help"
-                >
-                  <span className="text-[10px] font-bold uppercase tracking-tight text-amber-700">Como conseguir uma chave?</span>
-                  <ExternalLink size={12} className="text-amber-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </a>
+              <div className="mt-3 rounded-2xl border border-amber-500/10 bg-amber-500/5 px-3 py-2">
+                <span className="text-[10px] font-bold uppercase tracking-tight text-amber-700">
+                  Ainda nao tem chave? Crie uma no Google AI Studio e volte aqui.
+                </span>
               </div>
 
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-app-border">
-                <span className="text-[9px] font-mono text-app-text-secondary/40 uppercase tracking-widest">Aguardando chave...</span>
-                <button 
+              <div className="mt-4 flex items-center justify-between border-t border-app-border pt-4">
+                <span className="text-[9px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                  Aguardando chave...
+                </span>
+                <button
                   onClick={() => setHasFinishedOnboarding(true)}
-                  className="p-2 hover:bg-app-surface/50 rounded-full transition-colors text-app-text-secondary/40 hover:text-app-text-primary"
+                  className="rounded-full p-2 text-app-text-secondary/40 transition-colors hover:bg-app-surface/50 hover:text-app-text-primary"
                 >
                   <X size={16} />
                 </button>
@@ -68,39 +64,42 @@ const OnboardingOverlay: React.FC = () => {
             </div>
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-full max-w-md p-6 pointer-events-auto"
+            className="pointer-events-auto w-full max-w-md p-6"
           >
-            <div className="bg-emerald-500 text-white p-10 rounded-[3.5rem] shadow-[0_30px_60px_-15px_rgba(16,185,129,0.5)] text-center relative border-4 border-white/20">
-              <div className="flex justify-center mb-6">
-                <motion.div 
+            <div className="relative rounded-[3.5rem] border-4 border-white/20 bg-emerald-500 p-10 text-center text-white shadow-[0_30px_60px_-15px_rgba(16,185,129,0.5)]">
+              <div className="mb-6 flex justify-center">
+                <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ repeat: Infinity, duration: 3 }}
-                  className="w-20 h-20 bg-white/20 rounded-[2rem] flex items-center justify-center backdrop-blur-md"
+                  className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-white/20 backdrop-blur-md"
                 >
                   <Lightbulb size={40} className="fill-white/20" />
                 </motion.div>
               </div>
-              
-              <h4 className="font-black uppercase tracking-tighter text-3xl italic mb-3">Tudo Pronto!</h4>
-              <p className="text-sm leading-relaxed mb-8 opacity-90 font-medium">
-                Sua chave está ativa e o sistema está online. <br/>
-                <span className="bg-white/20 px-2 py-0.5 rounded">Importe seu primeiro capítulo</span> e deixe o Gemini cuidar do rascunho inicial.
+
+              <h4 className="mb-3 text-3xl font-black uppercase tracking-tighter italic">
+                Tudo pronto!
+              </h4>
+              <p className="mb-8 text-sm font-medium leading-relaxed opacity-90">
+                Sua chave esta ativa e o app ja pode gerar o primeiro rascunho. <br />
+                <span className="rounded bg-white/20 px-2 py-0.5">Importe um capitulo</span> e
+                comece a revisar.
               </p>
 
-              <Button 
+              <Button
                 onClick={() => setHasFinishedOnboarding(true)}
-                className="w-full bg-white text-emerald-600 hover:bg-white/90 font-black uppercase tracking-[0.2em] py-8 rounded-[2rem] text-sm shadow-xl hover:shadow-2xl transition-all"
+                className="w-full rounded-[2rem] bg-white py-8 text-sm font-black uppercase tracking-[0.2em] text-emerald-600 shadow-xl transition-all hover:bg-white/90 hover:shadow-2xl"
               >
-                VAMOS COMEÇAR
+                Vamos comecar
               </Button>
 
-              <button 
+              <button
                 onClick={() => setHasFinishedOnboarding(true)}
-                className="absolute top-8 right-8 opacity-40 hover:opacity-100 transition-opacity p-2 hover:bg-white/10 rounded-full"
+                className="absolute right-8 top-8 rounded-full p-2 opacity-40 transition-opacity hover:bg-white/10 hover:opacity-100"
               >
                 <X size={20} />
               </button>

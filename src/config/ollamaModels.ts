@@ -26,7 +26,7 @@ export const OLLAMA_MODEL_OPTIONS: OllamaModelOption[] = [
     label: "Qwen 3 VL 4B",
     sizeLabel: "3.3 GB",
     profile: "equilibrado",
-    description: "Melhor equilibrio entre qualidade, OCR e velocidade para o MVP.",
+    description: "Melhor equilibrio entre qualidade, OCR e velocidade para a maioria dos usos.",
     installCommand: "ollama pull qwen3-vl:4b",
     requiresOllama: "0.12.7+",
     recommended: true,

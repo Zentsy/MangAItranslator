@@ -59,7 +59,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
     if (imagePaths.length === 0) {
       setStatusModal({
         isOpen: true,
-        title: "Pasta Vazia",
+        title: "Pasta vazia",
         description: "Nenhuma imagem suportada foi encontrada.",
         type: "warning",
       });
@@ -93,8 +93,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
       console.error("Erro no upload nativo:", error);
       setStatusModal({
         isOpen: true,
-        title: "Erro no Processamento",
-        description: "Falha ao processar os arquivos e copiar para o cache.",
+        title: "Nao foi possivel preparar o capitulo",
+        description: "Tente novamente em instantes ou escolha outra pasta.",
         type: "error",
       });
     } finally {
@@ -106,8 +106,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
     if (imagePaths.length === 0) {
       setStatusModal({
         isOpen: true,
-        title: "Imagens não encontradas",
-        description: "Certifique-se de que a pasta contém imagens suportadas (JPG, PNG).",
+        title: "Imagens nao encontradas",
+        description: "Verifique se a pasta tem imagens suportadas, como JPG, PNG ou WEBP.",
         type: "warning",
       });
       return;
@@ -139,8 +139,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
       console.error("Erro ao ler a pasta selecionada:", error);
       setStatusModal({
         isOpen: true,
-        title: "Erro de Leitura",
-        description: "Nao foi possivel ler a pasta selecionada.",
+        title: "Nao foi possivel abrir a pasta",
+        description: "Tente novamente ou selecione uma pagina manualmente.",
         type: "error",
       });
     }
@@ -169,8 +169,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
       console.error("Erro ao descobrir paginas vizinhas:", error);
       setStatusModal({
         isOpen: true,
-        title: "Erro de Vizinhos",
-        description: "Não foi possível carregar as outras páginas da pasta.",
+        title: "Nao foi possivel carregar as paginas",
+        description: "Tente selecionar a pasta do capitulo inteira.",
         type: "error",
       });
     }
@@ -195,11 +195,11 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
 
         <div>
           <h3 className="text-xl font-bold uppercase tracking-tight text-app-text-primary">
-            {isProcessing ? "Copiando para o Cache..." : "Selecionar Capitulo"}
+            {isProcessing ? "Preparando as imagens..." : "Selecionar capitulo"}
           </h3>
           <p className="mt-2 max-w-[340px] text-[14px] leading-relaxed text-app-text-secondary/60">
             {isProcessing
-              ? "Isso economizara seu SSD no futuro"
+              ? "Estamos organizando tudo para voce continuar sem se preocupar com a estrutura dos arquivos."
               : "Abra a pasta inteira do capitulo ou selecione uma pagina para puxar automaticamente as vizinhas."}
           </p>
         </div>
@@ -209,10 +209,10 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
             <Button
               type="button"
               onClick={handlePickFolder}
-              className="h-11 gap-2 bg-app-text-primary px-5 text-app-bg hover:opacity-90 shadow-lg"
+              className="h-11 gap-2 bg-app-text-primary px-5 text-app-bg shadow-lg hover:opacity-90"
             >
               <FolderOpen size={14} />
-              Selecionar Pasta
+              Selecionar pasta
             </Button>
             <Button
               type="button"
@@ -221,7 +221,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
               className="h-11 gap-2 border-app-border px-5 text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
             >
               <Images size={14} />
-              Selecionar Uma Pagina
+              Selecionar uma pagina
             </Button>
           </div>
         )}
@@ -229,7 +229,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onSuccess }) => {
         {!isProcessing && (
           <div className="mt-2 flex items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-3 py-1 text-[9px] font-mono uppercase tracking-[0.18em] text-app-text-secondary/40">
             <FileImage size={12} />
-            SQLite + Cache Local Ativos
+            Salvo localmente neste app
           </div>
         )}
       </div>

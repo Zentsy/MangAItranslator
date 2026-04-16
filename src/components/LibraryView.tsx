@@ -84,7 +84,7 @@ const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
             Biblioteca <span className="text-app-text-secondary/20">Local</span>
           </h2>
           <p className="mt-1 text-xs font-mono uppercase tracking-widest text-app-text-secondary/40">
-            Sincronizacao SQLite Ativa
+            Seus projetos salvos neste computador
           </p>
         </div>
 
@@ -173,10 +173,10 @@ const LibraryView: React.FC<LibraryViewProps> = ({ onOpenProject }) => {
         title="Excluir Capitulo?"
         description={
           projectToDelete
-            ? `Isso vai remover "${projectToDelete.name}" do historico local e apagar o cache salvo deste projeto.`
+            ? `Isso vai remover "${projectToDelete.name}" da biblioteca e apagar os arquivos salvos deste projeto neste computador.`
             : ""
         }
-        confirmText="Excluir do Historico"
+        confirmText="Excluir projeto"
         variant="destructive"
       />
     </div>

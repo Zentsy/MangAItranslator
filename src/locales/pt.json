@@ -2,47 +2,47 @@
   "common": {
     "back": "Voltar",
     "export": "Exportar .txt",
-    "translate": "Traduzir Página",
+    "translate": "Traduzir pagina",
     "ollama": "Ollama",
     "online": "Online",
     "offline": "Offline",
     "start": "Iniciar",
-    "next": "Próxima Página",
-    "previous": "Página Anterior",
+    "next": "Proxima pagina",
+    "previous": "Pagina anterior",
     "characters": "Caracteres",
     "confirmDelete": "Deseja realmente excluir este projeto e todo o seu progresso?",
     "cancel": "Cancelar",
     "finish": "Finalizar"
   },
   "dashboard": {
-    "title": "MangAI",
-    "subtitle": "Terminal de Tradução Visiva v0.1",
+    "title": "MangAI Translator",
+    "subtitle": "Traducao assistida para manga e quadrinhos",
     "newTranslation": {
-      "title": "Nova Tradução",
-      "description": "Inicie o workflow de tradução carregando um novo capítulo.",
+      "title": "Novo projeto",
+      "description": "Comece carregando um capitulo para traduzir e revisar.",
       "button": "INICIAR PROJETO"
     },
     "history": {
-      "title": "Histórico",
-      "description": "Acesse capítulos traduzidos anteriormente (Em breve)."
+      "title": "Historico",
+      "description": "Abra projetos salvos neste computador e continue de onde parou."
     }
   },
   "editor": {
-    "pageCounter": "Página {{current}} / {{total}}",
+    "pageCounter": "Pagina {{current}} / {{total}}",
     "signals": {
-      "rectangle": "[] Retângulo",
+      "rectangle": "[] Retangulo",
       "outside": "{} Fora",
       "thought": "() Pensamento",
       "double": "// Duplo"
     },
-    "placeholder": "A tradução aparecerá aqui usando o sistema de sinais...\nEx: [] O vento soprava forte naquela noite.\n{ (O som das folhas) }\n() Será que ele virá?",
+    "placeholder": "A traducao aparecera aqui usando o sistema de sinais...\nEx: [] O vento soprava forte naquela noite.\n{ (O som das folhas) }\n() Sera que ele vira?",
     "hints": {
-      "image": "Scroll para Zoom • Arraste para Mover"
+      "image": "Scroll para zoom • Arraste para mover"
     },
     "finishModal": {
-      "title": "Finalizar Capítulo?",
-      "description": "Esta ação exportará sua tradução final e removerá os arquivos temporários para liberar espaço em disco. O projeto será removido da sua lista ativa.",
-      "confirm": "Finalizar e Limpar"
+      "title": "Finalizar capitulo?",
+      "description": "Isso vai exportar sua traducao e remover os arquivos temporarios deste projeto para liberar espaco.",
+      "confirm": "Finalizar e limpar"
     }
   }
 }

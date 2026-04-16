@@ -261,10 +261,10 @@ function App() {
                         ) : (
                           <>
                             <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-amber-400">
-                              Experimental
+                              Modo local
                             </span>
                             <span className="max-w-[260px] text-app-text-secondary/50">
-                              Local/offline, mas pode ser lento ou inconsistente
+                              Roda no seu PC e pode variar bastante de velocidade
                             </span>
                           </>
                         )}
