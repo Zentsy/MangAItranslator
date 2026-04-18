@@ -20,10 +20,10 @@ const OnboardingOverlay: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="pointer-events-auto absolute right-[11rem] top-28 w-80"
+            className="pointer-events-auto absolute right-[6.75rem] top-28 w-80"
           >
             <div className="relative rounded-[2.5rem] border border-app-border bg-app-surface p-6 text-app-text-primary shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-              <div className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-app-border bg-app-surface" />
+              <div className="absolute -top-2 left-[73%] h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-app-border bg-app-surface" />
 
               <div className="mb-3 flex items-start gap-3">
                 <div className="rounded-xl bg-amber-500/10 p-2">
