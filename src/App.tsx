@@ -271,7 +271,10 @@ function App() {
                       </div>
                    </div>
                    {translationEngine === "gemini" && (
-                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                     <div
+                        data-gemini-key-anchor="true"
+                        className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300"
+                      >
                         <Key size={14} className="text-app-text-secondary" />
                         <input 
                           type="password" 

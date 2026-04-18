@@ -29,6 +29,7 @@
   },
   "bundle": {
     "active": true,
+    "publisher": "Zentsy",
     "targets": "nsis",
     "windows": {
       "webviewInstallMode": {
