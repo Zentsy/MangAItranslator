@@ -49,6 +49,22 @@ cd src-tauri
 cargo check
 ```
 
+## Gerando o instalador Windows
+
+Para distribuir como app de verdade no Windows, o fluxo e gerar o instalador do Tauri:
+
+```bash
+npm run tauri -- build
+```
+
+O artefato principal do beta fica em:
+
+```text
+src-tauri/target/release/bundle/nsis/
+```
+
+O usuario final nao precisa rodar `npm`, `Node.js` ou `Rust`. Ele so baixa o instalador gerado e abre o app normalmente.
+
 ## Como testar rapido
 
 1. Abra o app.
