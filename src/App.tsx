@@ -12,7 +12,7 @@ import BrandMark from "@/components/BrandMark";
 import UpdateModal from "@/components/UpdateModal";
 import { Button } from "@/components/ui/button";
 import { getOllamaModelOption } from "@/config/ollamaModels";
-import { useAppUpdater } from "@/hooks/useAppUpdater";
+import { useAppUpdater, type UpdateCheckResult } from "@/hooks/useAppUpdater";
 import { useMangaStore } from "@/store/useMangaStore";
 import { dbService, DBProject, resolveAssetUrl } from "@/services/dbService";
 import {
@@ -146,6 +146,24 @@ function App() {
     }
   }, [updater.availableUpdate, updater.isInstalling]);
 
+  const handleManualUpdateCheck = async (): Promise<UpdateCheckResult> => {
+    const result = await updater.checkForUpdates();
+
+    if (result.status === "available") {
+      setIsUpdateModalOpen(true);
+      return result;
+    }
+
+    setStatusModal({
+      isOpen: true,
+      title: result.status === "none" ? "Sem atualizacao por enquanto" : "Nao foi possivel verificar",
+      description: result.message,
+      type: result.status === "none" ? "info" : "warning",
+    });
+
+    return result;
+  };
+
   const handleOpenProject = async (projectId: string) => {
     try {
       const pages = await dbService.getProjectPages(projectId);
@@ -235,7 +253,7 @@ function App() {
                 updateStatusMessage={updater.statusMessage}
                 lastUpdateCheck={updater.lastCheckedAt}
                 updateError={updater.lastError}
-                onCheckForUpdates={() => updater.checkForUpdates()}
+                onCheckForUpdates={handleManualUpdateCheck}
                 onInstallUpdate={updater.installUpdate}
               />
             </div>
@@ -256,7 +274,7 @@ function App() {
                 <div className="flex flex-wrap items-start justify-start gap-3 xl:max-w-[760px] xl:justify-end">
                    <button
                       type="button"
-                      onClick={() => void updater.checkForUpdates()}
+                      onClick={() => void handleManualUpdateCheck()}
                       className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-app-text-secondary transition-all hover:bg-app-surface hover:text-app-text-primary"
                     >
                       <RefreshCw size={14} className={updater.isChecking ? "animate-spin" : ""} />

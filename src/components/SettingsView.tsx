@@ -8,7 +8,7 @@ import { useMangaStore } from "@/store/useMangaStore";
 import { useTheme } from "@/contexts/ThemeContext";
 import { dbService } from "@/services/dbService";
 import { Button } from "@/components/ui/button";
-import type { AvailableUpdateInfo } from "@/hooks/useAppUpdater";
+import type { AvailableUpdateInfo, UpdateCheckResult } from "@/hooks/useAppUpdater";
 import {
   Settings,
   Trash2,
@@ -35,7 +35,7 @@ interface SettingsViewProps {
   updateStatusMessage: string | null;
   lastUpdateCheck: string | null;
   updateError: string | null;
-  onCheckForUpdates: () => Promise<AvailableUpdateInfo | null>;
+  onCheckForUpdates: () => Promise<UpdateCheckResult>;
   onInstallUpdate: () => Promise<boolean>;
 }
 

@@ -13,6 +13,12 @@ export interface AvailableUpdateInfo {
   body?: string;
 }
 
+export interface UpdateCheckResult {
+  status: "available" | "none" | "error";
+  message: string;
+  update: AvailableUpdateInfo | null;
+}
+
 const normalizeUpdaterError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   const lower = message.toLowerCase();
@@ -71,8 +77,13 @@ export const useAppUpdater = () => {
 
       if (!update) {
         setAvailableUpdate(null);
-        setStatusMessage("Voce ja esta na versao mais recente.");
-        return null;
+        const result: UpdateCheckResult = {
+          status: "none",
+          message: "Voce ja esta na versao mais recente.",
+          update: null,
+        };
+        setStatusMessage(result.message);
+        return result;
       }
 
       pendingUpdateRef.current = update;
@@ -84,15 +95,25 @@ export const useAppUpdater = () => {
       };
 
       setAvailableUpdate(nextUpdate);
-      setStatusMessage(`Nova versao encontrada: ${update.version}`);
-      return nextUpdate;
+      const result: UpdateCheckResult = {
+        status: "available",
+        message: `Nova versao encontrada: ${update.version}`,
+        update: nextUpdate,
+      };
+      setStatusMessage(result.message);
+      return result;
     } catch (error) {
       const friendlyError = normalizeUpdaterError(error);
+      console.warn("Erro ao verificar atualizacoes:", error);
       setLastError(friendlyError);
       if (!silent) {
         setStatusMessage(friendlyError);
       }
-      return null;
+      return {
+        status: "error",
+        message: friendlyError,
+        update: null,
+      } satisfies UpdateCheckResult;
     } finally {
       setIsChecking(false);
     }
