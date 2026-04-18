@@ -33,6 +33,10 @@
     "windows": {
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "languages": ["PortugueseBR", "English"],
+        "displayLanguageSelector": false
       }
     },
     "icon": [

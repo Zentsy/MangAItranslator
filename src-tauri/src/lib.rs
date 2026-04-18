@@ -1,10 +1,17 @@
 use std::fs;
+use std::net::{SocketAddr, TcpStream};
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::time::Duration;
 use serde::Deserialize;
 use sqlx::{Connection, SqliteConnection};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_sql::{Migration, MigrationKind};
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 #[derive(Deserialize)]
 struct PersistedBlockInput {
@@ -39,33 +46,36 @@ fn is_supported_image(path: &Path) -> bool {
 
 #[tauri::command]
 fn check_ollama_status() -> Result<bool, String> {
-    let output = if cfg!(target_os = "windows") {
-        Command::new("powershell")
-            .args(["-Command", "Invoke-WebRequest -Uri http://localhost:11434/api/tags -Method Get -UseBasicParsing"])
-            .output()
-    } else {
-        Command::new("curl")
-            .args(["-I", "http://localhost:11434"])
-            .output()
-    };
+    let address: SocketAddr = "127.0.0.1:11434"
+        .parse()
+        .map_err(|e: std::net::AddrParseError| e.to_string())?;
 
-    match output {
-        Ok(out) => Ok(out.status.success()),
-        Err(_) => Ok(false),
-    }
+    Ok(TcpStream::connect_timeout(&address, Duration::from_millis(250)).is_ok())
 }
 
 #[tauri::command]
 async fn start_ollama() -> Result<String, String> {
     if cfg!(target_os = "windows") {
-        Command::new("powershell")
-            .args(["-Command", "Start-Process ollama -ArgumentList 'serve' -NoNewWindow"])
+        let mut command = Command::new("ollama");
+        command
+            .arg("serve")
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+
+        #[cfg(target_os = "windows")]
+        command.creation_flags(CREATE_NO_WINDOW);
+
+        command
             .spawn()
             .map_err(|e| format!("Falha ao iniciar Ollama: {}", e))?;
         Ok("Comando de inicialização enviado".to_string())
     } else {
         Command::new("ollama")
             .arg("serve")
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .spawn()
             .map_err(|e| format!("Falha ao iniciar Ollama: {}", e))?;
         Ok("Comando de inicialização enviado".to_string())
@@ -318,3 +328,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
