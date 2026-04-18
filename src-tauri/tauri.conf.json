@@ -30,6 +30,7 @@
   "bundle": {
     "active": true,
     "publisher": "Zentsy",
+    "createUpdaterArtifacts": true,
     "targets": "nsis",
     "windows": {
       "webviewInstallMode": {
@@ -47,5 +48,16 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI1MzFEODdCRTUwMUEzRjQKUldUMG93SGxlOWd4SmZxNGVKUXlSeU1xUEp6ZDlhVmJEa0VuMVZtWEZWaGxSWDFXR0RGaFkvb2cK",
+      "endpoints": [
+        "https://github.com/Zentsy/MangAItranslator/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

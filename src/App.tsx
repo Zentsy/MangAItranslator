@@ -9,8 +9,10 @@ import FileUpload from "@/components/FileUpload";
 import StatusModal, { StatusType } from "@/components/StatusModal";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
 import BrandMark from "@/components/BrandMark";
+import UpdateModal from "@/components/UpdateModal";
 import { Button } from "@/components/ui/button";
 import { getOllamaModelOption } from "@/config/ollamaModels";
+import { useAppUpdater } from "@/hooks/useAppUpdater";
 import { useMangaStore } from "@/store/useMangaStore";
 import { dbService, DBProject, resolveAssetUrl } from "@/services/dbService";
 import {
@@ -23,8 +25,7 @@ import {
   Clock3,
   History,
   Play,
-  HardDrive,
-  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 
 type AppView = "dashboard" | "editor" | "library" | "settings";
@@ -76,9 +77,11 @@ const ProjectThumbnail: React.FC<{
 
 function App() {
   const { t } = useTranslation();
+  const updater = useAppUpdater();
   const [ollamaStatus, setOllamaStatus] = useState<boolean | null>(null);
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
   const [recentProjects, setRecentProjects] = useState<DBProject[]>([]);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -136,6 +139,12 @@ function App() {
       void loadRecentProjects();
     }
   }, [currentView]);
+
+  useEffect(() => {
+    if (updater.availableUpdate && !updater.isInstalling) {
+      setIsUpdateModalOpen(true);
+    }
+  }, [updater.availableUpdate, updater.isInstalling]);
 
   const handleOpenProject = async (projectId: string) => {
     try {
@@ -216,7 +225,19 @@ function App() {
         <div className="relative min-h-0 flex-1 overflow-hidden bg-app-bg text-app-text-primary">
           {currentView === 'settings' && (
             <div className="h-full overflow-y-auto p-6">
-              <SettingsView onBack={() => setCurrentView('dashboard')} />
+              <SettingsView
+                onBack={() => setCurrentView('dashboard')}
+                appVersion={updater.appVersion}
+                availableUpdate={updater.availableUpdate}
+                isCheckingUpdates={updater.isChecking}
+                isInstallingUpdate={updater.isInstalling}
+                updateProgressPercent={updater.progressPercent}
+                updateStatusMessage={updater.statusMessage}
+                lastUpdateCheck={updater.lastCheckedAt}
+                updateError={updater.lastError}
+                onCheckForUpdates={() => updater.checkForUpdates()}
+                onInstallUpdate={updater.installUpdate}
+              />
             </div>
           )}
 
@@ -233,6 +254,14 @@ function App() {
                 </div>
 
                 <div className="flex flex-wrap items-start justify-start gap-3 xl:max-w-[760px] xl:justify-end">
+                   <button
+                      type="button"
+                      onClick={() => void updater.checkForUpdates()}
+                      className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-app-text-secondary transition-all hover:bg-app-surface hover:text-app-text-primary"
+                    >
+                      <RefreshCw size={14} className={updater.isChecking ? "animate-spin" : ""} />
+                      {updater.availableUpdate ? `Atualizacao ${updater.availableUpdate.version}` : "Verificar atualizacao"}
+                    </button>
                    <div className="flex flex-col gap-2 rounded-[1.6rem] border border-app-border bg-app-surface/50 px-4 py-3">
                       <div className="flex items-center gap-2">
                         <button 
@@ -508,6 +537,15 @@ function App() {
           title={statusModal.title}
           description={statusModal.description}
           type={statusModal.type}
+        />
+        <UpdateModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          update={updater.availableUpdate}
+          isInstalling={updater.isInstalling}
+          progressPercent={updater.progressPercent}
+          statusMessage={updater.statusMessage}
+          onInstall={updater.installUpdate}
         />
       </div>
     </MangaBackground>

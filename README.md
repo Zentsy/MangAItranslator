@@ -54,7 +54,9 @@ cargo check
 Para distribuir como app de verdade no Windows, o fluxo e gerar o instalador do Tauri:
 
 ```bash
-npm run tauri -- build
+$env:TAURI_SIGNING_PRIVATE_KEY="$env:USERPROFILE\.tauri\mangai-updater.key"
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
+npm run tauri -- build --bundles nsis
 ```
 
 O artefato principal do beta fica em:
@@ -64,6 +66,44 @@ src-tauri/target/release/bundle/nsis/
 ```
 
 O usuario final nao precisa rodar `npm`, `Node.js` ou `Rust`. Ele so baixa o instalador gerado e abre o app normalmente.
+
+## Atualizacoes automaticas
+
+O app agora esta preparado para checar atualizacoes pelo `latest.json` publicado no GitHub Releases.
+
+- endpoint configurado: `https://github.com/Zentsy/MangAItranslator/releases/latest/download/latest.json`
+- updater assinado com chave publica no `tauri.conf.json`
+- instalacao no Windows em modo `passive`
+
+### O que voce precisa configurar uma vez
+
+1. Gerar sua chave privada do updater localmente:
+
+```bash
+npm run tauri -- signer generate -w "$env:USERPROFILE\.tauri\mangai-updater.key"
+```
+
+2. Guardar essa chave com cuidado.
+
+Se voce perder a chave privada, as proximas atualizacoes automaticas deixam de funcionar para quem ja instalou o app.
+
+### GitHub Actions
+
+O repo ja tem workflow em `.github/workflows/release.yml` para publicar releases com o `tauri-action`.
+
+Configure estes secrets no GitHub:
+
+- `TAURI_SIGNING_PRIVATE_KEY`
+- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+
+### Importante sobre o canal de update
+
+Como o app usa `releases/latest/download/latest.json`, a release que vai alimentar o updater precisa ser uma release normal do GitHub.
+
+- `draft`: nao entra no canal automatico
+- `prerelease`: tambem pode ficar fora do `latest`
+
+Se quiser chamar de beta, tudo bem. So nao marque a release como `prerelease` no GitHub se quiser que o updater pegue essa versao.
 
 ## Como testar rapido
 

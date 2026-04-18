@@ -1,3 +1,5 @@
+use serde::Deserialize;
+use sqlx::{Connection, SqliteConnection};
 use std::fs;
 use std::net::{SocketAddr, TcpStream};
 #[cfg(target_os = "windows")]
@@ -5,8 +7,6 @@ use std::os::windows::process::CommandExt;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::Duration;
-use serde::Deserialize;
-use sqlx::{Connection, SqliteConnection};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -40,7 +40,12 @@ fn database_url(app: &AppHandle) -> Result<String, String> {
 fn is_supported_image(path: &Path) -> bool {
     path.extension()
         .and_then(|ext| ext.to_str())
-        .map(|ext| matches!(ext.to_ascii_lowercase().as_str(), "png" | "jpg" | "jpeg" | "webp"))
+        .map(|ext| {
+            matches!(
+                ext.to_ascii_lowercase().as_str(),
+                "png" | "jpg" | "jpeg" | "webp"
+            )
+        })
         .unwrap_or(false)
 }
 
@@ -84,10 +89,14 @@ async fn start_ollama() -> Result<String, String> {
 
 // Comandos para gerenciar o cache de imagens
 #[tauri::command]
-async fn cache_image(app: AppHandle, project_id: String, image_path: String) -> Result<String, String> {
+async fn cache_image(
+    app: AppHandle,
+    project_id: String,
+    image_path: String,
+) -> Result<String, String> {
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let cache_dir = app_dir.join("cache").join(&project_id);
-    
+
     if !cache_dir.exists() {
         fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
     }
@@ -95,7 +104,7 @@ async fn cache_image(app: AppHandle, project_id: String, image_path: String) -> 
     let file_name = Path::new(&image_path)
         .file_name()
         .ok_or("Caminho de arquivo inválido")?;
-    
+
     let target_path = cache_dir.join(file_name);
     fs::copy(&image_path, &target_path).map_err(|e| e.to_string())?;
 
@@ -107,11 +116,11 @@ async fn cache_image(app: AppHandle, project_id: String, image_path: String) -> 
 async fn clear_project_cache(app: AppHandle, project_id: String) -> Result<(), String> {
     let app_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let cache_dir = app_dir.join("cache").join(&project_id);
-    
+
     if cache_dir.exists() {
         fs::remove_dir_all(cache_dir).map_err(|e| e.to_string())?;
     }
-    
+
     Ok(())
 }
 
@@ -269,11 +278,10 @@ async fn wipe_all_data(app: AppHandle) -> Result<(), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let migrations = vec![
-        Migration {
-            version: 1,
-            description: "create_initial_tables",
-            sql: "
+    let migrations = vec![Migration {
+        version: 1,
+        description: "create_initial_tables",
+        sql: "
                 CREATE TABLE projects (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -302,11 +310,12 @@ pub fn run() {
                     FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
                 );
             ",
-            kind: MigrationKind::Up,
-        }
-    ];
+        kind: MigrationKind::Up,
+    }];
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -316,9 +325,9 @@ pub fn run() {
                 .build(),
         )
         .invoke_handler(tauri::generate_handler![
-            check_ollama_status, 
-            start_ollama, 
-            cache_image, 
+            check_ollama_status,
+            start_ollama,
+            cache_image,
             clear_project_cache,
             list_chapter_images,
             save_page_atomic,
@@ -328,4 +337,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-

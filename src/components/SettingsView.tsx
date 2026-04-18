@@ -8,6 +8,7 @@ import { useMangaStore } from "@/store/useMangaStore";
 import { useTheme } from "@/contexts/ThemeContext";
 import { dbService } from "@/services/dbService";
 import { Button } from "@/components/ui/button";
+import type { AvailableUpdateInfo } from "@/hooks/useAppUpdater";
 import {
   Settings,
   Trash2,
@@ -17,15 +18,58 @@ import {
   ChevronRight,
   Monitor,
   Database,
+  Download,
+  RefreshCw,
+  Rocket,
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import StatusModal, { StatusType } from "@/components/StatusModal";
 
 interface SettingsViewProps {
   onBack: () => void;
+  appVersion: string;
+  availableUpdate: AvailableUpdateInfo | null;
+  isCheckingUpdates: boolean;
+  isInstallingUpdate: boolean;
+  updateProgressPercent: number | null;
+  updateStatusMessage: string | null;
+  lastUpdateCheck: string | null;
+  updateError: string | null;
+  onCheckForUpdates: () => Promise<AvailableUpdateInfo | null>;
+  onInstallUpdate: () => Promise<boolean>;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
+const formatLastCheck = (value: string | null) => {
+  if (!value) {
+    return "Ainda nao verificado";
+  }
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Ainda nao verificado";
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(parsedDate);
+};
+
+const SettingsView: React.FC<SettingsViewProps> = ({
+  onBack,
+  appVersion,
+  availableUpdate,
+  isCheckingUpdates,
+  isInstallingUpdate,
+  updateProgressPercent,
+  updateStatusMessage,
+  lastUpdateCheck,
+  updateError,
+  onCheckForUpdates,
+  onInstallUpdate,
+}) => {
   const {
     apiKey,
     translationEngine,
@@ -110,6 +154,119 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onBack }) => {
       </header>
 
       <div className="custom-scrollbar flex-1 space-y-8 overflow-y-auto pr-4">
+        <section>
+          <div className="mb-4 flex items-center gap-2">
+            <Rocket size={16} className="text-emerald-500" />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">
+              Atualizacoes do app
+            </h3>
+          </div>
+
+          <div className="rounded-3xl border border-app-border bg-app-surface/20 p-5">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+              <div className="rounded-3xl border border-app-border bg-app-surface/30 p-5">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/45">
+                      Versao instalada
+                    </div>
+                    <h4 className="mt-2 text-lg font-bold italic text-app-text-primary">
+                      MangAI Translator {appVersion}
+                    </h4>
+                    <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/60">
+                      O app pode checar novas versoes no GitHub Releases e abrir o instalador para voce.
+                    </p>
+                  </div>
+
+                  {availableUpdate ? (
+                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400">
+                      Nova versao {availableUpdate.version}
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-app-border bg-app-surface px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-app-text-secondary">
+                      Sem update pendente
+                    </span>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-app-border bg-app-bg/35 px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em] text-app-text-secondary/50">
+                    <span>Ultima verificacao</span>
+                    <span className="text-app-text-primary">{formatLastCheck(lastUpdateCheck)}</span>
+                  </div>
+
+                  {(updateStatusMessage || updateError) && (
+                    <p className="mt-3 text-xs leading-relaxed text-app-text-secondary/60">
+                      {updateError || updateStatusMessage}
+                    </p>
+                  )}
+
+                  {isInstallingUpdate && (
+                    <div className="mt-4">
+                      <div className="mb-2 flex items-center justify-between text-[11px] text-app-text-secondary/65">
+                        <span>Progresso do download</span>
+                        <span>{updateProgressPercent ?? 0}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-app-surface">
+                        <div
+                          className="h-full bg-emerald-400 transition-all duration-300"
+                          style={{ width: `${updateProgressPercent ?? 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between rounded-3xl border border-app-border bg-app-surface/30 p-5">
+                <div>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-app-text-secondary/60">
+                    Como funciona
+                  </h4>
+                  <p className="mt-3 text-xs leading-relaxed text-app-text-secondary/60">
+                    Quando uma nova versao estiver publicada, o app avisa aqui e prepara a instalacao para voce.
+                    No Windows, ele fecha sozinho para abrir o instalador.
+                  </p>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3">
+                  <Button
+                    onClick={() => {
+                      void onCheckForUpdates();
+                    }}
+                    variant="outline"
+                    disabled={isCheckingUpdates || isInstallingUpdate}
+                    className="w-full rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"
+                  >
+                    <RefreshCw className={isCheckingUpdates ? "animate-spin" : ""} />
+                    {isCheckingUpdates ? "Verificando..." : "Verificar agora"}
+                  </Button>
+
+                  <Button
+                    onClick={() => {
+                      void onInstallUpdate();
+                    }}
+                    disabled={!availableUpdate || isInstallingUpdate || isCheckingUpdates}
+                    className="w-full rounded-2xl py-6 text-[10px] font-black uppercase tracking-[0.18em]"
+                  >
+                    {isInstallingUpdate ? (
+                      <>
+                        <RefreshCw className="animate-spin" />
+                        Instalando
+                      </>
+                    ) : (
+                      <>
+                        <Download />
+                        {availableUpdate ? `Instalar ${availableUpdate.version}` : "Nenhum update agora"}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section>
           <div className="mb-4 flex items-center gap-2">
             <Sparkles size={16} className="text-amber-500" />
