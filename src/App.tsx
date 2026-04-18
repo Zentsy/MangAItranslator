@@ -156,9 +156,14 @@ function App() {
 
     setStatusModal({
       isOpen: true,
-      title: result.status === "none" ? "Sem atualizacao por enquanto" : "Nao foi possivel verificar",
+      title:
+        result.status === "none"
+          ? "Sem atualizacao por enquanto"
+          : result.status === "channel_unavailable"
+            ? "Canal de atualizacao ainda nao publicado"
+            : "Nao foi possivel verificar",
       description: result.message,
-      type: result.status === "none" ? "info" : "warning",
+      type: result.status === "none" ? "info" : result.status === "channel_unavailable" ? "warning" : "error",
     });
 
     return result;

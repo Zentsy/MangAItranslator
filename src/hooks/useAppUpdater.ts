@@ -14,7 +14,7 @@ export interface AvailableUpdateInfo {
 }
 
 export interface UpdateCheckResult {
-  status: "available" | "none" | "error";
+  status: "available" | "none" | "channel_unavailable" | "error";
   message: string;
   update: AvailableUpdateInfo | null;
 }
@@ -24,18 +24,30 @@ const normalizeUpdaterError = (error: unknown) => {
   const lower = message.toLowerCase();
 
   if (lower.includes("404") || lower.includes("not found")) {
-    return "Ainda nao existe uma release publica com updater pronta para este app.";
+    return {
+      status: "channel_unavailable",
+      message: "O canal de atualizacao ainda nao foi publicado para este app.",
+    } as const;
   }
 
   if (lower.includes("signature")) {
-    return "A atualizacao encontrada nao passou na validacao de assinatura.";
+    return {
+      status: "error",
+      message: "A atualizacao encontrada nao passou na validacao de assinatura.",
+    } as const;
   }
 
   if (lower.includes("timeout")) {
-    return "A verificacao demorou demais. Tente novamente em alguns instantes.";
+    return {
+      status: "error",
+      message: "A verificacao demorou demais. Tente novamente em alguns instantes.",
+    } as const;
   }
 
-  return "Nao foi possivel verificar atualizacoes agora.";
+  return {
+    status: "error",
+    message: "Nao foi possivel verificar atualizacoes agora.",
+  } as const;
 };
 
 const closeUpdateResource = async (update: Update | null) => {
@@ -105,13 +117,13 @@ export const useAppUpdater = () => {
     } catch (error) {
       const friendlyError = normalizeUpdaterError(error);
       console.warn("Erro ao verificar atualizacoes:", error);
-      setLastError(friendlyError);
+      setLastError(friendlyError.message);
       if (!silent) {
-        setStatusMessage(friendlyError);
+        setStatusMessage(friendlyError.message);
       }
       return {
-        status: "error",
-        message: friendlyError,
+        status: friendlyError.status,
+        message: friendlyError.message,
         update: null,
       } satisfies UpdateCheckResult;
     } finally {
@@ -169,8 +181,8 @@ export const useAppUpdater = () => {
       return true;
     } catch (error) {
       const friendlyError = normalizeUpdaterError(error);
-      setLastError(friendlyError);
-      setStatusMessage(friendlyError);
+      setLastError(friendlyError.message);
+      setStatusMessage(friendlyError.message);
       return false;
     } finally {
       setIsInstalling(false);
