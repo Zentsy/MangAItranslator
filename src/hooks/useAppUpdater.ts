@@ -23,7 +23,11 @@ const normalizeUpdaterError = (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
   const lower = message.toLowerCase();
 
-  if (lower.includes("404") || lower.includes("not found")) {
+  if (
+    lower.includes("404") ||
+    lower.includes("not found") ||
+    lower.includes("valid release json")
+  ) {
     return {
       status: "channel_unavailable",
       message: "O canal de atualizacao ainda nao foi publicado para este app.",
