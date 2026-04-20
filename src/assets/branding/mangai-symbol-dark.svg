@@ -1,0 +1,12 @@
+<svg width="112" height="112" viewBox="0 0 112 112" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mangaiSymbolDarkStroke" x1="22" y1="18" x2="92" y2="94" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5F1E8"/>
+      <stop offset="1" stop-color="#D6D1C7"/>
+    </linearGradient>
+  </defs>
+  <circle cx="88" cy="22" r="14" fill="#10B981" fill-opacity="0.16"/>
+  <circle cx="88" cy="22" r="8" fill="#10B981"/>
+  <path d="M22 82V28L40 50L56 34L72 50L90 28V82" stroke="url(#mangaiSymbolDarkStroke)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 92H86" stroke="url(#mangaiSymbolDarkStroke)" stroke-width="10" stroke-linecap="round"/>
+</svg>

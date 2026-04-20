@@ -4,6 +4,21 @@
 
 @layer base {
   :root {
+    /* Padrão (Dark Organic) */
+    --app-bg: 10 10 10;
+    --app-surface: 20 20 20;
+    --app-accent: 16 185 129;
+    --app-text-primary: 242 242 242;
+    --app-text-secondary: 160 160 160;
+    --app-border: 38 38 38;
+
+    /* Cores dos Blocos de Tradução (HLS ou RGB para manter consistência) */
+    --block-rect: 142 70% 45%;    
+    --block-outside: 217 91% 60%; 
+    --block-thought: 271 91% 65%; 
+    --block-double: 346 84% 61%;
+
+    /* Shadcn defaults (para manter compatibilidade se necessário) */
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
@@ -25,10 +40,34 @@
     --ring: 0 0% 83.1%;
     --radius: 0.5rem;
   }
+
+  .theme-dark-organic {
+    --app-bg: 10 10 10;
+    --app-surface: 20 20 20;
+    --app-accent: 16 185 129;
+    --app-text-primary: 242 242 242;
+    --app-text-secondary: 160 160 160;
+    --app-border: 38 38 38;
+  }
+
+  .theme-paper-light {
+    --app-bg: 240 238 225;       /* Creme/Papel envelhecido */
+    --app-surface: 255 255 252;  /* Branco puro para áreas de foco */
+    --app-accent: 37 99 235;     /* Azul Royal mais suave */
+    --app-text-primary: 28 25 23; /* Marrom quase preto para conforto */
+    --app-text-secondary: 87 83 78;
+    --app-border: 214 211 209;
+  }
+}
+
+@layer utilities {
+  .bg-paper-grain {
+    background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+  }
 }
 
 body {
-  @apply bg-[#0a0a0a] text-slate-200 antialiased overflow-hidden;
+  @apply bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text-primary))] antialiased overflow-hidden;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 

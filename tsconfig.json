@@ -21,5 +21,10 @@
     }
   },
   "include": ["src"],
+  "exclude": [
+    "src/components/DecryptedText.tsx",
+    "src/components/SplitText.tsx",
+    "src/components/VariableProximity.tsx"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

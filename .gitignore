@@ -11,7 +11,6 @@ src-tauri/gen/
 
 # IDEs
 .vscode/*
-!.vscode/extensions.json
 .idea/
 *.suo
 *.ntvs*
@@ -34,8 +33,8 @@ models/
 *.bin
 *.gguf
 
-# Conductor State
-conductor/setup_state.json
+# Internal planning / workspace docs
+conductor/
 
 #testes
 testes.txt
