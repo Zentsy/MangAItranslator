@@ -98,3 +98,7 @@ O app já está funcional para uso real em Windows, mas continua em fase de beta
 ## Uso responsável
 
 Use o app apenas em materiais próprios, licenciados ou para os quais você tenha permissão de localização ou tradução.
+
+## Licença
+
+Este projeto está licenciado sob a licença MIT. Veja [LICENSE](LICENSE).
