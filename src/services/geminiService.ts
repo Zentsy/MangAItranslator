@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, type ResponseSchema } from "@google/generative-ai";
 
 const MAX_RETRIES = 2;
 const NON_RETRYABLE_GEMINI_CODES = new Set([
@@ -7,6 +7,28 @@ const NON_RETRYABLE_GEMINI_CODES = new Set([
   "GEMINI_FORBIDDEN",
   "GEMINI_BAD_REQUEST",
 ]);
+
+const translationResponseSchema: ResponseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    translations: {
+      type: SchemaType.ARRAY,
+      description: "Lista em ordem de leitura com as falas ja traduzidas para portugues brasileiro.",
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          text: {
+            type: SchemaType.STRING,
+            description:
+              "Traducao final em PT-BR. Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.",
+          },
+        },
+        required: ["text"],
+      },
+    },
+  },
+  required: ["translations"],
+};
 
 type GeminiErrorCode =
   | "GEMINI_INVALID_KEY"
@@ -123,31 +145,43 @@ export const translateWithGemini = async (
     model: geminiModel,
   });
 
-  const systemPrompt = `Voce e um extrator de dados JSON para traducao de mangas.
-Sua unica tarefa e extrair o texto em ingles da imagem, traduzir para o portugues e retornar um JSON.
+  const systemPrompt = `Voce e um tradutor especializado em mangas.
+Sua unica tarefa e ler o texto da imagem e devolver a traducao final em portugues brasileiro.
 REGRAS:
 - ORDEM: Siga rigorosamente a ordem de leitura (Direita para Esquerda, Cima para Baixo).
-- FORMATO: Retorne APENAS o objeto JSON abaixo. Nao escreva nada antes ou depois.
-- CASE: Use iniciais maiusculas e o restante minusculo.
+- IDIOMA: Cada item em "translations.text" deve estar em PT-BR natural e legivel.
+- NAO COPIE O INGLES: Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.
+- OCR: Se um balao estiver vazio, ilegivel ou sem texto relevante, nao invente conteudo.
+- FORMATO: Responda somente em JSON valido seguindo o schema.
 
-MODELO DE RESPOSTA (JSON PURO):
-{
-  "translations": [
-    { "text": "fala 1" },
-    { "text": "fala 2" }
-  ]
-}`;
+Exemplo:
+English: "I love you."
+JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
 
   try {
-    const result = await model.generateContent([
-      systemPrompt,
-      {
-        inlineData: {
-          data: base64Image,
-          mimeType: "image/jpeg",
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: systemPrompt,
+            },
+            {
+              inlineData: {
+                data: base64Image,
+                mimeType: "image/jpeg",
+              },
+            },
+          ],
         },
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+        responseSchema: translationResponseSchema,
       },
-    ]);
+    });
 
     const responseText = result.response.text();
     const cleaned = cleanJson(responseText);
