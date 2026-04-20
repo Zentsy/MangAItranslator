@@ -55,7 +55,7 @@ Para distribuir como app de verdade no Windows, o fluxo e gerar o instalador do 
 
 ```bash
 $env:TAURI_SIGNING_PRIVATE_KEY="$env:USERPROFILE\.tauri\mangai-updater.key"
-$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="SUA_SENHA_DA_CHAVE"
 npm run tauri -- build --bundles nsis
 ```
 
@@ -80,12 +80,12 @@ O app agora esta preparado para checar atualizacoes pelo `latest.json` publicado
 1. Gerar sua chave privada do updater localmente:
 
 ```bash
-npm run tauri -- signer generate -w "$env:USERPROFILE\.tauri\mangai-updater.key"
+npx tauri signer generate -w "$env:USERPROFILE\.tauri\mangai-updater.key" -p "SUA_SENHA_DA_CHAVE" -f --ci
 ```
 
 2. Guardar essa chave com cuidado.
 
-Se voce perder a chave privada, as proximas atualizacoes automaticas deixam de funcionar para quem ja instalou o app.
+Se voce perder a chave privada ou a senha dela, as proximas atualizacoes automaticas deixam de funcionar para quem ja instalou o app.
 
 ### GitHub Actions
 

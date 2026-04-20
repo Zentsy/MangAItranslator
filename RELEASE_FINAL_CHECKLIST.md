@@ -4,17 +4,17 @@ Checklist enxuto para levar o `MangAI Translator` do estado atual para um beta p
 
 ## 1. Antes do push
 
-- [ ] Confirmar que o app abre normalmente pelo instalador mais recente.
-- [ ] Confirmar que a home, editor, export e settings estao ok.
-- [ ] Confirmar que `Verificar atualizacao` mostra `Canal de atualizacao ainda nao publicado`.
-- [ ] Conferir se o nome/publisher no Windows aparece como `MangAI Translator` / `Zentsy`.
-- [ ] Conferir se nao existe nenhuma chave real ou arquivo sensivel no repo.
+- [x] Confirmar que o app abre normalmente pelo instalador mais recente.
+- [x] Confirmar que a home, editor, export e settings estao ok.
+- [x] Confirmar que `Verificar atualizacao` mostra `Canal de atualizacao ainda nao publicado`.
+- [x] Conferir se o nome/publisher no Windows aparece como `MangAI Translator` / `Zentsy`.
+- [x] Conferir se nao existe nenhuma chave real ou arquivo sensivel no repo.
 
 ## 2. Chave do updater
 
-- [ ] Decidir se a chave atual sem senha vai continuar.
-- [ ] Fazer backup de `C:\Users\levib\.tauri\mangai-updater.key`.
-- [ ] Fazer backup de `C:\Users\levib\.tauri\mangai-updater.key.pub`.
+- [x] Decidir se a chave atual sem senha vai continuar.
+- [x] Fazer backup de `C:\Users\levib\.tauri\mangai-updater.key`.
+- [x] Fazer backup de `C:\Users\levib\.tauri\mangai-updater.key.pub`.
 
 Importante:
 
@@ -25,8 +25,8 @@ Importante:
 
 Configurar no repo:
 
-- [ ] `TAURI_SIGNING_PRIVATE_KEY`
-- [ ] `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+- [x] `TAURI_SIGNING_PRIVATE_KEY`
+- [x] `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
 
 Observacao:
 
