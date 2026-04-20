@@ -10,6 +10,7 @@ export interface TranslationResult {
 export const translatePage = async (
   engine: TranslationEngine,
   apiKey: string,
+  geminiModel: string,
   ollamaModel: string,
   base64Image: string,
   onResult: (results: TranslationResult[]) => void,
@@ -18,9 +19,9 @@ export const translatePage = async (
 ) => {
   if (engine === "gemini") {
     if (!apiKey) {
-      throw new Error("API Key do Gemini não configurada.");
+      throw new Error("API Key do Gemini nao configurada.");
     }
-    await translateWithGemini(apiKey, base64Image, onResult);
+    await translateWithGemini(apiKey, geminiModel, base64Image, onResult);
   } else {
     const results = await translateWithOllama(base64Image, ollamaModel, onProgress, onStatusChange);
     onResult(

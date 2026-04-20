@@ -11,6 +11,7 @@ import OnboardingOverlay from "@/components/OnboardingOverlay";
 import BrandMark from "@/components/BrandMark";
 import UpdateModal from "@/components/UpdateModal";
 import { Button } from "@/components/ui/button";
+import { getGeminiModelOption } from "@/config/geminiModels";
 import { getOllamaModelOption } from "@/config/ollamaModels";
 import { useAppUpdater, type UpdateCheckResult } from "@/hooks/useAppUpdater";
 import { useMangaStore } from "@/store/useMangaStore";
@@ -102,8 +103,10 @@ function App() {
     currentProjectId, 
     translationEngine, 
     setTranslationEngine,
+    geminiModel,
     ollamaModel,
   } = useMangaStore();
+  const selectedGeminiModel = getGeminiModelOption(geminiModel);
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", caption: "Inicio", icon: LayoutGrid },
@@ -335,6 +338,16 @@ function App() {
                           onChange={(e) => setApiKey(e.target.value)}
                          className="w-36 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
                         />
+                     </div>
+                   )}
+                   {translationEngine === "gemini" && (
+                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
+                          Modelo
+                        </span>
+                        <span className="text-[10px] font-mono text-app-text-primary">
+                          {selectedGeminiModel.label}
+                        </span>
                      </div>
                    )}
                    {translationEngine === "ollama" && (

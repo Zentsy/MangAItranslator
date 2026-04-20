@@ -34,6 +34,20 @@ import {
 const MAX_AI_IMAGE_WIDTH = 1600;
 const AI_IMAGE_QUALITY = 0.88;
 
+const inferImageMimeType = (path: string) => {
+  const normalizedPath = path.toLowerCase();
+
+  if (normalizedPath.endsWith(".png")) {
+    return "image/png";
+  }
+
+  if (normalizedPath.endsWith(".webp")) {
+    return "image/webp";
+  }
+
+  return "image/jpeg";
+};
+
 const optimizeImageForAi = async (dataUrl: string) => {
   if (!dataUrl) {
     return "";
@@ -113,6 +127,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     updatePage,
     apiKey,
     translationEngine,
+    geminiModel,
     ollamaModel,
     currentProjectId,
     clearStore,
@@ -180,7 +195,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPageIndex, pages.length, isTranslating, apiKey, translationEngine]);
+  }, [currentPageIndex, pages.length, isTranslating, apiKey, translationEngine, geminiModel]);
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, index: number) => {
     // Prevent Ctrl+Enter from bubbling to global handler (which triggers AI)
@@ -213,6 +228,9 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   useEffect(() => {
     async function loadPageImage() {
       if (!currentPage) return;
+
+      setImgBase64("");
+
       try {
         const cleanPath = currentPage.path
           .replace("http://asset.localhost/", "")
@@ -220,7 +238,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           .replace(/%3A/g, ":");
 
         const contents = await readFile(cleanPath);
-        const blob = new Blob([contents]);
+        const blob = new Blob([contents], { type: inferImageMimeType(cleanPath) });
         const reader = new FileReader();
         reader.onloadend = () => setImgBase64(reader.result as string);
         reader.readAsDataURL(blob);
@@ -233,6 +251,8 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   }, [currentPageIndex, currentPage?.id, currentPage?.path]);
 
   if (!currentPage) return null;
+
+  const pageImageSrc = currentPage.url || "";
 
   const handleTranslate = async () => {
     if (translationEngine === "gemini" && !apiKey) {
@@ -256,6 +276,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       await translatePage(
         translationEngine,
         apiKey,
+        geminiModel,
         ollamaModel,
         base64,
         (results) => {
@@ -288,15 +309,23 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         }
       );
     } catch (error: any) {
-      let friendlyMessage = "Ocorreu um erro inesperado ao processar a página.";
-      const errorStr = error.toString().toLowerCase();
+      let friendlyMessage = "Ocorreu um erro inesperado ao processar a pagina.";
+      const errorStr = [error?.message, error?.statusText, error?.toString?.()]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const errorCode = typeof error?.code === "string" ? error.code : "";
 
-      if (errorStr.includes("api key not valid") || errorStr.includes("invalid api key")) {
-        friendlyMessage = "Sua chave de API do Gemini é inválida. Verifique-a nas configurações.";
-      } else if (errorStr.includes("429") || errorStr.includes("quota") || errorStr.includes("too many requests")) {
-        friendlyMessage = "Limite de uso atingido ou muitas requisições. Tente novamente em um minuto.";
+      if (errorCode === "GEMINI_INVALID_KEY" || errorStr.includes("api key not valid") || errorStr.includes("invalid api key")) {
+        friendlyMessage = "Sua chave de API do Gemini e invalida. Verifique-a nas configuracoes.";
+      } else if (errorCode === "GEMINI_RATE_LIMIT" || errorStr.includes("429") || errorStr.includes("quota") || errorStr.includes("too many requests")) {
+        friendlyMessage = "O Google recusou a requisicao com 429. Isso normalmente significa quota, billing ou limite temporario no projeto do Gemini, e pode acontecer ate com chave nova.";
+      } else if (errorCode === "GEMINI_FORBIDDEN" || errorStr.includes("permission denied") || errorStr.includes("forbidden")) {
+        friendlyMessage = "A chave foi aceita, mas o projeto nao tem permissao para usar a Gemini API. Confira a chave, o projeto no AI Studio e se a API esta habilitada.";
+      } else if (errorCode === "GEMINI_BAD_REQUEST") {
+        friendlyMessage = "O Gemini recusou a requisicao. Confira se a chave pertence ao projeto certo e se esse projeto tem quota disponivel.";
       } else if (errorStr.includes("network") || errorStr.includes("fetch")) {
-        friendlyMessage = "Erro de conexão. Verifique sua internet ou o status dos servidores da IA.";
+        friendlyMessage = "Erro de conexao. Verifique sua internet ou o status dos servidores da IA.";
       } else if (errorStr.includes("tempo limite") || errorStr.includes("timeout")) {
         friendlyMessage = "O Ollama demorou demais para responder. Em CPU isso pode acontecer; tente uma pagina mais simples ou use Gemini.";
       } else if (errorStr.includes("ollama nao encontrado") || errorStr.includes("failed to fetch")) {
@@ -394,7 +423,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPageIndex, currentPage?.id, isTranslating, apiKey, imgBase64, translationEngine]);
+  }, [currentPageIndex, currentPage?.id, isTranslating, apiKey, imgBase64, translationEngine, geminiModel]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-app-border bg-app-surface/20 backdrop-blur-sm">
@@ -488,9 +517,9 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   justifyContent: "center",
                 }}
               >
-                {imgBase64 ? (
+                {pageImageSrc ? (
                   <img
-                    src={imgBase64}
+                    src={pageImageSrc}
                     className="h-auto max-h-full w-auto max-w-full object-contain shadow-2xl transition-transform"
                     alt="page"
                   />

@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import {
+  GEMINI_MODEL_OPTIONS,
+  getGeminiAccessLabel,
+  getGeminiFamilyLabel,
+  getGeminiModelOption,
+} from "@/config/geminiModels";
+import {
   getOllamaModelOption,
   getOllamaProfileLabel,
   OLLAMA_MODEL_OPTIONS,
@@ -74,6 +80,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     apiKey,
     translationEngine,
     setTranslationEngine,
+    geminiModel,
+    setGeminiModel,
     ollamaModel,
     setOllamaModel,
     resetOnboarding,
@@ -81,6 +89,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   } = useMangaStore();
 
   const { theme, setTheme } = useTheme();
+  const selectedGeminiModel = getGeminiModelOption(geminiModel);
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
 
   const [confirmWipe, setConfirmWipe] = useState(false);
@@ -275,174 +284,274 @@ const SettingsView: React.FC<SettingsViewProps> = ({
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setTranslationEngine("gemini")}
-              className={`rounded-3xl border p-6 text-left transition-all ${
-                translationEngine === "gemini"
-                  ? "border-app-accent/30 bg-app-surface/70"
-                  : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-              }`}
-            >
-              <div className="mb-4 flex items-start justify-between">
-                <span className="rounded bg-app-surface/50 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
-                  {translationEngine === "gemini" ? "Selecionado agora" : "Mais facil de usar"}
-                </span>
-                <div
-                  className={`h-2 w-2 rounded-full ${
-                    apiKey ? "bg-emerald-500" : "bg-rose-500"
-                  } shadow-[0_0_10px_rgba(16,185,129,0.5)]`}
-                />
-              </div>
-
-              <h4 className="mb-1 text-lg font-bold italic text-app-text-primary">
-                Google Gemini
-              </h4>
-              <p className="mb-4 text-xs leading-relaxed text-app-text-secondary/60">
-                Melhor escolha para quem quer resultado consistente sem precisar configurar modelo local.
-                Costuma entregar mais qualidade e velocidade.
-              </p>
-
-              <div className="flex items-center gap-2 rounded-xl border border-app-border bg-app-bg/40 px-4 py-2">
-                <ShieldCheck size={14} className="text-emerald-500" />
-                <span className="text-[10px] font-mono text-app-text-secondary/60">
-                  Sua chave fica salva apenas neste computador.
-                </span>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTranslationEngine("ollama")}
-              className={`rounded-3xl border p-6 text-left transition-all ${
-                translationEngine === "ollama"
-                  ? "border-app-accent/30 bg-app-surface/70"
-                  : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-              }`}
-            >
-              <div className="mb-4 flex items-start justify-between">
-                <span className="rounded bg-app-surface/50 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
-                  {translationEngine === "ollama" ? "Selecionado agora" : "Modo local"}
-                </span>
-                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
-                  {selectedOllamaModel.sizeLabel}
-                </span>
-              </div>
-
-              <h4 className="mb-1 text-lg font-bold italic text-app-text-primary">
-                Ollama Local
-              </h4>
-              <p className="mb-4 text-xs leading-relaxed text-app-text-secondary/60">
-                Traduz usando um modelo rodando no seu PC. Bom para privacidade e uso offline,
-                mas pode ficar mais lento em maquinas modestas. Modelo atual:{" "}
-                <span className="text-app-text-primary">{selectedOllamaModel.label}</span>.
-              </p>
-
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-app-border bg-app-bg/40 px-4 py-3">
+          <div className="rounded-3xl border border-app-border bg-app-surface/20 p-5">
+            <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-app-border bg-app-surface/30 p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
-                    Estilo
+                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40">
+                    Motor ativo
                   </div>
-                  <div className="text-xs text-app-text-primary">
-                    {getOllamaProfileLabel(selectedOllamaModel.profile)}
-                  </div>
+                  <h4 className="mt-2 text-lg font-bold italic text-app-text-primary">
+                    {translationEngine === "gemini" ? "Google Gemini" : "Ollama Local"}
+                  </h4>
                 </div>
-                <div className="text-right">
-                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
-                    Versao minima
-                  </div>
-                  <div className="text-xs text-app-text-primary">
-                    Ollama {selectedOllamaModel.requiresOllama}
-                  </div>
-                </div>
-              </div>
-            </button>
-          </div>
 
-          <div className="mt-4 rounded-3xl border border-app-border bg-app-surface/20 p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h4 className="text-sm font-bold uppercase tracking-widest text-app-text-secondary/60">
-                  Modelos locais
-                </h4>
-                <p className="mt-1 text-xs text-app-text-secondary/50">
-                  Escolha um modelo mais leve para ganhar velocidade ou um modelo maior se quiser tentar mais qualidade.
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40">
-                  Instalar no terminal
-                </div>
-                <code className="text-[11px] text-app-text-primary">
-                  {selectedOllamaModel.installCommand}
-                </code>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {OLLAMA_MODEL_OPTIONS.map((model) => {
-                const isSelected = ollamaModel === model.id;
-
-                return (
+                <div className="inline-flex rounded-full border border-app-border bg-app-bg/35 p-1">
                   <button
-                    key={model.id}
                     type="button"
-                    onClick={() => {
-                      setOllamaModel(model.id);
-                      setTranslationEngine("ollama");
-                    }}
-                    className={`rounded-2xl border p-4 text-left transition-all ${
-                      isSelected
-                        ? "border-app-accent/30 bg-app-surface/80"
-                        : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+                    onClick={() => setTranslationEngine("gemini")}
+                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                      translationEngine === "gemini"
+                        ? "bg-app-text-primary text-app-bg"
+                        : "text-app-text-secondary hover:text-app-text-primary"
                     }`}
                   >
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h5 className="text-sm font-bold text-app-text-primary">{model.label}</h5>
-                          {model.recommended && (
-                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                              Boa opcao
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-1 text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
-                          {model.id}
-                        </p>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                        {model.sizeLabel}
-                      </span>
-                    </div>
-
-                    <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
-                      {model.description}
-                    </p>
-
-                    <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
-                      <span className="text-app-text-secondary/50">
-                        {getOllamaProfileLabel(model.profile)}
-                      </span>
-                      <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
-                        {isSelected ? "Selecionado" : "Escolher"}
-                      </span>
-                    </div>
+                    Gemini
                   </button>
-                );
-              })}
+                  <button
+                    type="button"
+                    onClick={() => setTranslationEngine("ollama")}
+                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                      translationEngine === "ollama"
+                        ? "bg-app-text-primary text-app-bg"
+                        : "text-app-text-secondary hover:text-app-text-primary"
+                    }`}
+                  >
+                    Ollama
+                  </button>
+                </div>
+              </div>
+
+              {translationEngine === "gemini" ? (
+                <>
+                  <p className="text-sm leading-relaxed text-app-text-secondary/65">
+                    Melhor escolha para quem quer resultado consistente sem configurar modelo local.
+                    O modelo atual e <span className="text-app-text-primary">{selectedGeminiModel.label}</span>.
+                  </p>
+
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <span className="rounded bg-app-surface/60 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
+                          {selectedGeminiModel.recommended ? "Padrao" : "Modelo em uso"}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
+                          {getGeminiAccessLabel(selectedGeminiModel.access)}
+                        </span>
+                      </div>
+
+                      <div className="mb-3 text-sm font-bold text-app-text-primary">{selectedGeminiModel.label}</div>
+                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
+                        {selectedGeminiModel.description}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <ShieldCheck size={14} className="text-emerald-500" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
+                          Chave da API
+                        </span>
+                      </div>
+                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
+                        {apiKey
+                          ? "Sua chave fica salva apenas neste computador e o app fala direto com a API do Google."
+                          : "Cole sua chave do Google AI Studio no painel para liberar o AI Draft com Gemini."}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm leading-relaxed text-app-text-secondary/65">
+                    Traduz usando um modelo rodando no seu PC. O modelo atual e <span className="text-app-text-primary">{selectedOllamaModel.label}</span>,
+                    com perfil <span className="text-app-text-primary">{getOllamaProfileLabel(selectedOllamaModel.profile)}</span>.
+                  </p>
+
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <span className="rounded bg-app-surface/60 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
+                          Modelo local
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
+                          {selectedOllamaModel.sizeLabel}
+                        </span>
+                      </div>
+
+                      <div className="mb-3 text-sm font-bold text-app-text-primary">{selectedOllamaModel.label}</div>
+                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
+                        {selectedOllamaModel.description}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
+                      <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
+                        Instalar no terminal
+                      </div>
+                      <code className="block rounded-xl border border-app-border bg-app-surface/40 px-3 py-2 text-[11px] text-app-text-primary">
+                        {selectedOllamaModel.installCommand}
+                      </code>
+                      <p className="mt-3 text-xs leading-relaxed text-app-text-secondary/60">
+                        Requer Ollama {selectedOllamaModel.requiresOllama}. Em PCs mais modestos, vale comecar por modelos leves.
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-app-border bg-app-bg/30 px-4 py-3">
-              <div className="text-xs text-app-text-secondary/60">
-                Se voce quer praticidade, fique com <span className="text-app-text-primary">Gemini</span>.
-                Se preferir testar tudo localmente, comece por{" "}
-                <span className="text-app-text-primary">Qwen 3 VL 2B</span> em PCs mais fracos.
+            <div className="rounded-3xl border border-app-border bg-app-surface/20 p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h4 className="text-sm font-bold uppercase tracking-widest text-app-text-secondary/60">
+                    {translationEngine === "gemini" ? "Modelos Gemini" : "Modelos locais"}
+                  </h4>
+                  <p className="mt-1 text-xs text-app-text-secondary/50">
+                    {translationEngine === "gemini"
+                      ? "Troque o modelo na nuvem sem editar codigo. Alguns modelos pedem billing ou ainda estao em preview."
+                      : "Escolha um modelo mais leve para ganhar velocidade ou um maior se quiser tentar mais qualidade."}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40">
+                    Selecionado agora
+                  </div>
+                  <div className="text-xs text-app-text-primary">
+                    {translationEngine === "gemini" ? selectedGeminiModel.label : selectedOllamaModel.label}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-[9px] font-bold uppercase text-app-text-secondary/30">
-                Escolha o que fizer mais sentido pra voce <ChevronRight size={10} />
-              </div>
+
+              {translationEngine === "gemini" ? (
+                <>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {GEMINI_MODEL_OPTIONS.map((model) => {
+                      const isSelected = geminiModel === model.id;
+
+                      return (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => {
+                            setGeminiModel(model.id);
+                            setTranslationEngine("gemini");
+                          }}
+                          className={`rounded-2xl border p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-app-accent/30 bg-app-surface/80"
+                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+                          }`}
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="text-sm font-bold text-app-text-primary">{model.label}</h5>
+                                {model.recommended && (
+                                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                                    Padrao
+                                  </span>
+                                )}
+                              </div>
+                              <p className="mt-1 text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                                {model.id}
+                              </p>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
+                              {getGeminiAccessLabel(model.access)}
+                            </span>
+                          </div>
+
+                          <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
+                            {model.description}
+                          </p>
+
+                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
+                            <span className="text-app-text-secondary/50">
+                              {getGeminiFamilyLabel(model.family)}
+                            </span>
+                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
+                              {isSelected ? "Selecionado" : "Escolher"}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-app-border bg-app-bg/30 px-4 py-3 text-xs leading-relaxed text-app-text-secondary/60">
+                    Dica: <span className="text-app-text-primary">Gemini 2.5 Flash</span> e o melhor ponto de partida.
+                    Se voce tiver billing ativo ou quiser testar as novidades, pode trocar para a linha <span className="text-app-text-primary">Pro</span> ou para os modelos <span className="text-app-text-primary">Gemini 3</span>.
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {OLLAMA_MODEL_OPTIONS.map((model) => {
+                      const isSelected = ollamaModel === model.id;
+
+                      return (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => {
+                            setOllamaModel(model.id);
+                            setTranslationEngine("ollama");
+                          }}
+                          className={`rounded-2xl border p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-app-accent/30 bg-app-surface/80"
+                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+                          }`}
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="text-sm font-bold text-app-text-primary">{model.label}</h5>
+                                {model.recommended && (
+                                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                                    Boa opcao
+                                  </span>
+                                )}
+                              </div>
+                              <p className="mt-1 text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                                {model.id}
+                              </p>
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
+                              {model.sizeLabel}
+                            </span>
+                          </div>
+
+                          <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
+                            {model.description}
+                          </p>
+
+                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
+                            <span className="text-app-text-secondary/50">
+                              {getOllamaProfileLabel(model.profile)}
+                            </span>
+                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
+                              {isSelected ? "Selecionado" : "Escolher"}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-app-border bg-app-bg/30 px-4 py-3">
+                    <div className="text-xs text-app-text-secondary/60">
+                      Se voce quer praticidade, fique com <span className="text-app-text-primary">Gemini</span>.
+                      Se preferir testar tudo localmente, comece por <span className="text-app-text-primary">Qwen 3 VL 2B</span> em PCs mais fracos.
+                    </div>
+                    <div className="flex items-center gap-1 text-[9px] font-bold uppercase text-app-text-secondary/30">
+                      Escolha o que fizer mais sentido pra voce <ChevronRight size={10} />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </section>
