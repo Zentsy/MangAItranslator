@@ -1,27 +1,74 @@
 # MangAI Translator
 
-App desktop para traducao assistida de manga e quadrinhos, com foco em importar paginas, gerar um rascunho por IA, revisar bloco por bloco e exportar o resultado final.
+Desktop app para localizacao assistida de manga e quadrinhos.
+
+O foco do app e simples: importar um capitulo, gerar um rascunho com IA, revisar bloco por bloco e exportar o resultado sem perder o contexto da pagina.
+
+## Download
+
+Baixe a versao para Windows em [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases).
+
+O usuario final nao precisa instalar `Node.js`, `Rust` ou rodar comando no terminal.
 
 ## O que o app faz
 
-- importa um capitulo inteiro a partir de uma pasta ou de uma pagina
-- salva o projeto localmente para continuar depois
+- importa uma pasta inteira do capitulo ou puxa as paginas vizinhas a partir de uma unica imagem
+- salva projetos localmente para continuar depois
 - gera rascunho com `Gemini` ou `Ollama`
 - permite revisar, reorganizar e editar blocos manualmente
 - exporta em `.txt` e `.docx`
+- checa novas versoes no proprio app
 
 ## Melhor forma de usar hoje
 
 - `Gemini`: melhor experiencia para a maioria das pessoas
-- `Ollama`: opcao local/offline, mas pode ficar lenta em PCs mais modestos
+- `Ollama`: opcao local/offline, mas pode ser bem mais lenta em maquinas modestas
 
-## Tecnologias
+## Screenshots
 
-- `React + Vite + TypeScript`
-- `Tauri + Rust`
-- `SQLite local`
+### Home
 
-## Rodando em desenvolvimento
+![Home do MangAI Translator](screenshots/retomar.png)
+
+### Editor
+
+![Editor com revisao de blocos](screenshots/editor.png)
+
+### Exportacao
+
+![Modal de exportacao](screenshots/exportar.png)
+
+### Modelos
+
+![Selecao de modelos e motores](screenshots/modelos.png)
+
+### Tema claro
+
+![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png)
+
+## Fluxo rapido
+
+1. Escolha `Gemini` ou `Ollama`.
+2. Importe um capitulo.
+3. Gere o `AI Draft`.
+4. Revise os blocos no editor.
+5. Exporte em `.txt` ou `.docx`.
+
+## Como funcionam os motores
+
+### Gemini
+
+- usa a sua propria chave da API
+- e a opcao recomendada para qualidade e velocidade
+- a chave e usada localmente no app para falar direto com a API do Google
+
+### Ollama
+
+- roda localmente no seu PC
+- e util para uso offline ou mais privado
+- o desempenho depende bastante da maquina e do modelo escolhido
+
+## Desenvolvimento
 
 ### Requisitos
 
@@ -29,19 +76,14 @@ App desktop para traducao assistida de manga e quadrinhos, com foco em importar 
 - `Rust`
 - dependencias do Tauri instaladas no sistema
 
-### Instalar dependencias
+### Rodando em desenvolvimento
 
 ```bash
 npm install
-```
-
-### Rodar o app
-
-```bash
 npm run tauri -- dev
 ```
 
-### Build de producao
+### Build rapido
 
 ```bash
 npm run build
@@ -49,81 +91,10 @@ cd src-tauri
 cargo check
 ```
 
-## Gerando o instalador Windows
+## Status do projeto
 
-Para distribuir como app de verdade no Windows, o fluxo e gerar o instalador do Tauri:
+O app ja esta funcional para uso real em Windows, mas continua em fase de beta. O foco atual e polir a experiencia, validar o updater e corrigir bugs de uso real conforme a comunidade testar.
 
-```bash
-$env:TAURI_SIGNING_PRIVATE_KEY="$env:USERPROFILE\.tauri\mangai-updater.key"
-$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="SUA_SENHA_DA_CHAVE"
-npm run tauri -- build --bundles nsis
-```
-
-O artefato principal do beta fica em:
-
-```text
-src-tauri/target/release/bundle/nsis/
-```
-
-O usuario final nao precisa rodar `npm`, `Node.js` ou `Rust`. Ele so baixa o instalador gerado e abre o app normalmente.
-
-## Atualizacoes automaticas
-
-O app agora esta preparado para checar atualizacoes pelo `latest.json` publicado no GitHub Releases.
-
-- endpoint configurado: `https://github.com/Zentsy/MangAItranslator/releases/latest/download/latest.json`
-- updater assinado com chave publica no `tauri.conf.json`
-- instalacao no Windows em modo `passive`
-
-### O que voce precisa configurar uma vez
-
-1. Gerar sua chave privada do updater localmente:
-
-```bash
-npx tauri signer generate -w "$env:USERPROFILE\.tauri\mangai-updater.key" -p "SUA_SENHA_DA_CHAVE" -f --ci
-```
-
-2. Guardar essa chave com cuidado.
-
-Se voce perder a chave privada ou a senha dela, as proximas atualizacoes automaticas deixam de funcionar para quem ja instalou o app.
-
-### GitHub Actions
-
-O repo ja tem workflow em `.github/workflows/release.yml` para publicar releases com o `tauri-action`.
-
-Configure estes secrets no GitHub:
-
-- `TAURI_SIGNING_PRIVATE_KEY`
-- `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-
-### Importante sobre o canal de update
-
-Como o app usa `releases/latest/download/latest.json`, a release que vai alimentar o updater precisa ser uma release normal do GitHub.
-
-- `draft`: nao entra no canal automatico
-- `prerelease`: tambem pode ficar fora do `latest`
-
-Se quiser chamar de beta, tudo bem. So nao marque a release como `prerelease` no GitHub se quiser que o updater pegue essa versao.
-
-## Como testar rapido
-
-1. Abra o app.
-2. Escolha `Gemini` ou `Ollama`.
-3. Importe um capitulo.
-4. Gere o rascunho da pagina.
-5. Revise os blocos no editor.
-6. Exporte o projeto em `.txt` ou `.docx`.
-
-## Estado atual
-
-Este projeto esta em fase de beta fechado/aberto inicial. A base principal ja funciona, mas o foco atual ainda e polish, clareza de UX e empacotamento para release.
-
-## Observacoes
-
-- os projetos ficam salvos localmente neste computador
-- o app ainda esta sendo refinado para release publica
-- se voce usar `Ollama`, o desempenho depende bastante da sua maquina e do modelo escolhido
-
-## Licenca e uso
+## Uso responsavel
 
 Use o app apenas em materiais proprios, licenciados ou para os quais voce tenha permissao de localizacao/traducao.
