@@ -9,6 +9,7 @@ Desktop app para localização assistida de mangá e quadrinhos.
 [![Plataforma](https://img.shields.io/badge/platform-Windows-0078D6)](https://github.com/Zentsy/MangAItranslator/releases/latest)
 
 O foco do app é simples: importar um capítulo, gerar um rascunho com IA, revisar bloco por bloco e exportar o resultado sem perder o contexto da página.
+obs: A IA não traduz *para* você, mas sim **com** você! Ela comete erros e cometerá, ainda mais se estiver usando um modelo mais fraco. Então certifique-se de revisar o resultado.
 
 ## Download
 
@@ -69,7 +70,7 @@ O editor é o coração do app, então a imagem principal fica aqui primeiro.
 1. Escolha `Gemini` ou `Ollama`.
 2. Importe um capítulo.
 3. Gere o `AI Draft`.
-4. Revise os blocos no editor.
+4. **Revise** os blocos no editor.
 5. Exporte em `.txt` ou `.docx`.
 
 ## Como funcionam os motores
