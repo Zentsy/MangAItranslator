@@ -1,4 +1,4 @@
-# MangAI Translator
+﻿# MangAI Translator
 
 Desktop app para localização assistida de mangá e quadrinhos.
 
@@ -15,7 +15,18 @@ O foco do app é simples: importar um capítulo, gerar um rascunho com IA, revis
 - Baixar a versão mais recente: [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases/latest)
 - Release atual: [v0.1.1](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.1)
 
-O usuário final não precisa instalar `Node.js`, `Rust` nem rodar comandos no terminal.
+
+## Aviso para Windows SmartScreen
+
+Como o app ainda é novo e não tem code signing de distribuição no Windows, o SmartScreen pode mostrar um aviso de "aplicativo não reconhecido" na instalação.
+
+Isso não significa que o app tenha sido detectado como malware. Hoje o que acontece é:
+
+- o instalador ainda não tem reputação consolidada no ecossistema da Microsoft
+- o app usa assinatura do updater para validar atualizações, mas isso é diferente de code signing do Windows
+- a meta é reduzir esse atrito nas próximas versões com code signing de distribuição
+
+Se você baixou o app deste repositório oficial e quiser testar mesmo assim, revise o aviso do Windows com calma antes de continuar.
 
 ## O que o app faz
 
@@ -74,6 +85,15 @@ O editor é o coração do app, então a imagem principal fica aqui primeiro.
 - roda localmente no seu PC
 - é útil para uso offline ou mais privado
 - o desempenho depende bastante da máquina e do modelo escolhido
+
+## Roadmap
+
+### Planejado para próximas versões
+
+- code signing no Windows para reduzir o atrito com o SmartScreen e deixar a instalação mais confiável
+- suporte a novas APIs de IA além do Gemini e Ollama, incluindo opções como Claude e GPT
+- suporte ao idioma inglês com prompts próprios para traduzir direto de japonês, coreano e mandarim
+- leitura de mangás direto da fonte por meio de extensões independentes, em um modelo inspirado no ecossistema do Mihon
 
 ## Desenvolvimento
 
