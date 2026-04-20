@@ -2,11 +2,18 @@
 
 Desktop app para localização assistida de mangá e quadrinhos.
 
+[![Baixar no GitHub Releases](https://img.shields.io/badge/Baixar-Windows%20x64-2ea44f?style=for-the-badge&logo=windows)](https://github.com/Zentsy/MangAItranslator/releases/latest)
+[![Release](https://img.shields.io/github/v/release/Zentsy/MangAItranslator?display_name=tag&label=release)](https://github.com/Zentsy/MangAItranslator/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Zentsy/MangAItranslator/total?label=downloads)](https://github.com/Zentsy/MangAItranslator/releases/latest)
+[![Licença MIT](https://img.shields.io/github/license/Zentsy/MangAItranslator?label=license)](LICENSE)
+[![Plataforma](https://img.shields.io/badge/platform-Windows-0078D6)](https://github.com/Zentsy/MangAItranslator/releases/latest)
+
 O foco do app é simples: importar um capítulo, gerar um rascunho com IA, revisar bloco por bloco e exportar o resultado sem perder o contexto da página.
 
 ## Download
 
-Baixe a versão para Windows em [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases).
+- Baixar a versão mais recente: [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases/latest)
+- Release atual: [v0.1.1](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.1)
 
 O usuário final não precisa instalar `Node.js`, `Rust` nem rodar comandos no terminal.
 
