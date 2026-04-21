@@ -484,7 +484,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             }}
             className="gap-2 border-app-border text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
           >
-            <Download size={16} /> EXPORTAR CAPÃTULO
+            <Download size={16} /> EXPORTAR CAPITULO
           </Button>
 
           {isLastPage && (

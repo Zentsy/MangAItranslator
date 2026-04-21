@@ -16,7 +16,7 @@ obs: A IA não traduz *para* você, mas sim **com** você! Ela comete erros e co
 ## Download
 
 - Baixar a versão mais recente: [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases/latest)
-- Release atual: [v0.1.1](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.1)
+- Release atual: [v0.1.2](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.2)
 
 Se o projeto te ajudar e você quiser apoiar o desenvolvimento, também dá para contribuir em [Ko-fi](https://ko-fi.com/zentsy).
 
