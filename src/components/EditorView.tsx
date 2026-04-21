@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+﻿import React, { useEffect, useState, useRef } from "react";
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -145,6 +145,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [imgBase64, setImgBase64] = useState<string>("");
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [finishAfterExport, setFinishAfterExport] = useState(false);
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -258,8 +259,8 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (translationEngine === "gemini" && !apiKey) {
       setStatusModal({
         isOpen: true,
-        title: "Erro de Configuração",
-        description: "A API Key do Gemini não foi encontrada. Configure-a no Dashboard.",
+        title: "Erro de ConfiguraÃ§Ã£o",
+        description: "A API Key do Gemini nÃ£o foi encontrada. Configure-a no Dashboard.",
         type: "error",
       });
       return;
@@ -367,9 +368,31 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     try {
       const success = await exportProject(pages, format);
       if (success) {
+        if (finishAfterExport && currentProjectId) {
+          cancelPendingSaves();
+
+          try {
+            await dbService.deleteProject(currentProjectId);
+            setFinishAfterExport(false);
+            clearStore();
+            onBack();
+            return;
+          } catch (error) {
+            console.error("Erro ao finalizar projeto:", error);
+            setFinishAfterExport(false);
+            setStatusModal({
+              isOpen: true,
+              title: "Exportado, mas nao finalizado",
+              description: "O arquivo foi salvo, mas nao consegui limpar o projeto deste computador.",
+              type: "warning",
+            });
+            return;
+          }
+        }
+
         setStatusModal({
           isOpen: true,
-          title: "Exportação Concluída",
+          title: "Exportacao Concluida",
           description: `O arquivo .${format} foi salvo com sucesso no local escolhido.`,
           type: "success",
         });
@@ -377,28 +400,17 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     } catch (error: any) {
       setStatusModal({
         isOpen: true,
-        title: "Erro na Exportação",
-        description: "Não foi possível salvar o arquivo. Verifique as permissões de pasta.",
+        title: "Erro na Exportacao",
+        description: "Nao foi possivel salvar o arquivo. Verifique as permissoes de pasta.",
         type: "error",
       });
     }
   };
 
-  const handleFinishProject = async () => {
-    if (!currentProjectId) return;
-
-    void exportProject(pages, 'txt');
-    cancelPendingSaves();
-
-    try {
-      await dbService.deleteProject(currentProjectId);
-      clearStore();
-      onBack();
-    } catch (error) {
-      console.error("Erro ao finalizar projeto:", error);
-    }
+  const handleFinishProject = () => {
+    setFinishAfterExport(true);
+    setShowExportModal(true);
   };
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const isTyping = event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement;
@@ -466,10 +478,13 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowExportModal(true)}
+            onClick={() => {
+              setFinishAfterExport(false);
+              setShowExportModal(true);
+            }}
             className="gap-2 border-app-border text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
           >
-            <Download size={16} /> EXPORTAR CAPÍTULO
+            <Download size={16} /> EXPORTAR CAPÃTULO
           </Button>
 
           {isLastPage && (
@@ -668,7 +683,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[9px] font-mono uppercase text-app-text-secondary/60">
                    <div className="flex items-center justify-between">
                       <span className="text-app-text-secondary/80">Ctrl+Ent</span>
-                      <span>Próximo</span>
+                      <span>PrÃ³ximo</span>
                    </div>
                    <div className="flex items-center justify-between">
                       <span className="text-app-text-secondary/80">C+S+Ent</span>
@@ -680,7 +695,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                    </div>
                    <div className="flex items-center justify-between">
                       <span className="text-app-text-secondary/80">Setas</span>
-                      <span>Páginas</span>
+                      <span>PÃ¡ginas</span>
                    </div>
                 </div>
              </div>
@@ -731,7 +746,10 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
       <ExportModal
         isOpen={showExportModal}
-        onClose={() => setShowExportModal(false)}
+        onClose={() => {
+          setShowExportModal(false);
+          setFinishAfterExport(false);
+        }}
         onExport={handleExport}
       />
 
@@ -773,3 +791,4 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 };
 
 export default EditorView;
+

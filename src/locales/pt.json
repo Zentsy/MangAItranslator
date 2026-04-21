@@ -41,8 +41,8 @@
     },
     "finishModal": {
       "title": "Finalizar capitulo?",
-      "description": "Isso vai exportar sua traducao e remover os arquivos temporarios deste projeto para liberar espaco.",
-      "confirm": "Finalizar e limpar"
+      "description": "Na proxima etapa voce escolhe se quer exportar em .txt ou .docx. Depois disso, o projeto local e removido para liberar espaco.",
+      "confirm": "Escolher formato"
     }
   }
 }
