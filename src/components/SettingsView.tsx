@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   GEMINI_MODEL_OPTIONS,
   getGeminiAccessLabel,
@@ -27,6 +28,7 @@ import {
   Download,
   RefreshCw,
   Rocket,
+  Heart,
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import StatusModal, { StatusType } from "@/components/StatusModal";
@@ -62,6 +64,8 @@ const formatLastCheck = (value: string | null) => {
     minute: "2-digit",
   }).format(parsedDate);
 };
+
+const SUPPORT_URL = "https://ko-fi.com/zentsy";
 
 const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
@@ -131,6 +135,20 @@ const SettingsView: React.FC<SettingsViewProps> = ({
       setStatusModal({
         isOpen: true,
         title: "Nao foi possivel limpar agora",
+        description: "Tente novamente em alguns instantes.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleOpenSupport = async () => {
+    try {
+      await openUrl(SUPPORT_URL);
+    } catch (error) {
+      console.error("Erro ao abrir link de apoio:", error);
+      setStatusModal({
+        isOpen: true,
+        title: "Nao foi possivel abrir o link",
         description: "Tente novamente em alguns instantes.",
         type: "error",
       });
@@ -637,6 +655,37 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 className="w-full rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-widest text-app-text-secondary hover:text-app-text-primary"
               >
                 <RotateCcw size={16} className="mr-2" /> MOSTRAR TUTORIAL
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-4 flex items-center gap-2">
+            <Heart size={16} className="text-pink-500" />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">
+              Apoiar o projeto
+            </h3>
+          </div>
+
+          <div className="rounded-3xl border border-pink-500/15 bg-pink-500/5 p-6">
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+              <div className="max-w-[720px]">
+                <h4 className="text-lg font-bold italic text-app-text-primary">Curtiu o MangAI Translator?</h4>
+                <p className="mt-2 text-sm leading-relaxed text-app-text-secondary/65">
+                  Se o app te ajudou e voce quiser fortalecer o projeto, voce pode apoiar o desenvolvimento pelo Ko-fi.
+                  Isso ajuda bastante nas proximas melhorias, manutencao e tempo investido no app.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => {
+                  void handleOpenSupport();
+                }}
+                className="min-w-[220px] rounded-2xl bg-[#FF5E5B] py-6 text-[10px] font-black uppercase tracking-[0.18em] text-white hover:bg-[#ff7b78]"
+              >
+                <Heart size={16} className="mr-2" />
+                Apoiar no Ko-fi
               </Button>
             </div>
           </div>
