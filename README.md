@@ -2,12 +2,20 @@
 
 Desktop app para localização assistida de mangá e quadrinhos.
 
-[![Baixar no GitHub Releases](https://img.shields.io/badge/Baixar-Windows%20x64-2ea44f?style=for-the-badge&logo=windows)](https://github.com/Zentsy/MangAItranslator/releases/latest)
-[![Apoiar no Ko-fi](https://img.shields.io/badge/Apoiar-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white)](https://ko-fi.com/zentsy)
-[![Release](https://img.shields.io/github/v/release/Zentsy/MangAItranslator?display_name=tag&label=release)](https://github.com/Zentsy/MangAItranslator/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/Zentsy/MangAItranslator/total?label=downloads)](https://github.com/Zentsy/MangAItranslator/releases/latest)
-[![Licença MIT](https://img.shields.io/github/license/Zentsy/MangAItranslator?label=license)](LICENSE)
-[![Plataforma](https://img.shields.io/badge/platform-Windows-0078D6)](https://github.com/Zentsy/MangAItranslator/releases/latest)
+<p>
+  <a href="https://github.com/Zentsy/MangAItranslator/releases/latest">
+    <img alt="Baixar para Windows x64" src="https://img.shields.io/badge/Baixar-Windows%20x64-00A884?style=for-the-badge&logo=windows&logoColor=white">
+  </a>
+  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.2">
+    <img alt="Release atual v0.1.2" src="https://img.shields.io/badge/Release-v0.1.2-2F3342?style=for-the-badge">
+  </a>
+  <a href="https://ko-fi.com/zentsy">
+    <img alt="Apoiar no Ko-fi" src="https://img.shields.io/badge/Apoiar-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white">
+  </a>
+  <a href="LICENSE">
+    <img alt="Licença MIT" src="https://img.shields.io/badge/Licença-MIT-0078D6?style=for-the-badge">
+  </a>
+</p>
 
 O foco do app é simples: importar um capítulo, gerar um rascunho com IA, revisar bloco por bloco e exportar o resultado sem perder o contexto da página.
 
