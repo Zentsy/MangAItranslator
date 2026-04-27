@@ -1,4 +1,4 @@
-﻿# MangAI Translator
+# MangAI Translator
 
 Desktop app para localização assistida de mangá e quadrinhos.
 
@@ -6,8 +6,8 @@ Desktop app para localização assistida de mangá e quadrinhos.
   <a href="https://github.com/Zentsy/MangAItranslator/releases/latest">
     <img alt="Baixar para Windows x64" src="https://img.shields.io/badge/Baixar-Windows%20x64-00A884?style=for-the-badge&logo=windows&logoColor=white">
   </a>
-  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.2">
-    <img alt="Release atual v0.1.2" src="https://img.shields.io/badge/Release-v0.1.2-2F3342?style=for-the-badge">
+  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.3">
+    <img alt="Release atual v0.1.3" src="https://img.shields.io/badge/Release-v0.1.3-2F3342?style=for-the-badge">
   </a>
   <a href="https://ko-fi.com/zentsy">
     <img alt="Apoiar no Ko-fi" src="https://img.shields.io/badge/Apoiar-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white">
@@ -24,7 +24,7 @@ obs: A IA não traduz *para* você, mas sim **com** você! Ela comete erros e co
 ## Download
 
 - Baixar a versão mais recente: [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases/latest)
-- Release atual: [v0.1.2](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.2)
+- Release atual: [v0.1.3](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.3)
 
 Se o projeto te ajudar e você quiser apoiar o desenvolvimento, também dá para contribuir em [Ko-fi](https://ko-fi.com/zentsy).
 
