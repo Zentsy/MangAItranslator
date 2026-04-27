@@ -101,12 +101,30 @@ O editor é o coração do app, então a imagem principal fica aqui primeiro.
 
 ## Roadmap
 
-### Planejado para próximas versões
+### v0.2 - Mais motores de IA
+
+- suporte a APIs compatíveis com OpenAI, começando por OpenRouter e LM Studio
+- suporte experimental ao Groq para modelos vision compatíveis
+- seleção mais clara de modelos com suporte a imagem
+- configuração simples de URL, chave e modelo para provedores externos
+
+### v0.3 - Qualidade de tradução
+
+- perfis de tradução por idioma de origem e destino
+- glossário simples para nomes, golpes, termos e formas de tratamento
+- revisão de naturalidade para melhorar o texto final depois do rascunho inicial
+- opção para reprocessar uma página ou bloco específico sem refazer o capítulo inteiro
+
+### Futuro
 
 - code signing no Windows para reduzir o atrito com o SmartScreen e deixar a instalação mais confiável
-- suporte a novas APIs de IA além do Gemini e Ollama, incluindo opções como Claude e GPT
-- suporte ao idioma inglês com prompts próprios para traduzir direto de japonês, coreano e mandarim
 - leitura de mangás direto da fonte por meio de extensões independentes, em um modelo inspirado no ecossistema do Mihon
+
+### Em pesquisa
+
+- exportação visual com a tradução aplicada sobre a imagem
+- ferramentas futuras de limpeza de balões, redraw e typesetting assistido
+- experiência mobile ou modo leitor para acompanhar traduções em dispositivos móveis
 
 ## Desenvolvimento
 
