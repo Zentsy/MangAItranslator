@@ -85,8 +85,8 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: s
 
 const CHANGELOG_ITEMS = [
   {
-    version: "Próxima versão",
-    badge: "Em teste",
+    version: "v0.2.0",
+    badge: "Novo",
     title: "Suporte amplo a modelos e APIs",
     items: [
       "OpenRouter com modo grátis automático e fallback seguro.",
@@ -97,7 +97,7 @@ const CHANGELOG_ITEMS = [
   },
   {
     version: "v0.1.3",
-    badge: "Atual",
+    badge: "Anterior",
     title: "Correções de segurança e release público",
     items: [
       "Ajustes de dependências sinalizadas pelo Dependabot.",
