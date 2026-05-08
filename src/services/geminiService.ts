@@ -22,6 +22,13 @@ const translationResponseSchema: ResponseSchema = {
             description:
               "Traducao final em PT-BR. Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.",
           },
+          type: {
+            type: SchemaType.STRING,
+            format: "enum",
+            description:
+              'Tipo visual do texto quando solicitado: "rect", "outside", "thought", "double" ou "none".',
+            enum: ["rect", "outside", "thought", "double", "none"],
+          },
         },
         required: ["text"],
       },
@@ -60,6 +67,38 @@ const cleanJson = (text: string) => {
     return text;
   }
 };
+
+const getGeminiThinkingConfig = (modelId: string, thinkingEnabled: boolean) => {
+  const normalizedModel = modelId.toLowerCase();
+
+  if (normalizedModel.includes("gemini-3")) {
+    return {
+      thinkingLevel: thinkingEnabled ? "low" : "minimal",
+    };
+  }
+
+  if (normalizedModel.includes("gemini-2.5-pro")) {
+    return thinkingEnabled ? { thinkingBudget: -1 } : undefined;
+  }
+
+  if (normalizedModel.includes("gemini-2.5")) {
+    return {
+      thinkingBudget: thinkingEnabled ? -1 : 0,
+    };
+  }
+
+  return undefined;
+};
+
+const getThinkingInstruction = (thinkingEnabled: boolean) =>
+  thinkingEnabled
+    ? "THINKING: pense internamente antes de responder para reduzir OCR literal e garantir traducao PT-BR, mas devolva somente o JSON final."
+    : "THINKING: priorize resposta direta e rapida; nao inclua raciocinio, notas ou explicacoes.";
+
+const getTypeInstruction = (inferBlockTypes: boolean) =>
+  inferBlockTypes
+    ? 'TIPO: quando conseguir inferir com confianca, inclua "type" como "rect", "outside", "thought", "double" ou "none".'
+    : 'TIPO: nao tente classificar balao/container; se devolver "type", use sempre "none".';
 
 const stringifyGeminiDetails = (details: unknown) => {
   if (!Array.isArray(details)) {
@@ -137,7 +176,9 @@ export const translateWithGemini = async (
   apiKey: string,
   geminiModel: string,
   base64Image: string,
-  onResult: (blocks: { text: string }[]) => void,
+  aiThinkingEnabled: boolean,
+  aiInferBlockTypesEnabled: boolean,
+  onResult: (blocks: { text: string; type?: "rect" | "outside" | "thought" | "double" | "none" }[]) => void,
   retryCount = 0
 ): Promise<void> => {
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -152,11 +193,20 @@ REGRAS:
 - IDIOMA: Cada item em "translations.text" deve estar em PT-BR natural e legivel.
 - NAO COPIE O INGLES: Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.
 - OCR: Se um balao estiver vazio, ilegivel ou sem texto relevante, nao invente conteudo.
+- ${getThinkingInstruction(aiThinkingEnabled)}
+- ${getTypeInstruction(aiInferBlockTypesEnabled)}
 - FORMATO: Responda somente em JSON valido seguindo o schema.
 
 Exemplo:
 English: "I love you."
 JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
+  const thinkingConfig = getGeminiThinkingConfig(geminiModel, aiThinkingEnabled);
+  const generationConfig: Record<string, unknown> = {
+    temperature: 0.2,
+    responseMimeType: "application/json",
+    responseSchema: translationResponseSchema,
+    ...(thinkingConfig ? { thinkingConfig } : {}),
+  };
 
   try {
     const result = await model.generateContent({
@@ -176,11 +226,7 @@ JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
           ],
         },
       ],
-      generationConfig: {
-        temperature: 0.2,
-        responseMimeType: "application/json",
-        responseSchema: translationResponseSchema,
-      },
+      generationConfig,
     });
 
     const responseText = result.response.text();
@@ -196,7 +242,15 @@ JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
     } catch (parseError) {
       if (retryCount < MAX_RETRIES) {
         console.warn(`Falha no parse (tentativa ${retryCount + 1}). Tentando novamente...`);
-        return translateWithGemini(apiKey, geminiModel, base64Image, onResult, retryCount + 1);
+        return translateWithGemini(
+          apiKey,
+          geminiModel,
+          base64Image,
+          aiThinkingEnabled,
+          aiInferBlockTypesEnabled,
+          onResult,
+          retryCount + 1
+        );
       }
       throw parseError;
     }
@@ -204,7 +258,15 @@ JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
     const normalizedError = normalizeGeminiError(error);
 
     if (retryCount < MAX_RETRIES && !NON_RETRYABLE_GEMINI_CODES.has(normalizedError.code)) {
-      return translateWithGemini(apiKey, geminiModel, base64Image, onResult, retryCount + 1);
+      return translateWithGemini(
+        apiKey,
+        geminiModel,
+        base64Image,
+        aiThinkingEnabled,
+        aiInferBlockTypesEnabled,
+        onResult,
+        retryCount + 1
+      );
     }
 
     console.error("Erro na API do Gemini apos retries:", {

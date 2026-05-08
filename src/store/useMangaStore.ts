@@ -2,6 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEFAULT_GEMINI_MODEL } from "@/config/geminiModels";
 import { DEFAULT_OLLAMA_MODEL } from "@/config/ollamaModels";
+import {
+  DEFAULT_OPENAI_COMPATIBLE_MODEL,
+  DEFAULT_OPENAI_COMPATIBLE_PROVIDER,
+  type OpenRouterModelMode,
+  type OpenAiCompatibleProviderId,
+} from "@/config/openAiCompatibleProviders";
 import { dbService } from "@/services/dbService";
 
 const SAVE_DEBOUNCE_MS = 450;
@@ -23,7 +29,7 @@ const clearAllPendingSaves = () => {
 };
 
 export type BlockType = "rect" | "outside" | "thought" | "double" | "none";
-export type TranslationEngine = "gemini" | "ollama";
+export type TranslationEngine = "gemini" | "ollama" | "openaiCompatible";
 export type AppTheme = "dark-organic" | "paper-light";
 
 export interface TranslationBlock {
@@ -51,6 +57,12 @@ interface MangaStore {
   translationEngine: TranslationEngine;
   geminiModel: string;
   ollamaModel: string;
+  openAiCompatibleProvider: OpenAiCompatibleProviderId;
+  openAiCompatibleApiKey: string;
+  openAiCompatibleModel: string;
+  openRouterModelMode: OpenRouterModelMode;
+  aiThinkingEnabled: boolean;
+  aiInferBlockTypesEnabled: boolean;
   hasFinishedOnboarding: boolean;
   theme: AppTheme;
 
@@ -61,6 +73,12 @@ interface MangaStore {
   setTranslationEngine: (engine: TranslationEngine) => void;
   setGeminiModel: (model: string) => void;
   setOllamaModel: (model: string) => void;
+  setOpenAiCompatibleProvider: (provider: OpenAiCompatibleProviderId) => void;
+  setOpenAiCompatibleApiKey: (key: string) => void;
+  setOpenAiCompatibleModel: (model: string) => void;
+  setOpenRouterModelMode: (mode: OpenRouterModelMode) => void;
+  setAiThinkingEnabled: (enabled: boolean) => void;
+  setAiInferBlockTypesEnabled: (enabled: boolean) => void;
   setHasFinishedOnboarding: (value: boolean) => void;
   setTheme: (theme: AppTheme) => void;
   resetOnboarding: () => void;
@@ -91,6 +109,12 @@ export const useMangaStore = create<MangaStore>()(
       translationEngine: "gemini",
       geminiModel: DEFAULT_GEMINI_MODEL,
       ollamaModel: DEFAULT_OLLAMA_MODEL,
+      openAiCompatibleProvider: DEFAULT_OPENAI_COMPATIBLE_PROVIDER,
+      openAiCompatibleApiKey: "",
+      openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
+      openRouterModelMode: "auto-free",
+      aiThinkingEnabled: false,
+      aiInferBlockTypesEnabled: false,
       hasFinishedOnboarding: false,
       theme: "dark-organic",
 
@@ -100,6 +124,16 @@ export const useMangaStore = create<MangaStore>()(
       setTranslationEngine: (translationEngine) => set({ translationEngine }),
       setGeminiModel: (geminiModel) => set({ geminiModel }),
       setOllamaModel: (ollamaModel) => set({ ollamaModel }),
+      setOpenAiCompatibleProvider: (openAiCompatibleProvider) =>
+        set({ openAiCompatibleProvider }),
+      setOpenAiCompatibleApiKey: (openAiCompatibleApiKey) =>
+        set({ openAiCompatibleApiKey }),
+      setOpenAiCompatibleModel: (openAiCompatibleModel) =>
+        set({ openAiCompatibleModel }),
+      setOpenRouterModelMode: (openRouterModelMode) => set({ openRouterModelMode }),
+      setAiThinkingEnabled: (aiThinkingEnabled) => set({ aiThinkingEnabled }),
+      setAiInferBlockTypesEnabled: (aiInferBlockTypesEnabled) =>
+        set({ aiInferBlockTypesEnabled }),
       setHasFinishedOnboarding: (hasFinishedOnboarding) => set({ hasFinishedOnboarding }),
       setTheme: (theme) => set({ theme }),
       resetOnboarding: () => set({ hasFinishedOnboarding: false }),
@@ -240,6 +274,12 @@ export const useMangaStore = create<MangaStore>()(
           translationEngine: "gemini",
           geminiModel: DEFAULT_GEMINI_MODEL,
           ollamaModel: DEFAULT_OLLAMA_MODEL,
+          openAiCompatibleProvider: DEFAULT_OPENAI_COMPATIBLE_PROVIDER,
+          openAiCompatibleApiKey: "",
+          openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
+          openRouterModelMode: "auto-free",
+          aiThinkingEnabled: false,
+          aiInferBlockTypesEnabled: false,
           hasFinishedOnboarding: false,
           theme: "dark-organic",
         });
@@ -254,6 +294,12 @@ export const useMangaStore = create<MangaStore>()(
         translationEngine: state.translationEngine,
         geminiModel: state.geminiModel,
         ollamaModel: state.ollamaModel,
+        openAiCompatibleProvider: state.openAiCompatibleProvider,
+        openAiCompatibleApiKey: state.openAiCompatibleApiKey,
+        openAiCompatibleModel: state.openAiCompatibleModel,
+        openRouterModelMode: state.openRouterModelMode,
+        aiThinkingEnabled: state.aiThinkingEnabled,
+        aiInferBlockTypesEnabled: state.aiInferBlockTypesEnabled,
         hasFinishedOnboarding: state.hasFinishedOnboarding,
         theme: state.theme,
       }),

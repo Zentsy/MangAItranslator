@@ -13,6 +13,7 @@ import UpdateModal from "@/components/UpdateModal";
 import { Button } from "@/components/ui/button";
 import { getGeminiModelOption } from "@/config/geminiModels";
 import { getOllamaModelOption } from "@/config/ollamaModels";
+import { getOpenAiCompatibleProvider } from "@/config/openAiCompatibleProviders";
 import { useAppUpdater, type UpdateCheckResult } from "@/hooks/useAppUpdater";
 import { useMangaStore } from "@/store/useMangaStore";
 import { dbService, DBProject, resolveAssetUrl } from "@/services/dbService";
@@ -105,9 +106,14 @@ function App() {
     setTranslationEngine,
     geminiModel,
     ollamaModel,
+    openAiCompatibleProvider,
+    openAiCompatibleApiKey,
+    openAiCompatibleModel,
+    setOpenAiCompatibleApiKey,
   } = useMangaStore();
   const selectedGeminiModel = getGeminiModelOption(geminiModel);
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
+  const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
   const navItems: NavItem[] = [
     { id: "dashboard", label: "Dashboard", caption: "Inicio", icon: LayoutGrid },
     { id: "library", label: "Biblioteca", caption: "Historico", icon: Library },
@@ -302,6 +308,12 @@ function App() {
                         >
                           Ollama
                         </button>
+                        <button
+                          onClick={() => setTranslationEngine("openaiCompatible")}
+                          className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "openaiCompatible" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
+                        >
+                          APIs
+                        </button>
                       </div>
                       <div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-[0.16em]">
                         {translationEngine === "gemini" ? (
@@ -313,7 +325,7 @@ function App() {
                               Melhor qualidade e fluxo principal do app
                             </span>
                           </>
-                        ) : (
+                        ) : translationEngine === "ollama" ? (
                           <>
                             <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-amber-400">
                               Modo local
@@ -322,7 +334,16 @@ function App() {
                               Roda no seu PC e pode variar bastante de velocidade
                             </span>
                           </>
-                        )}
+                        ) : translationEngine === "openaiCompatible" ? (
+                          <>
+                            <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-blue-400">
+                              API externa
+                            </span>
+                            <span className="max-w-[260px] text-app-text-secondary/50">
+                              {selectedOpenAiProvider.label} usando modelo vision compativel
+                            </span>
+                          </>
+                        ) : null}
                       </div>
                    </div>
                    {translationEngine === "gemini" && (
@@ -340,6 +361,20 @@ function App() {
                         />
                      </div>
                    )}
+                   {translationEngine === "openaiCompatible" && selectedOpenAiProvider.requiresApiKey && (
+                     <div
+                        className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300"
+                      >
+                        <Key size={14} className="text-app-text-secondary" />
+                        <input
+                          type="password"
+                          placeholder={selectedOpenAiProvider.apiKeyLabel}
+                          value={openAiCompatibleApiKey}
+                          onChange={(e) => setOpenAiCompatibleApiKey(e.target.value)}
+                         className="w-40 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
+                        />
+                     </div>
+                   )}
                    {translationEngine === "gemini" && (
                      <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
                         <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
@@ -347,6 +382,16 @@ function App() {
                         </span>
                         <span className="text-[10px] font-mono text-app-text-primary">
                           {selectedGeminiModel.label}
+                        </span>
+                     </div>
+                   )}
+                   {translationEngine === "openaiCompatible" && (
+                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
+                          {selectedOpenAiProvider.label}
+                        </span>
+                        <span className="max-w-[220px] truncate text-[10px] font-mono text-app-text-primary">
+                          {openAiCompatibleModel}
                         </span>
                      </div>
                    )}

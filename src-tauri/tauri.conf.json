@@ -26,8 +26,12 @@
           "ipc:",
           "http://ipc.localhost",
           "https://generativelanguage.googleapis.com",
+          "https://openrouter.ai",
+          "https://api.groq.com",
           "http://localhost:11434",
-          "http://127.0.0.1:11434"
+          "http://127.0.0.1:11434",
+          "http://localhost:1234",
+          "http://127.0.0.1:1234"
         ],
         "img-src": [
           "'self'",

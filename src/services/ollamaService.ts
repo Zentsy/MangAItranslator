@@ -56,8 +56,19 @@ SCHEMA JSON OBRIGATORIO:
 
 Se a pagina nao tiver texto traduzivel, retorne {"translations": []}.`;
 
-const OLLAMA_USER_PROMPT =
+const getThinkingInstruction = (thinkingEnabled: boolean) =>
+  thinkingEnabled
+    ? "\nTHINKING: pense antes de responder se o modelo suportar raciocinio, mas devolva apenas o JSON final."
+    : "\nTHINKING: nao use cadeia de pensamento; seja direto e devolva apenas o JSON final.";
+
+const getTypeInstruction = (inferBlockTypes: boolean) =>
+  inferBlockTypes
+    ? '\nTIPO: tente inferir o tipo visual quando tiver confianca. Use "rect", "outside", "thought", "double" ou "none".'
+    : '\nTIPO: nao tente classificar balao/container. Use "none" em todos os blocos.';
+
+const getOllamaUserPrompt = (inferBlockTypes: boolean) =>
   `Analise esta pagina de manga e retorne somente o JSON solicitado.
+${getTypeInstruction(inferBlockTypes)}
 Siga exatamente este schema:
 ${JSON.stringify(OLLAMA_TRANSLATION_SCHEMA)}`;
 
@@ -200,6 +211,8 @@ const salvageBlocksFromBrokenJson = (rawText: string): OllamaTranslationBlock[] 
 export const translateImage = async (
   base64Image: string,
   model: string,
+  thinkingEnabled = false,
+  inferBlockTypes = false,
   onChunk?: (chunk: string) => void,
   onStatusChange?: (update: OllamaStatusUpdate) => void
 ) => {
@@ -236,7 +249,7 @@ export const translateImage = async (
       body: JSON.stringify({
         model,
         stream: false,
-        think: false,
+        think: thinkingEnabled,
         format: OLLAMA_TRANSLATION_SCHEMA,
         options: {
           temperature: 0,
@@ -244,11 +257,11 @@ export const translateImage = async (
         messages: [
           {
             role: "system",
-            content: OLLAMA_SYSTEM_PROMPT,
+            content: `${OLLAMA_SYSTEM_PROMPT}${getThinkingInstruction(thinkingEnabled)}`,
           },
           {
             role: "user",
-            content: OLLAMA_USER_PROMPT,
+            content: getOllamaUserPrompt(inferBlockTypes),
             images: [base64Image],
           },
         ],
@@ -257,7 +270,9 @@ export const translateImage = async (
 
     onStatusChange?.({
       stage: "processing",
-      message: `${model} recebeu a imagem. Agora ele esta pensando localmente, o que pode demorar bastante em CPU.`,
+      message: thinkingEnabled
+        ? `${model} recebeu a imagem com thinking ligado. Isso pode melhorar a leitura, mas demora mais em CPU.`
+        : `${model} recebeu a imagem. Aguardando resposta local sem thinking extra.`,
     });
 
     console.info(`${requestLabel} imagem enviada, aguardando resposta completa...`);

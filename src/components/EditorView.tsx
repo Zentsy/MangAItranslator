@@ -7,6 +7,7 @@ import { translatePage } from "@/services/translationService";
 import { dbService } from "@/services/dbService";
 import { exportProject } from "@/utils/exportUtils";
 import { useTheme } from "@/contexts/ThemeContext";
+import { getOpenAiCompatibleProvider } from "@/config/openAiCompatibleProviders";
 import CyberLoading from "@/components/CyberLoading";
 import ConfirmModal from "@/components/ConfirmModal";
 import StatusModal, { StatusType } from "@/components/StatusModal";
@@ -29,6 +30,8 @@ import {
   MessageSquareOff,
   CheckCircle2,
   Flag,
+  Brain,
+  Tags,
 } from "lucide-react";
 
 const MAX_AI_IMAGE_WIDTH = 1600;
@@ -129,6 +132,14 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     translationEngine,
     geminiModel,
     ollamaModel,
+    openAiCompatibleProvider,
+    openAiCompatibleApiKey,
+    openAiCompatibleModel,
+    openRouterModelMode,
+    aiThinkingEnabled,
+    setAiThinkingEnabled,
+    aiInferBlockTypesEnabled,
+    setAiInferBlockTypesEnabled,
     currentProjectId,
     clearStore,
     cancelPendingSaves,
@@ -196,7 +207,21 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPageIndex, pages.length, isTranslating, apiKey, translationEngine, geminiModel]);
+  }, [
+    currentPageIndex,
+    pages.length,
+    isTranslating,
+    apiKey,
+    translationEngine,
+    geminiModel,
+    ollamaModel,
+    openAiCompatibleProvider,
+    openAiCompatibleApiKey,
+    openAiCompatibleModel,
+    openRouterModelMode,
+    aiThinkingEnabled,
+    aiInferBlockTypesEnabled,
+  ]);
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, index: number) => {
     // Prevent Ctrl+Enter from bubbling to global handler (which triggers AI)
@@ -254,23 +279,41 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   if (!currentPage) return null;
 
   const pageImageSrc = currentPage.url || "";
+  const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
 
   const handleTranslate = async () => {
     if (translationEngine === "gemini" && !apiKey) {
       setStatusModal({
         isOpen: true,
-        title: "Erro de ConfiguraÃ§Ã£o",
-        description: "A API Key do Gemini nÃ£o foi encontrada. Configure-a no Dashboard.",
+        title: "Erro de Configuracao",
+        description: "A API Key do Gemini nao foi encontrada. Configure-a no Dashboard.",
         type: "error",
       });
       return;
     }
+
+    if (
+      translationEngine === "openaiCompatible" &&
+      selectedOpenAiProvider.requiresApiKey &&
+      !openAiCompatibleApiKey
+    ) {
+      setStatusModal({
+        isOpen: true,
+        title: "Erro de Configuracao",
+        description: `A ${selectedOpenAiProvider.apiKeyLabel} nao foi encontrada. Configure-a em Ajustes.`,
+        type: "error",
+      });
+      return;
+    }
+
     setIsTranslating(true);
     setTranslationStartedAt(Date.now());
     setTranslationStatus(
       translationEngine === "ollama"
         ? `Otimizando imagem para ${ollamaModel}...`
-        : "Enviando imagem para o Gemini..."
+        : translationEngine === "openaiCompatible"
+          ? `Enviando imagem para ${selectedOpenAiProvider.label}...`
+          : "Enviando imagem para o Gemini..."
     );
     try {
       const base64 = await optimizeImageForAi(imgBase64);
@@ -279,6 +322,12 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         apiKey,
         geminiModel,
         ollamaModel,
+        openAiCompatibleProvider,
+        openAiCompatibleApiKey,
+        openAiCompatibleModel,
+        openRouterModelMode,
+        aiThinkingEnabled,
+        aiInferBlockTypesEnabled,
         base64,
         (results) => {
           if (results.length === 0) {
@@ -288,6 +337,8 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               description:
                 translationEngine === "ollama"
                   ? "O modelo local respondeu, mas nao devolveu blocos utilizaveis. Isso e comum em modelos pequenos/CPU-only. Tente outra pagina ou use Gemini."
+                  : translationEngine === "openaiCompatible"
+                    ? "O provedor respondeu, mas nao devolveu blocos utilizaveis. Confira se o modelo selecionado suporta vision."
                   : "A IA respondeu sem blocos utilizaveis para esta pagina.",
               type: "warning",
             });
@@ -325,14 +376,37 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         friendlyMessage = "A chave foi aceita, mas o projeto nao tem permissao para usar a Gemini API. Confira a chave, o projeto no AI Studio e se a API esta habilitada.";
       } else if (errorCode === "GEMINI_BAD_REQUEST") {
         friendlyMessage = "O Gemini recusou a requisicao. Confira se a chave pertence ao projeto certo e se esse projeto tem quota disponivel.";
-      } else if (errorStr.includes("network") || errorStr.includes("fetch")) {
-        friendlyMessage = "Erro de conexao. Verifique sua internet ou o status dos servidores da IA.";
+      } else if (
+        translationEngine === "ollama" &&
+        (errorStr.includes("network") || errorStr.includes("fetch") || errorStr.includes("ollama nao encontrado"))
+      ) {
+        friendlyMessage = "Nao consegui falar com o Ollama. Verifique se ele esta aberto e rodando na sua maquina.";
+      } else if (
+        translationEngine === "openaiCompatible" &&
+        (errorStr.includes("network") || errorStr.includes("fetch"))
+      ) {
+        friendlyMessage =
+          selectedOpenAiProvider.id === "lmstudio"
+            ? "Nao consegui falar com o LM Studio. Abra o servidor local na porta 1234 e confira se o modelo esta carregado."
+            : `Nao consegui falar com ${selectedOpenAiProvider.label}. Verifique sua internet e tente novamente.`;
       } else if (errorStr.includes("tempo limite") || errorStr.includes("timeout")) {
         friendlyMessage = "O Ollama demorou demais para responder. Em CPU isso pode acontecer; tente uma pagina mais simples ou use Gemini.";
-      } else if (errorStr.includes("ollama nao encontrado") || errorStr.includes("failed to fetch")) {
-        friendlyMessage = "Nao consegui falar com o Ollama. Verifique se ele esta aberto e rodando na sua maquina.";
       } else if (errorStr.includes("modelo do ollama nao encontrado") || errorStr.includes("not found")) {
         friendlyMessage = `O modelo ${ollamaModel} ainda nao foi baixado. Rode "ollama pull ${ollamaModel}" no terminal.`;
+      } else if (errorCode === "OPENAI_COMPATIBLE_MISSING_KEY" || errorCode === "OPENAI_COMPATIBLE_INVALID_KEY") {
+        friendlyMessage = error?.message ?? `Confira a chave salva para ${selectedOpenAiProvider.label}.`;
+      } else if (errorCode === "OPENAI_COMPATIBLE_RATE_LIMIT") {
+        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} retornou limite de uso. Tente novamente em alguns minutos.`;
+      } else if (errorCode === "OPENAI_COMPATIBLE_FORBIDDEN") {
+        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} recusou a requisicao. Confira permissao, saldo e modelo.`;
+      } else if (errorCode === "OPENAI_COMPATIBLE_BAD_REQUEST") {
+        friendlyMessage = error?.message ?? `Confira se ${openAiCompatibleModel} suporta vision em ${selectedOpenAiProvider.label}.`;
+      } else if (errorCode === "OPENAI_COMPATIBLE_TIMEOUT") {
+        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} demorou demais para responder.`;
+      } else if (errorCode === "OPENAI_COMPATIBLE_UNKNOWN") {
+        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} retornou um erro inesperado.`;
+      } else if (errorStr.includes("network") || errorStr.includes("fetch")) {
+        friendlyMessage = "Erro de conexao. Verifique sua internet ou o status dos servidores da IA.";
       }
 
       setStatusModal({
@@ -474,6 +548,46 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </Button>
 
           <div className="mx-2 h-4 w-px bg-app-border" />
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAiThinkingEnabled(!aiThinkingEnabled)}
+            disabled={isTranslating}
+            title={
+              aiThinkingEnabled
+                ? "Thinking ligado: pode melhorar modelos dificeis, mas demora mais."
+                : "Thinking desligado: mais rapido para o uso normal."
+            }
+            className={`gap-2 border-app-border text-[10px] font-bold transition-all ${
+              aiThinkingEnabled
+                ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/15"
+                : "text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
+            }`}
+          >
+            <Brain size={14} />
+            {aiThinkingEnabled ? "THINK ON" : "THINK OFF"}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAiInferBlockTypesEnabled(!aiInferBlockTypesEnabled)}
+            disabled={isTranslating}
+            title={
+              aiInferBlockTypesEnabled
+                ? "Tipos ligados: a IA tenta marcar balao, pensamento e narracao."
+                : "Tipos desligados: o app usa tipo neutro em todos os blocos."
+            }
+            className={`gap-2 border-app-border text-[10px] font-bold transition-all ${
+              aiInferBlockTypesEnabled
+                ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/15"
+                : "text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
+            }`}
+          >
+            <Tags size={14} />
+            {aiInferBlockTypesEnabled ? "TIPOS ON" : "TIPOS OFF"}
+          </Button>
 
           <Button
             variant="outline"
@@ -683,7 +797,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[9px] font-mono uppercase text-app-text-secondary/60">
                    <div className="flex items-center justify-between">
                       <span className="text-app-text-secondary/80">Ctrl+Ent</span>
-                      <span>PrÃ³ximo</span>
+                      <span>Proximo</span>
                    </div>
                    <div className="flex items-center justify-between">
                       <span className="text-app-text-secondary/80">C+S+Ent</span>
@@ -695,7 +809,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                    </div>
                    <div className="flex items-center justify-between">
                       <span className="text-app-text-secondary/80">Setas</span>
-                      <span>PÃ¡ginas</span>
+                      <span>Paginas</span>
                    </div>
                 </div>
              </div>

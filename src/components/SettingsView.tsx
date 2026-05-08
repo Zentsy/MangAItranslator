@@ -11,9 +11,21 @@ import {
   getOllamaProfileLabel,
   OLLAMA_MODEL_OPTIONS,
 } from "@/config/ollamaModels";
+import {
+  getDefaultOpenAiCompatibleModelForProvider,
+  getOpenAiCompatibleModel,
+  getOpenAiCompatibleProvider,
+  OPENROUTER_AUTO_FREE_MODEL_ID,
+  OPENAI_COMPATIBLE_PROVIDERS,
+  type OpenAiCompatibleProviderId,
+} from "@/config/openAiCompatibleProviders";
 import { useMangaStore } from "@/store/useMangaStore";
 import { useTheme } from "@/contexts/ThemeContext";
 import { dbService } from "@/services/dbService";
+import {
+  clearOpenRouterFreeModelsCache,
+  getOpenRouterFreeVisionModels,
+} from "@/services/openAiCompatibleService";
 import { Button } from "@/components/ui/button";
 import type { AvailableUpdateInfo, UpdateCheckResult } from "@/hooks/useAppUpdater";
 import {
@@ -23,12 +35,15 @@ import {
   ShieldCheck,
   Sparkles,
   ChevronRight,
+  Key,
   Monitor,
   Database,
   Download,
   RefreshCw,
   Rocket,
   Heart,
+  Brain,
+  Tags,
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import StatusModal, { StatusType } from "@/components/StatusModal";
@@ -88,6 +103,18 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     setGeminiModel,
     ollamaModel,
     setOllamaModel,
+    openAiCompatibleProvider,
+    setOpenAiCompatibleProvider,
+    openAiCompatibleApiKey,
+    setOpenAiCompatibleApiKey,
+    openAiCompatibleModel,
+    setOpenAiCompatibleModel,
+    openRouterModelMode,
+    setOpenRouterModelMode,
+    aiThinkingEnabled,
+    setAiThinkingEnabled,
+    aiInferBlockTypesEnabled,
+    setAiInferBlockTypesEnabled,
     resetOnboarding,
     clearStore,
   } = useMangaStore();
@@ -95,8 +122,18 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   const { theme, setTheme } = useTheme();
   const selectedGeminiModel = getGeminiModelOption(geminiModel);
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
+  const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
+  const selectedOpenAiModel = getOpenAiCompatibleModel(openAiCompatibleProvider, openAiCompatibleModel);
+
+  const handleOpenAiProviderSelect = (providerId: OpenAiCompatibleProviderId) => {
+    setOpenAiCompatibleProvider(providerId);
+    setOpenAiCompatibleModel(getDefaultOpenAiCompatibleModelForProvider(providerId));
+    setOpenRouterModelMode(providerId === "openrouter" ? "auto-free" : "manual");
+    setTranslationEngine("openaiCompatible");
+  };
 
   const [confirmWipe, setConfirmWipe] = useState(false);
+  const [isRefreshingOpenRouterModels, setIsRefreshingOpenRouterModels] = useState(false);
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -108,6 +145,31 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     description: "",
     type: "info",
   });
+
+  const handleRefreshOpenRouterFreeModels = async () => {
+    setIsRefreshingOpenRouterModels(true);
+
+    try {
+      clearOpenRouterFreeModelsCache();
+      const models = await getOpenRouterFreeVisionModels(openAiCompatibleApiKey, true);
+      setStatusModal({
+        isOpen: true,
+        title: "Lista atualizada",
+        description: `Encontramos ${models.length} modelo(s) gratis com vision no OpenRouter.`,
+        type: "success",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Nao foi possivel atualizar a lista agora.";
+      setStatusModal({
+        isOpen: true,
+        title: "Falha ao atualizar",
+        description: message,
+        type: "error",
+      });
+    } finally {
+      setIsRefreshingOpenRouterModels(false);
+    }
+  };
 
   const handleResetOnboarding = () => {
     resetOnboarding();
@@ -310,7 +372,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     Motor ativo
                   </div>
                   <h4 className="mt-2 text-lg font-bold italic text-app-text-primary">
-                    {translationEngine === "gemini" ? "Google Gemini" : "Ollama Local"}
+                    {translationEngine === "gemini"
+                      ? "Google Gemini"
+                      : translationEngine === "ollama"
+                        ? "Ollama Local"
+                        : selectedOpenAiProvider.label}
                   </h4>
                 </div>
 
@@ -336,6 +402,113 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     }`}
                   >
                     Ollama
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTranslationEngine("openaiCompatible")}
+                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                      translationEngine === "openaiCompatible"
+                        ? "bg-app-text-primary text-app-bg"
+                        : "text-app-text-secondary hover:text-app-text-primary"
+                    }`}
+                  >
+                    APIs
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-2xl border border-app-border bg-app-bg/35 p-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`mt-0.5 rounded-xl border p-2 ${
+                      aiThinkingEnabled
+                        ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
+                        : "border-app-border bg-app-surface/40 text-app-text-secondary"
+                    }`}
+                  >
+                    <Brain size={16} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-primary">
+                      Thinking
+                    </div>
+                    <p className="mt-1 max-w-2xl text-xs leading-relaxed text-app-text-secondary/60">
+                      Ligue quando quiser que a IA pense mais antes de responder. Pode ajudar modelos
+                      locais e reasoning, mas deixa o AI Draft mais lento.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="inline-flex self-start rounded-full border border-app-border bg-app-surface/35 p-1 md:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setAiThinkingEnabled(false)}
+                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                      !aiThinkingEnabled
+                        ? "bg-app-text-primary text-app-bg"
+                        : "text-app-text-secondary hover:text-app-text-primary"
+                    }`}
+                  >
+                    Rapido
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAiThinkingEnabled(true)}
+                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                      aiThinkingEnabled
+                        ? "bg-amber-500 text-black"
+                        : "text-app-text-secondary hover:text-app-text-primary"
+                    }`}
+                  >
+                    Pensar mais
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-2xl border border-app-border bg-app-bg/35 p-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`mt-0.5 rounded-xl border p-2 ${
+                      aiInferBlockTypesEnabled
+                        ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
+                        : "border-app-border bg-app-surface/40 text-app-text-secondary"
+                    }`}
+                  >
+                    <Tags size={16} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-primary">
+                      Tipos de balao
+                    </div>
+                    <p className="mt-1 max-w-2xl text-xs leading-relaxed text-app-text-secondary/60">
+                      Deixe desligado para criar blocos neutros. Ligue apenas se o modelo estiver
+                      classificando bem pensamento, narracao, texto fora de balao e balao duplo.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="inline-flex self-start rounded-full border border-app-border bg-app-surface/35 p-1 md:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setAiInferBlockTypesEnabled(false)}
+                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                      !aiInferBlockTypesEnabled
+                        ? "bg-app-text-primary text-app-bg"
+                        : "text-app-text-secondary hover:text-app-text-primary"
+                    }`}
+                  >
+                    Neutro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAiInferBlockTypesEnabled(true)}
+                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
+                      aiInferBlockTypesEnabled
+                        ? "bg-cyan-500 text-black"
+                        : "text-app-text-secondary hover:text-app-text-primary"
+                    }`}
+                  >
+                    Detectar
                   </button>
                 </div>
               </div>
@@ -379,7 +552,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     </div>
                   </div>
                 </>
-              ) : (
+              ) : translationEngine === "ollama" ? (
                 <>
                   <p className="text-sm leading-relaxed text-app-text-secondary/65">
                     Traduz usando um modelo rodando no seu PC. O modelo atual e <span className="text-app-text-primary">{selectedOllamaModel.label}</span>,
@@ -416,6 +589,64 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     </div>
                   </div>
                 </>
+              ) : (
+                <>
+                  <p className="text-sm leading-relaxed text-app-text-secondary/65">
+                    Traduz usando uma API compativel com OpenAI. O provedor atual e <span className="text-app-text-primary">{selectedOpenAiProvider.label}</span>
+                    {" "}com <span className="text-app-text-primary">
+                      {selectedOpenAiProvider.id === "openrouter" &&
+                      openRouterModelMode === "auto-free"
+                        ? "modelos gratis automaticos"
+                        : `o modelo ${openAiCompatibleModel}`}
+                    </span>.
+                  </p>
+
+                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <span className="rounded bg-app-surface/60 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
+                          {selectedOpenAiProvider.label}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
+                          Vision
+                        </span>
+                      </div>
+
+                      <div className="mb-3 break-all text-xs font-mono text-app-text-primary">{selectedOpenAiProvider.baseUrl}</div>
+                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
+                        {selectedOpenAiProvider.description}
+                      </p>
+                      {selectedOpenAiProvider.id === "openrouter" && (
+                        <div className="mt-3 rounded-xl border border-emerald-500/15 bg-emerald-500/5 px-3 py-2 text-[11px] leading-relaxed text-emerald-500">
+                          No modo automatico, o app tenta apenas modelos vision gratuitos e pula para o proximo se bater cota.
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <Key size={14} className="text-blue-400" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
+                          {selectedOpenAiProvider.requiresApiKey ? selectedOpenAiProvider.apiKeyLabel : "Servidor local"}
+                        </span>
+                      </div>
+
+                      {selectedOpenAiProvider.requiresApiKey ? (
+                        <input
+                          type="password"
+                          value={openAiCompatibleApiKey}
+                          onChange={(event) => setOpenAiCompatibleApiKey(event.target.value)}
+                          placeholder={selectedOpenAiProvider.apiKeyLabel}
+                          className="w-full rounded-xl border border-app-border bg-app-surface/40 px-3 py-3 text-xs font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30 focus:border-app-accent/30"
+                        />
+                      ) : (
+                        <p className="text-xs leading-relaxed text-app-text-secondary/60">
+                          Abra o servidor do LM Studio e mantenha o modelo vision carregado. Nao precisa colar chave no app.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
 
@@ -423,12 +654,18 @@ const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                   <h4 className="text-sm font-bold uppercase tracking-widest text-app-text-secondary/60">
-                    {translationEngine === "gemini" ? "Modelos Gemini" : "Modelos locais"}
+                    {translationEngine === "gemini"
+                      ? "Modelos Gemini"
+                      : translationEngine === "ollama"
+                        ? "Modelos locais"
+                        : "APIs compativeis"}
                   </h4>
                   <p className="mt-1 text-xs text-app-text-secondary/50">
                     {translationEngine === "gemini"
                       ? "Troque o modelo na nuvem sem editar codigo. Alguns modelos pedem billing ou ainda estao em preview."
-                      : "Escolha um modelo mais leve para ganhar velocidade ou um maior se quiser tentar mais qualidade."}
+                      : translationEngine === "ollama"
+                        ? "Escolha um modelo mais leve para ganhar velocidade ou um maior se quiser tentar mais qualidade."
+                        : "Escolha o provedor e o modelo vision que o app deve usar no AI Draft."}
                   </p>
                 </div>
 
@@ -437,7 +674,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     Selecionado agora
                   </div>
                   <div className="text-xs text-app-text-primary">
-                    {translationEngine === "gemini" ? selectedGeminiModel.label : selectedOllamaModel.label}
+                    {translationEngine === "gemini"
+                      ? selectedGeminiModel.label
+                      : translationEngine === "ollama"
+                        ? selectedOllamaModel.label
+                        : selectedOpenAiProvider.id === "openrouter" &&
+                            openRouterModelMode === "auto-free"
+                          ? "OpenRouter / Auto gratis"
+                          : `${selectedOpenAiProvider.label} / ${openAiCompatibleModel}`}
                   </div>
                 </div>
               </div>
@@ -503,7 +747,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     Se voce tiver billing ativo ou quiser testar as novidades, pode trocar para a linha <span className="text-app-text-primary">Pro</span> ou para os modelos <span className="text-app-text-primary">Gemini 3</span>.
                   </div>
                 </>
-              ) : (
+              ) : translationEngine === "ollama" ? (
                 <>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                     {OLLAMA_MODEL_OPTIONS.map((model) => {
@@ -566,6 +810,176 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                     </div>
                     <div className="flex items-center gap-1 text-[9px] font-bold uppercase text-app-text-secondary/30">
                       Escolha o que fizer mais sentido pra voce <ChevronRight size={10} />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                    {OPENAI_COMPATIBLE_PROVIDERS.map((provider) => {
+                      const isSelected = selectedOpenAiProvider.id === provider.id;
+
+                      return (
+                        <button
+                          key={provider.id}
+                          type="button"
+                          onClick={() => handleOpenAiProviderSelect(provider.id)}
+                          className={`rounded-2xl border p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-app-accent/30 bg-app-surface/80"
+                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+                          }`}
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                              <h5 className="text-sm font-bold text-app-text-primary">{provider.label}</h5>
+                              <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                                {provider.requiresApiKey ? "API Key" : "Local"}
+                              </p>
+                            </div>
+                            {provider.id === "openrouter" && (
+                              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                                Flexivel
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="min-h-[52px] text-xs leading-relaxed text-app-text-secondary/60">
+                            {provider.description}
+                          </p>
+
+                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
+                            <span className="max-w-[190px] truncate text-app-text-secondary/50">
+                              {provider.baseUrl.replace(/^https?:\/\//, "")}
+                            </span>
+                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
+                              {isSelected ? "Selecionado" : "Escolher"}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {selectedOpenAiProvider.models.map((model) => {
+                      const isSelected = openAiCompatibleModel === model.id;
+
+                      return (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => {
+                            setOpenAiCompatibleModel(model.id);
+                            setOpenRouterModelMode(
+                              selectedOpenAiProvider.id === "openrouter" &&
+                                model.id === OPENROUTER_AUTO_FREE_MODEL_ID
+                                ? "auto-free"
+                                : "manual"
+                            );
+                            setTranslationEngine("openaiCompatible");
+                          }}
+                          className={`rounded-2xl border p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-app-accent/30 bg-app-surface/80"
+                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
+                          }`}
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h5 className="text-sm font-bold text-app-text-primary">{model.label}</h5>
+                                {model.recommended && (
+                                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                                    Sugestao
+                                  </span>
+                                )}
+                              </div>
+                              <p className="mt-1 break-all text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                                {model.id === OPENROUTER_AUTO_FREE_MODEL_ID
+                                  ? "FILA GRATIS / VISION"
+                                  : model.id}
+                              </p>
+                            </div>
+                          </div>
+
+                          <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
+                            {model.description}
+                          </p>
+
+                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
+                            <span className="text-app-text-secondary/50">Vision</span>
+                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
+                              {isSelected && model.id === OPENROUTER_AUTO_FREE_MODEL_ID
+                                ? "Automatico"
+                                : isSelected
+                                  ? "Selecionado"
+                                  : "Escolher"}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 grid gap-3 rounded-2xl border border-app-border bg-app-bg/30 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                    <label className="block">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
+                        Modelo customizado avancado
+                      </span>
+                      <input
+                        type="text"
+                        value={
+                          selectedOpenAiProvider.id === "openrouter" &&
+                          openRouterModelMode === "auto-free"
+                            ? ""
+                            : openAiCompatibleModel
+                        }
+                        onChange={(event) => {
+                          setOpenAiCompatibleModel(event.target.value);
+                          setOpenRouterModelMode("manual");
+                          setTranslationEngine("openaiCompatible");
+                        }}
+                        placeholder={
+                          selectedOpenAiProvider.id === "openrouter"
+                            ? "Cole um ID manual, ex: google/gemini-2.5-flash"
+                            : selectedOpenAiModel.id
+                        }
+                        className="mt-2 w-full rounded-xl border border-app-border bg-app-surface/40 px-3 py-3 text-xs font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30 focus:border-app-accent/30"
+                      />
+                      <p className="mt-2 text-[11px] leading-relaxed text-app-text-secondary/45">
+                        Deixe vazio e escolha Auto gratis para o app cuidar da fila sem usar modelos pagos.
+                      </p>
+                    </label>
+
+                    <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+                      {selectedOpenAiProvider.id === "openrouter" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleRefreshOpenRouterFreeModels}
+                          disabled={isRefreshingOpenRouterModels}
+                          className="rounded-xl border-emerald-500/20 px-5 py-6 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500 hover:bg-emerald-500/10"
+                        >
+                          {isRefreshingOpenRouterModels ? (
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                          )}
+                          Atualizar lista gratis
+                        </Button>
+                      )}
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          void openUrl(selectedOpenAiProvider.docsUrl);
+                        }}
+                        className="rounded-xl border-app-border px-5 py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"
+                      >
+                        Abrir docs
+                      </Button>
                     </div>
                   </div>
                 </>

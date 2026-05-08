@@ -18,6 +18,15 @@
     "fs:allow-exists",
     "fs:allow-copy-file",
     "fs:allow-mkdir",
-    "fs:scope-appdata-recursive"
+    "fs:scope-appdata-recursive",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://openrouter.ai/**" },
+        { "url": "https://api.groq.com/**" },
+        { "url": "http://localhost:1234/**" },
+        { "url": "http://127.0.0.1:1234/**" }
+      ]
+    }
   ]
 }
