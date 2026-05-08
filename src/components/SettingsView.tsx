@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
   GEMINI_MODEL_OPTIONS,
@@ -19,7 +19,7 @@ import {
   OPENAI_COMPATIBLE_PROVIDERS,
   type OpenAiCompatibleProviderId,
 } from "@/config/openAiCompatibleProviders";
-import { useMangaStore } from "@/store/useMangaStore";
+import { useMangaStore, type TranslationEngine } from "@/store/useMangaStore";
 import { useTheme } from "@/contexts/ThemeContext";
 import { dbService } from "@/services/dbService";
 import {
@@ -29,21 +29,28 @@ import {
 import { Button } from "@/components/ui/button";
 import type { AvailableUpdateInfo, UpdateCheckResult } from "@/hooks/useAppUpdater";
 import {
-  Settings,
-  Trash2,
-  RotateCcw,
-  ShieldCheck,
-  Sparkles,
+  Brain,
   ChevronRight,
-  Key,
-  Monitor,
+  Cloud,
+  Cpu,
   Database,
   Download,
-  RefreshCw,
-  Rocket,
+  ExternalLink,
+  Github,
   Heart,
-  Brain,
+  History,
+  Info,
+  Palette,
+  RefreshCw,
+  RotateCcw,
+  Settings,
+  ShieldCheck,
+  Sparkles,
   Tags,
+  Trash2,
+  Wand2,
+  Zap,
+  type LucideIcon,
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import StatusModal, { StatusType } from "@/components/StatusModal";
@@ -62,16 +69,68 @@ interface SettingsViewProps {
   onInstallUpdate: () => Promise<boolean>;
 }
 
+type SettingsSectionId = "ai" | "editor" | "appearance" | "data" | "updates" | "about";
+
+const SUPPORT_URL = "https://ko-fi.com/zentsy";
+const GITHUB_URL = "https://github.com/Zentsy/MangAItranslator";
+
+const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: string; icon: LucideIcon }> = [
+  { id: "ai", label: "IA", kicker: "motores", icon: Sparkles },
+  { id: "editor", label: "Editor", kicker: "draft", icon: Wand2 },
+  { id: "appearance", label: "Aparência", kicker: "tema", icon: Palette },
+  { id: "data", label: "Dados", kicker: "local", icon: Database },
+  { id: "updates", label: "Atualizações", kicker: "release", icon: RefreshCw },
+  { id: "about", label: "Sobre", kicker: "projeto", icon: Info },
+];
+
+const CHANGELOG_ITEMS = [
+  {
+    version: "Próxima versão",
+    badge: "Em teste",
+    title: "Suporte amplo a modelos e APIs",
+    items: [
+      "OpenRouter com modo grátis automático e fallback seguro.",
+      "LM Studio com detecção automática do modelo carregado.",
+      "Groq como modo turbo para páginas leves.",
+      "Thinking e tipos de balão agora podem ser ligados direto no editor.",
+    ],
+  },
+  {
+    version: "v0.1.3",
+    badge: "Atual",
+    title: "Correções de segurança e release público",
+    items: [
+      "Ajustes de dependências sinalizadas pelo Dependabot.",
+      "README, licença MIT e avisos de SmartScreen refinados.",
+      "Fluxo de atualização automática preparado via GitHub Releases.",
+    ],
+  },
+  {
+    version: "v0.1.2",
+    badge: "Base pública",
+    title: "Apoio, roadmap e refinamentos",
+    items: [
+      "Ko-fi adicionado ao app e ao repositório.",
+      "Roadmap público atualizado com pedidos da comunidade.",
+      "Correções no fluxo de exportação e acabamento visual.",
+    ],
+  },
+  {
+    version: "v0.1.1",
+    badge: "Beta",
+    title: "Instalador e atualizações",
+    items: [
+      "Build Windows assinado para o updater do Tauri.",
+      "Primeiro canal de atualização pelo GitHub Releases.",
+      "Ajustes de branding, ícone e pacote de release.",
+    ],
+  },
+];
+
 const formatLastCheck = (value: string | null) => {
-  if (!value) {
-    return "Ainda nao verificado";
-  }
-
+  if (!value) return "Ainda não verificado";
   const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Ainda nao verificado";
-  }
-
+  if (Number.isNaN(parsedDate.getTime())) return "Ainda não verificado";
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "short",
@@ -80,8 +139,94 @@ const formatLastCheck = (value: string | null) => {
   }).format(parsedDate);
 };
 
-const SUPPORT_URL = "https://ko-fi.com/zentsy";
+const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
+const panelClass = "rounded-[2rem] border border-app-border bg-app-surface/25 p-5 shadow-black/10";
+const cardClass = "rounded-3xl border border-app-border bg-app-bg/25 p-5";
+const labelClass = "text-[10px] font-black uppercase tracking-[0.22em] text-app-text-secondary/50";
+const inputClass = "w-full rounded-2xl border border-app-border bg-app-surface/50 px-4 py-3 text-xs font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30 focus:border-app-accent/40";
 
+const SectionTitle = ({ icon: Icon, label, title, description }: { icon: LucideIcon; label: string; title: string; description: string }) => (
+  <div className="mb-6 flex items-start gap-4">
+    <div className="rounded-2xl border border-app-border bg-app-surface/50 p-3 text-app-text-secondary">
+      <Icon size={22} />
+    </div>
+    <div className="min-w-0">
+      <div className={labelClass}>{label}</div>
+      <h3 className="mt-2 text-2xl font-black uppercase italic tracking-tighter text-app-text-primary">{title}</h3>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-app-text-secondary/70">{description}</p>
+    </div>
+  </div>
+);
+
+const InfoRow = ({ label, value }: { label: string; value: ReactNode }) => (
+  <div className="flex items-center justify-between gap-4 border-b border-app-border/60 py-3 last:border-b-0">
+    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">{label}</span>
+    <span className="text-right text-xs font-bold text-app-text-primary">{value}</span>
+  </div>
+);
+
+const ToggleButton = ({
+  active,
+  title,
+  description,
+  icon: Icon,
+  onClick,
+  accentClass,
+}: {
+  active: boolean;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  onClick: () => void;
+  accentClass: string;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cx(
+      "rounded-3xl border p-5 text-left transition-all",
+      active ? accentClass : "border-app-border bg-app-bg/25 text-app-text-secondary hover:bg-app-surface/50 hover:text-app-text-primary"
+    )}
+  >
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="rounded-2xl border border-current/20 bg-current/10 p-3"><Icon size={18} /></div>
+      <span className="rounded-full border border-current/20 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em]">{active ? "Ativo" : "Opcional"}</span>
+    </div>
+    <h4 className="text-base font-black italic text-app-text-primary">{title}</h4>
+    <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">{description}</p>
+  </button>
+);
+
+const EngineCard = ({
+  active,
+  icon: Icon,
+  title,
+  badge,
+  description,
+  tone,
+  onClick,
+}: {
+  active: boolean;
+  icon: LucideIcon;
+  title: string;
+  badge: string;
+  description: string;
+  tone: string;
+  onClick: () => void;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={cx("rounded-3xl border p-5 text-left transition-all", active ? tone : "border-app-border bg-app-bg/25 hover:bg-app-surface/50")}
+  >
+    <div className="mb-4 flex items-start justify-between gap-3">
+      <Icon size={22} />
+      <span className="rounded-full border border-app-border px-2 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-app-text-secondary">{badge}</span>
+    </div>
+    <h5 className="font-black italic text-app-text-primary">{title}</h5>
+    <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">{description}</p>
+  </button>
+);
 const SettingsView: React.FC<SettingsViewProps> = ({
   onBack,
   appVersion,
@@ -97,6 +242,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
 }) => {
   const {
     apiKey,
+    setApiKey,
     translationEngine,
     setTranslationEngine,
     geminiModel,
@@ -120,10 +266,26 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   } = useMangaStore();
 
   const { theme, setTheme } = useTheme();
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>("ai");
+  const [confirmWipe, setConfirmWipe] = useState(false);
+  const [isRefreshingOpenRouterModels, setIsRefreshingOpenRouterModels] = useState(false);
+  const [statusModal, setStatusModal] = useState<{ isOpen: boolean; title: string; description: string; type: StatusType }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    type: "info",
+  });
+
   const selectedGeminiModel = getGeminiModelOption(geminiModel);
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
   const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
   const selectedOpenAiModel = getOpenAiCompatibleModel(openAiCompatibleProvider, openAiCompatibleModel);
+
+  const activeEngineLabel = useMemo(() => {
+    if (translationEngine === "gemini") return "Google Gemini";
+    if (translationEngine === "ollama") return "Ollama Local";
+    return selectedOpenAiProvider.label;
+  }, [selectedOpenAiProvider.label, translationEngine]);
 
   const handleOpenAiProviderSelect = (providerId: OpenAiCompatibleProviderId) => {
     setOpenAiCompatibleProvider(providerId);
@@ -132,40 +294,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     setTranslationEngine("openaiCompatible");
   };
 
-  const [confirmWipe, setConfirmWipe] = useState(false);
-  const [isRefreshingOpenRouterModels, setIsRefreshingOpenRouterModels] = useState(false);
-  const [statusModal, setStatusModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    description: string;
-    type: StatusType;
-  }>({
-    isOpen: false,
-    title: "",
-    description: "",
-    type: "info",
-  });
-
   const handleRefreshOpenRouterFreeModels = async () => {
     setIsRefreshingOpenRouterModels(true);
-
     try {
       clearOpenRouterFreeModelsCache();
       const models = await getOpenRouterFreeVisionModels(openAiCompatibleApiKey, true);
-      setStatusModal({
-        isOpen: true,
-        title: "Lista atualizada",
-        description: `Encontramos ${models.length} modelo(s) gratis com vision no OpenRouter.`,
-        type: "success",
-      });
+      setStatusModal({ isOpen: true, title: "Lista atualizada", description: `Encontramos ${models.length} modelo(s) grátis com vision no OpenRouter.`, type: "success" });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Nao foi possivel atualizar a lista agora.";
-      setStatusModal({
-        isOpen: true,
-        title: "Falha ao atualizar",
-        description: message,
-        type: "error",
-      });
+      const message = error instanceof Error ? error.message : "Não foi possível atualizar a lista agora.";
+      setStatusModal({ isOpen: true, title: "Falha ao atualizar", description: message, type: "error" });
     } finally {
       setIsRefreshingOpenRouterModels(false);
     }
@@ -173,12 +310,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
 
   const handleResetOnboarding = () => {
     resetOnboarding();
-    setStatusModal({
-      isOpen: true,
-      title: "Tutorial reativado",
-      description: "As dicas iniciais vao aparecer novamente no painel.",
-      type: "success",
-    });
+    setStatusModal({ isOpen: true, title: "Tutorial reativado", description: "As dicas iniciais vão aparecer novamente no painel.", type: "success" });
   };
 
   const handleWipeAll = async () => {
@@ -186,945 +318,300 @@ const SettingsView: React.FC<SettingsViewProps> = ({
       await dbService.wipeAllData();
       clearStore();
       setConfirmWipe(false);
-      setStatusModal({
-        isOpen: true,
-        title: "Dados apagados",
-        description: "Historico, cache de imagens e configuracoes foram removidos deste computador.",
-        type: "success",
-      });
+      setStatusModal({ isOpen: true, title: "Dados apagados", description: "Histórico, cache de imagens e configurações foram removidos deste computador.", type: "success" });
     } catch (error) {
       console.error("Erro ao limpar dados locais:", error);
-      setStatusModal({
-        isOpen: true,
-        title: "Nao foi possivel limpar agora",
-        description: "Tente novamente em alguns instantes.",
-        type: "error",
-      });
+      setStatusModal({ isOpen: true, title: "Não foi possível limpar agora", description: "Tente novamente em alguns instantes.", type: "error" });
     }
   };
 
-  const handleOpenSupport = async () => {
+  const openExternalUrl = async (url: string) => {
     try {
-      await openUrl(SUPPORT_URL);
+      await openUrl(url);
     } catch (error) {
-      console.error("Erro ao abrir link de apoio:", error);
-      setStatusModal({
-        isOpen: true,
-        title: "Nao foi possivel abrir o link",
-        description: "Tente novamente em alguns instantes.",
-        type: "error",
-      });
+      console.error("Erro ao abrir link externo:", error);
+      setStatusModal({ isOpen: true, title: "Não foi possível abrir o link", description: "Tente novamente em alguns instantes.", type: "error" });
+    }
+  };
+
+  const renderGeminiSettings = () => (
+    <div className="space-y-4">
+      <label className="block">
+        <span className={labelClass}>Gemini API Key</span>
+        <input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="Cole sua chave do Google AI Studio" className={cx(inputClass, "mt-2")} />
+        <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/60">A chave fica salva neste computador e o app fala direto com a API do Google.</p>
+      </label>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {GEMINI_MODEL_OPTIONS.map((model) => {
+          const isSelected = geminiModel === model.id;
+          return (
+            <button key={model.id} type="button" onClick={() => { setGeminiModel(model.id); setTranslationEngine("gemini"); }} className={cx("rounded-2xl border p-4 text-left transition-all", isSelected ? "border-emerald-500/30 bg-emerald-500/10" : "border-app-border bg-app-bg/30 hover:bg-app-surface/50")}>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-sm font-black text-app-text-primary">{model.label}</span>
+                <span className="rounded-full border border-app-border px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-app-text-secondary">{getGeminiAccessLabel(model.access)}</span>
+              </div>
+              <p className="text-xs leading-relaxed text-app-text-secondary/70">{model.description}</p>
+              <div className="mt-3 text-[9px] font-bold uppercase tracking-[0.18em] text-app-text-secondary/50">{getGeminiFamilyLabel(model.family)} {isSelected ? "- selecionado" : ""}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderOllamaSettings = () => (
+    <div className="space-y-4">
+      <div className={cardClass}>
+        <InfoRow label="Modelo atual" value={selectedOllamaModel.label} />
+        <InfoRow label="Perfil" value={getOllamaProfileLabel(selectedOllamaModel.profile)} />
+        <InfoRow label="Tamanho" value={selectedOllamaModel.sizeLabel} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {OLLAMA_MODEL_OPTIONS.map((model) => {
+          const isSelected = ollamaModel === model.id;
+          return (
+            <button key={model.id} type="button" onClick={() => { setOllamaModel(model.id); setTranslationEngine("ollama"); }} className={cx("rounded-2xl border p-4 text-left transition-all", isSelected ? "border-violet-500/30 bg-violet-500/10" : "border-app-border bg-app-bg/30 hover:bg-app-surface/50")}>
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <span className="text-sm font-black text-app-text-primary">{model.label}</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary/50">{model.sizeLabel}</span>
+              </div>
+              <p className="text-xs leading-relaxed text-app-text-secondary/70">{model.description}</p>
+              <code className="mt-3 block rounded-xl border border-app-border bg-app-surface/50 px-3 py-2 text-[10px] text-app-text-primary">{model.installCommand}</code>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderOpenAiCompatibleSettings = () => (
+    <div className="space-y-4">
+      {selectedOpenAiProvider.requiresApiKey ? (
+        <label className="block">
+          <span className={labelClass}>{selectedOpenAiProvider.apiKeyLabel}</span>
+          <input type="password" value={openAiCompatibleApiKey} onChange={(event) => setOpenAiCompatibleApiKey(event.target.value)} placeholder={selectedOpenAiProvider.apiKeyLabel} className={cx(inputClass, "mt-2")} />
+        </label>
+      ) : (
+        <div className={cardClass}>
+          <div className="mb-2 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={16} className="text-blue-400" /><span className="text-sm font-black">Servidor local</span></div>
+          <p className="text-xs leading-relaxed text-app-text-secondary/70">Deixe o LM Studio aberto em <span className="text-app-text-primary">localhost:1234</span>. O app tenta detectar o modelo carregado automaticamente.</p>
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {selectedOpenAiProvider.models.map((model) => {
+          const isSelected = openAiCompatibleModel === model.id;
+          return (
+            <button key={model.id} type="button" onClick={() => { setOpenAiCompatibleModel(model.id); setOpenRouterModelMode(selectedOpenAiProvider.id === "openrouter" && model.id === OPENROUTER_AUTO_FREE_MODEL_ID ? "auto-free" : "manual"); setTranslationEngine("openaiCompatible"); }} className={cx("rounded-2xl border p-4 text-left transition-all", isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-app-border bg-app-bg/30 hover:bg-app-surface/50")}>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-sm font-black text-app-text-primary">{model.label}</span>
+                {model.recommended && <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-emerald-400">Sugestão</span>}
+              </div>
+              <p className="text-xs leading-relaxed text-app-text-secondary/70">{model.description}</p>
+              <p className="mt-3 break-all text-[10px] font-mono uppercase tracking-wider text-app-text-secondary/50">{model.id === OPENROUTER_AUTO_FREE_MODEL_ID ? "Fila grátis / vision" : model.id}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="rounded-3xl border border-app-border bg-app-bg/30 p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div><div className={labelClass}>Avançado</div><p className="mt-1 text-xs text-app-text-secondary/60">Use apenas se você já souber o ID exato do modelo.</p></div>
+          <Button type="button" variant="outline" onClick={() => { void openExternalUrl(selectedOpenAiProvider.docsUrl); }} className="rounded-xl border-app-border px-4 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary">Docs <ExternalLink size={13} className="ml-2" /></Button>
+        </div>
+        <input type="text" value={selectedOpenAiProvider.id === "openrouter" && openRouterModelMode === "auto-free" ? "" : openAiCompatibleModel} onChange={(event) => { setOpenAiCompatibleModel(event.target.value); setOpenRouterModelMode("manual"); setTranslationEngine("openaiCompatible"); }} placeholder={selectedOpenAiProvider.id === "openrouter" ? "Cole um ID manual, ex: google/gemini-2.5-flash" : selectedOpenAiModel.id} className={inputClass} />
+        {selectedOpenAiProvider.id === "openrouter" && (
+          <Button type="button" variant="outline" onClick={handleRefreshOpenRouterFreeModels} disabled={isRefreshingOpenRouterModels} className="mt-3 w-full rounded-xl border-emerald-500/20 py-5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500 hover:bg-emerald-500/10">
+            <RefreshCw className={cx("mr-2 h-4 w-4", isRefreshingOpenRouterModels && "animate-spin")} /> Atualizar lista grátis
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+  const renderAiSection = () => (
+    <section className="space-y-6">
+      <SectionTitle icon={Sparkles} label="Motores de tradução" title="Escolha como a IA trabalha" description="Selecione entre nuvem, APIs flexíveis e modelos locais. O modo recomendado continua simples, mas quem quiser ajustar tem espaço para isso." />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
+        <div className={panelClass}>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div><div className={labelClass}>Motor ativo</div><h4 className="mt-2 text-xl font-black italic text-app-text-primary">{activeEngineLabel}</h4></div>
+            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-400">Pronto para AI Draft</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <EngineCard active={translationEngine === "gemini"} icon={Cloud} title="Google Gemini" badge="Confiável" description="Melhor escolha para qualidade consistente e pouco atrito no dia a dia." tone="border-emerald-500/30 bg-emerald-500/10" onClick={() => setTranslationEngine("gemini")} />
+            {OPENAI_COMPATIBLE_PROVIDERS.map((provider) => {
+              const isSelected = translationEngine === "openaiCompatible" && selectedOpenAiProvider.id === provider.id;
+              const Icon = provider.id === "lmstudio" ? Cpu : provider.id === "groq" ? Zap : Cloud;
+              const chip = provider.id === "groq" ? "Turbo" : provider.id === "lmstudio" ? "Local" : "Flexível";
+              const tone = provider.id === "groq" ? "border-orange-500/30 bg-orange-500/10" : provider.id === "lmstudio" ? "border-blue-500/30 bg-blue-500/10" : "border-cyan-500/30 bg-cyan-500/10";
+              return <EngineCard key={provider.id} active={isSelected} icon={Icon} title={provider.label} badge={chip} description={provider.description} tone={tone} onClick={() => handleOpenAiProviderSelect(provider.id)} />;
+            })}
+            <EngineCard active={translationEngine === "ollama"} icon={Cpu} title="Ollama Local" badge="Experimental" description="Opção local simples para quem já usa Ollama, mas pode ser lenta em CPU." tone="border-violet-500/30 bg-violet-500/10" onClick={() => setTranslationEngine("ollama")} />
+          </div>
+        </div>
+        <div className={panelClass}>
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div><div className={labelClass}>Configuração do motor</div><h4 className="mt-2 text-xl font-black italic text-app-text-primary">{activeEngineLabel}</h4></div>
+            <button type="button" onClick={() => setActiveSection("editor")} className="flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary">Ajustes do draft <ChevronRight size={12} /></button>
+          </div>
+          {translationEngine === "gemini" && renderGeminiSettings()}
+          {translationEngine === "ollama" && renderOllamaSettings()}
+          {translationEngine === "openaiCompatible" && renderOpenAiCompatibleSettings()}
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderEditorSection = () => (
+    <section className="space-y-6">
+      <SectionTitle icon={Wand2} label="AI Draft" title="Comportamento do editor" description="Ajustes que afetam como o rascunho da IA chega na fila de blocos. Também aparecem no editor para troca rápida durante o trabalho." />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ToggleButton active={aiThinkingEnabled} title="Thinking mais cuidadoso" description="Ajuda modelos locais/reasoning a não só transcrever o inglês, mas pode aumentar bastante o tempo de resposta." icon={Brain} onClick={() => setAiThinkingEnabled(!aiThinkingEnabled)} accentClass="border-amber-500/30 bg-amber-500/10 text-amber-400" />
+        <ToggleButton active={aiInferBlockTypesEnabled} title="Detectar tipos de balão" description="Quando ligado, a IA tenta classificar narração, pensamento, texto fora de balão e balão duplo. Se o modelo errar, deixe desligado." icon={Tags} onClick={() => setAiInferBlockTypesEnabled(!aiInferBlockTypesEnabled)} accentClass="border-cyan-500/30 bg-cyan-500/10 text-cyan-400" />
+      </div>
+      <div className={panelClass}>
+        <div className="mb-4 flex items-center gap-2 text-app-text-primary"><Info size={16} className="text-app-accent" /><h4 className="text-sm font-black uppercase tracking-[0.18em]">Sugestão prática</h4></div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className={cardClass}><div className={labelClass}>Uso diário</div><p className="mt-2 text-sm font-bold text-app-text-primary">Thinking desligado</p><p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">Mais rápido para Gemini, Groq e páginas simples.</p></div>
+          <div className={cardClass}><div className={labelClass}>Modelos locais</div><p className="mt-2 text-sm font-bold text-app-text-primary">Thinking ligado</p><p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">Pode melhorar LM Studio, especialmente em modelos menores.</p></div>
+          <div className={cardClass}><div className={labelClass}>Tipos</div><p className="mt-2 text-sm font-bold text-app-text-primary">Opcional</p><p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">Se a classificação vier ruim, usar tudo como bloco neutro é melhor.</p></div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderAppearanceSection = () => (
+    <section className="space-y-6">
+      <SectionTitle icon={Palette} label="Visual" title="Aparência do app" description="Escolha o tema que combina melhor com seu ambiente. A interface continua seguindo a identidade editorial/scan-tech do MangAI." />
+      <div className="grid gap-4 md:grid-cols-2">
+        <button type="button" onClick={() => setTheme("dark-organic")} className={cx("rounded-[2rem] border p-6 text-left transition-all", theme === "dark-organic" ? "border-emerald-500/30 bg-emerald-500/10" : "border-app-border bg-app-surface/30 hover:bg-app-surface/50")}>
+          <div className="mb-8 h-24 rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_42%),linear-gradient(135deg,#090909,#151515)]" />
+          <h4 className="text-xl font-black italic text-app-text-primary">Dark Organic</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Tema escuro para focar na leitura e trabalhar por mais tempo.</p>
+          {theme === "dark-organic" && <div className="mt-4 text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">Ativo</div>}
+        </button>
+        <button type="button" onClick={() => setTheme("paper-light")} className={cx("rounded-[2rem] border p-6 text-left transition-all", theme === "paper-light" ? "border-blue-500/30 bg-blue-500/10" : "border-app-border bg-app-surface/30 hover:bg-app-surface/50")}>
+          <div className="mb-8 h-24 rounded-3xl border border-stone-300 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.16),transparent_45%),linear-gradient(135deg,#fffef8,#eee9d8)]" />
+          <h4 className="text-xl font-black italic text-app-text-primary">Paper Light</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Tema claro com visual de papel, bom para ambientes iluminados.</p>
+          {theme === "paper-light" && <div className="mt-4 text-[9px] font-black uppercase tracking-[0.2em] text-blue-400">Ativo</div>}
+        </button>
+      </div>
+    </section>
+  );
+
+  const renderDataSection = () => (
+    <section className="space-y-6">
+      <SectionTitle icon={Database} label="Privacidade local" title="Dados deste computador" description="O MangAI salva configurações, chaves e projetos localmente para você não precisar configurar tudo de novo a cada abertura." />
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className={panelClass}>
+          <div className="mb-4 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={18} className="text-emerald-400" /><h4 className="text-lg font-black italic">O que fica salvo?</h4></div>
+          <div className="rounded-3xl border border-app-border bg-app-bg/30 px-5 py-2">
+            <InfoRow label="Gemini key" value={apiKey ? "Salva localmente" : "Não configurada"} />
+            <InfoRow label="APIs compatíveis" value={openAiCompatibleApiKey ? "Salva localmente" : "Não configurada"} />
+            <InfoRow label="Projetos" value="SQLite local" />
+            <InfoRow label="Cache" value="Imagens e histórico local" />
+          </div>
+          <p className="mt-4 text-xs leading-relaxed text-app-text-secondary/60">O app não envia sua chave para o desenvolvedor. As chamadas são feitas do seu computador para o provedor escolhido.</p>
+        </div>
+        <div className="space-y-4">
+          <div className="rounded-[2rem] border border-app-border bg-app-surface/25 p-5"><h4 className="text-lg font-black italic text-app-text-primary">Tutorial inicial</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Reative as dicas do primeiro uso caso queira rever o fluxo do app.</p><Button onClick={handleResetOnboarding} variant="outline" className="mt-5 w-full rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-widest text-app-text-secondary hover:text-app-text-primary"><RotateCcw size={16} className="mr-2" /> Mostrar tutorial</Button></div>
+          <div className="rounded-[2rem] border border-rose-500/20 bg-rose-500/5 p-5"><h4 className="text-lg font-black italic text-rose-400">Limpar tudo</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Remove histórico, cache, projetos salvos e chaves deste computador.</p><Button onClick={() => setConfirmWipe(true)} variant="destructive" className="mt-5 w-full rounded-2xl py-6 text-[10px] font-black uppercase tracking-widest"><Trash2 size={16} className="mr-2" /> Apagar dados deste app</Button></div>
+        </div>
+      </div>
+    </section>
+  );
+  const renderUpdatesSection = () => (
+    <section className="space-y-6">
+      <SectionTitle icon={RefreshCw} label="Release" title="Atualizações e changelog" description="Confira a versão instalada, procure updates pelo GitHub Releases e veja o que mudou nas últimas versões." />
+      <div className="grid gap-4 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]">
+        <div className={panelClass}>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div><div className={labelClass}>Versão instalada</div><h4 className="mt-2 text-2xl font-black italic text-app-text-primary">MangAI {appVersion}</h4></div>
+            {availableUpdate ? <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-400">Nova {availableUpdate.version}</span> : <span className="rounded-full border border-app-border bg-app-bg/40 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary">Sem update pendente</span>}
+          </div>
+          <div className="rounded-3xl border border-app-border bg-app-bg/30 px-5 py-3"><InfoRow label="Última verificação" value={formatLastCheck(lastUpdateCheck)} /><InfoRow label="Canal" value="GitHub Releases" /></div>
+          {(updateStatusMessage || updateError) && <p className="mt-4 rounded-2xl border border-app-border bg-app-bg/30 p-4 text-xs leading-relaxed text-app-text-secondary/70">{updateError || updateStatusMessage}</p>}
+          {isInstallingUpdate && <div className="mt-5"><div className="mb-2 flex items-center justify-between text-[11px] text-app-text-secondary/70"><span>Progresso do download</span><span>{updateProgressPercent ?? 0}%</span></div><div className="h-2 overflow-hidden rounded-full bg-app-bg/60"><div className="h-full bg-emerald-400 transition-all duration-300" style={{ width: `${updateProgressPercent ?? 0}%` }} /></div></div>}
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <Button onClick={() => { void onCheckForUpdates(); }} variant="outline" disabled={isCheckingUpdates || isInstallingUpdate} className="rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"><RefreshCw className={cx("mr-2 h-4 w-4", isCheckingUpdates && "animate-spin")} />{isCheckingUpdates ? "Verificando..." : "Verificar agora"}</Button>
+            <Button onClick={() => { void onInstallUpdate(); }} disabled={!availableUpdate || isInstallingUpdate || isCheckingUpdates} className="rounded-2xl py-6 text-[10px] font-black uppercase tracking-[0.18em]">{isInstallingUpdate ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}{isInstallingUpdate ? "Instalando" : availableUpdate ? `Instalar ${availableUpdate.version}` : "Nenhum update agora"}</Button>
+          </div>
+        </div>
+        <div className={panelClass}>
+          <div className="mb-5 flex items-center gap-2 text-app-text-primary"><History size={18} className="text-app-accent" /><h4 className="text-lg font-black italic">Changelog</h4></div>
+          <div className="space-y-3">
+            {CHANGELOG_ITEMS.map((entry) => (
+              <article key={entry.version} className="rounded-3xl border border-app-border bg-app-bg/30 p-5">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><div className="text-[10px] font-black uppercase tracking-[0.22em] text-app-text-secondary/50">{entry.version}</div><h5 className="mt-1 text-base font-black italic text-app-text-primary">{entry.title}</h5></div><span className="rounded-full border border-app-border bg-app-surface/40 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary">{entry.badge}</span></div>
+                <ul className="space-y-2 text-xs leading-relaxed text-app-text-secondary/70">{entry.items.map((item) => <li key={item} className="flex gap-2"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-app-accent" /><span>{item}</span></li>)}</ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderAboutSection = () => (
+    <section className="space-y-6">
+      <SectionTitle icon={Info} label="Projeto" title="MangAI Translator" description="Desktop app para localização assistida de mangá e quadrinhos, feito para acelerar o rascunho sem tirar o controle editorial de você." />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className={panelClass}>
+          <h4 className="text-xl font-black italic text-app-text-primary">Beta aberto</h4>
+          <p className="mt-3 text-sm leading-relaxed text-app-text-secondary/70">O app ainda está evoluindo com feedback da comunidade. Bugs e sugestões são bem-vindos no GitHub.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <Button variant="outline" onClick={() => { void openExternalUrl(GITHUB_URL); }} className="rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"><Github size={16} className="mr-2" /> GitHub</Button>
+            <Button onClick={() => { void openExternalUrl(SUPPORT_URL); }} className="rounded-2xl bg-[#FF5E5B] py-6 text-[10px] font-black uppercase tracking-[0.18em] text-white hover:bg-[#ff7b78]"><Heart size={16} className="mr-2" /> Ko-fi</Button>
+          </div>
+        </div>
+        <div className={panelClass}>
+          <h4 className="text-xl font-black italic text-app-text-primary">Resumo</h4>
+          <div className="mt-4 rounded-3xl border border-app-border bg-app-bg/30 px-5 py-2"><InfoRow label="Versão" value={appVersion} /><InfoRow label="Licença" value="MIT" /><InfoRow label="Release" value="GitHub Releases" /><InfoRow label="Apoio" value="Ko-fi / comunidade" /></div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case "ai": return renderAiSection();
+      case "editor": return renderEditorSection();
+      case "appearance": return renderAppearanceSection();
+      case "data": return renderDataSection();
+      case "updates": return renderUpdatesSection();
+      case "about": return renderAboutSection();
+      default: return renderAiSection();
     }
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-app-border bg-app-surface/20 p-8 shadow-2xl backdrop-blur-md">
-      <header className="mb-12 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="rounded-2xl border border-app-border bg-app-surface/50 p-3">
-            <Settings className="text-app-text-secondary" size={24} />
-          </div>
-          <div>
-            <h2 className="text-3xl font-black uppercase tracking-tighter italic text-app-text-primary">
-              Configuracoes <span className="text-app-text-secondary/20">do app</span>
-            </h2>
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-app-text-secondary/40">
-              Escolha como voce quer traduzir, visualizar e salvar seus dados
-            </p>
-          </div>
+    <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-app-border bg-app-surface/20 p-6 shadow-2xl backdrop-blur-md">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="rounded-2xl border border-app-border bg-app-surface/50 p-3"><Settings className="text-app-text-secondary" size={24} /></div>
+          <div className="min-w-0"><h2 className="text-3xl font-black uppercase tracking-tighter italic text-app-text-primary">Configurações <span className="text-app-text-secondary/20">do app</span></h2><p className="text-[10px] font-mono uppercase tracking-[0.2em] text-app-text-secondary/50">IA, editor, aparência, dados e atualizações em seções separadas</p></div>
         </div>
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className="text-[10px] font-bold uppercase tracking-widest text-app-text-secondary hover:bg-app-surface/50 hover:text-app-text-primary"
-        >
-          Voltar para o painel
-        </Button>
+        <Button variant="ghost" onClick={onBack} className="text-[10px] font-bold uppercase tracking-widest text-app-text-secondary hover:bg-app-surface/50 hover:text-app-text-primary">Voltar para o painel</Button>
       </header>
 
-      <div className="custom-scrollbar flex-1 space-y-8 overflow-y-auto pr-4">
-        <section>
-          <div className="mb-4 flex items-center gap-2">
-            <Rocket size={16} className="text-emerald-500" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">
-              Atualizacoes do app
-            </h3>
-          </div>
-
-          <div className="rounded-3xl border border-app-border bg-app-surface/20 p-5">
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-              <div className="rounded-3xl border border-app-border bg-app-surface/30 p-5">
-                <div className="mb-4 flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/45">
-                      Versao instalada
-                    </div>
-                    <h4 className="mt-2 text-lg font-bold italic text-app-text-primary">
-                      MangAI Translator {appVersion}
-                    </h4>
-                    <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/60">
-                      O app pode checar novas versoes no GitHub Releases e abrir o instalador para voce.
-                    </p>
-                  </div>
-
-                  {availableUpdate ? (
-                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400">
-                      Nova versao {availableUpdate.version}
-                    </span>
-                  ) : (
-                    <span className="rounded-full border border-app-border bg-app-surface px-3 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-app-text-secondary">
-                      Sem update pendente
-                    </span>
-                  )}
-                </div>
-
-                <div className="rounded-2xl border border-app-border bg-app-bg/35 px-4 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em] text-app-text-secondary/50">
-                    <span>Ultima verificacao</span>
-                    <span className="text-app-text-primary">{formatLastCheck(lastUpdateCheck)}</span>
-                  </div>
-
-                  {(updateStatusMessage || updateError) && (
-                    <p className="mt-3 text-xs leading-relaxed text-app-text-secondary/60">
-                      {updateError || updateStatusMessage}
-                    </p>
-                  )}
-
-                  {isInstallingUpdate && (
-                    <div className="mt-4">
-                      <div className="mb-2 flex items-center justify-between text-[11px] text-app-text-secondary/65">
-                        <span>Progresso do download</span>
-                        <span>{updateProgressPercent ?? 0}%</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-app-surface">
-                        <div
-                          className="h-full bg-emerald-400 transition-all duration-300"
-                          style={{ width: `${updateProgressPercent ?? 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col justify-between rounded-3xl border border-app-border bg-app-surface/30 p-5">
-                <div>
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-app-text-secondary/60">
-                    Como funciona
-                  </h4>
-                  <p className="mt-3 text-xs leading-relaxed text-app-text-secondary/60">
-                    Quando uma nova versao estiver publicada, o app avisa aqui e prepara a instalacao para voce.
-                    No Windows, ele fecha sozinho para abrir o instalador.
-                  </p>
-                </div>
-
-                <div className="mt-5 flex flex-col gap-3">
-                  <Button
-                    onClick={() => {
-                      void onCheckForUpdates();
-                    }}
-                    variant="outline"
-                    disabled={isCheckingUpdates || isInstallingUpdate}
-                    className="w-full rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"
-                  >
-                    <RefreshCw className={isCheckingUpdates ? "animate-spin" : ""} />
-                    {isCheckingUpdates ? "Verificando..." : "Verificar agora"}
-                  </Button>
-
-                  <Button
-                    onClick={() => {
-                      void onInstallUpdate();
-                    }}
-                    disabled={!availableUpdate || isInstallingUpdate || isCheckingUpdates}
-                    className="w-full rounded-2xl py-6 text-[10px] font-black uppercase tracking-[0.18em]"
-                  >
-                    {isInstallingUpdate ? (
-                      <>
-                        <RefreshCw className="animate-spin" />
-                        Instalando
-                      </>
-                    ) : (
-                      <>
-                        <Download />
-                        {availableUpdate ? `Instalar ${availableUpdate.version}` : "Nenhum update agora"}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-4 flex items-center gap-2">
-            <Sparkles size={16} className="text-amber-500" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">
-              Como voce quer traduzir
-            </h3>
-          </div>
-
-          <div className="rounded-3xl border border-app-border bg-app-surface/20 p-5">
-            <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-app-border bg-app-surface/30 p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40">
-                    Motor ativo
-                  </div>
-                  <h4 className="mt-2 text-lg font-bold italic text-app-text-primary">
-                    {translationEngine === "gemini"
-                      ? "Google Gemini"
-                      : translationEngine === "ollama"
-                        ? "Ollama Local"
-                        : selectedOpenAiProvider.label}
-                  </h4>
-                </div>
-
-                <div className="inline-flex rounded-full border border-app-border bg-app-bg/35 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setTranslationEngine("gemini")}
-                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      translationEngine === "gemini"
-                        ? "bg-app-text-primary text-app-bg"
-                        : "text-app-text-secondary hover:text-app-text-primary"
-                    }`}
-                  >
-                    Gemini
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTranslationEngine("ollama")}
-                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      translationEngine === "ollama"
-                        ? "bg-app-text-primary text-app-bg"
-                        : "text-app-text-secondary hover:text-app-text-primary"
-                    }`}
-                  >
-                    Ollama
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTranslationEngine("openaiCompatible")}
-                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      translationEngine === "openaiCompatible"
-                        ? "bg-app-text-primary text-app-bg"
-                        : "text-app-text-secondary hover:text-app-text-primary"
-                    }`}
-                  >
-                    APIs
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 rounded-2xl border border-app-border bg-app-bg/35 p-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`mt-0.5 rounded-xl border p-2 ${
-                      aiThinkingEnabled
-                        ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
-                        : "border-app-border bg-app-surface/40 text-app-text-secondary"
-                    }`}
-                  >
-                    <Brain size={16} />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-primary">
-                      Thinking
-                    </div>
-                    <p className="mt-1 max-w-2xl text-xs leading-relaxed text-app-text-secondary/60">
-                      Ligue quando quiser que a IA pense mais antes de responder. Pode ajudar modelos
-                      locais e reasoning, mas deixa o AI Draft mais lento.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="inline-flex self-start rounded-full border border-app-border bg-app-surface/35 p-1 md:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => setAiThinkingEnabled(false)}
-                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      !aiThinkingEnabled
-                        ? "bg-app-text-primary text-app-bg"
-                        : "text-app-text-secondary hover:text-app-text-primary"
-                    }`}
-                  >
-                    Rapido
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAiThinkingEnabled(true)}
-                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      aiThinkingEnabled
-                        ? "bg-amber-500 text-black"
-                        : "text-app-text-secondary hover:text-app-text-primary"
-                    }`}
-                  >
-                    Pensar mais
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 rounded-2xl border border-app-border bg-app-bg/35 p-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`mt-0.5 rounded-xl border p-2 ${
-                      aiInferBlockTypesEnabled
-                        ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
-                        : "border-app-border bg-app-surface/40 text-app-text-secondary"
-                    }`}
-                  >
-                    <Tags size={16} />
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-app-text-primary">
-                      Tipos de balao
-                    </div>
-                    <p className="mt-1 max-w-2xl text-xs leading-relaxed text-app-text-secondary/60">
-                      Deixe desligado para criar blocos neutros. Ligue apenas se o modelo estiver
-                      classificando bem pensamento, narracao, texto fora de balao e balao duplo.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="inline-flex self-start rounded-full border border-app-border bg-app-surface/35 p-1 md:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => setAiInferBlockTypesEnabled(false)}
-                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      !aiInferBlockTypesEnabled
-                        ? "bg-app-text-primary text-app-bg"
-                        : "text-app-text-secondary hover:text-app-text-primary"
-                    }`}
-                  >
-                    Neutro
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAiInferBlockTypesEnabled(true)}
-                    className={`rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition-all ${
-                      aiInferBlockTypesEnabled
-                        ? "bg-cyan-500 text-black"
-                        : "text-app-text-secondary hover:text-app-text-primary"
-                    }`}
-                  >
-                    Detectar
-                  </button>
-                </div>
-              </div>
-
-              {translationEngine === "gemini" ? (
-                <>
-                  <p className="text-sm leading-relaxed text-app-text-secondary/65">
-                    Melhor escolha para quem quer resultado consistente sem configurar modelo local.
-                    O modelo atual e <span className="text-app-text-primary">{selectedGeminiModel.label}</span>.
-                  </p>
-
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <span className="rounded bg-app-surface/60 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
-                          {selectedGeminiModel.recommended ? "Padrao" : "Modelo em uso"}
-                        </span>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                          {getGeminiAccessLabel(selectedGeminiModel.access)}
-                        </span>
-                      </div>
-
-                      <div className="mb-3 text-sm font-bold text-app-text-primary">{selectedGeminiModel.label}</div>
-                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
-                        {selectedGeminiModel.description}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
-                      <div className="mb-3 flex items-center gap-2">
-                        <ShieldCheck size={14} className="text-emerald-500" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
-                          Chave da API
-                        </span>
-                      </div>
-                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
-                        {apiKey
-                          ? "Sua chave fica salva apenas neste computador e o app fala direto com a API do Google."
-                          : "Cole sua chave do Google AI Studio no painel para liberar o AI Draft com Gemini."}
-                      </p>
-                    </div>
-                  </div>
-                </>
-              ) : translationEngine === "ollama" ? (
-                <>
-                  <p className="text-sm leading-relaxed text-app-text-secondary/65">
-                    Traduz usando um modelo rodando no seu PC. O modelo atual e <span className="text-app-text-primary">{selectedOllamaModel.label}</span>,
-                    com perfil <span className="text-app-text-primary">{getOllamaProfileLabel(selectedOllamaModel.profile)}</span>.
-                  </p>
-
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <span className="rounded bg-app-surface/60 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
-                          Modelo local
-                        </span>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                          {selectedOllamaModel.sizeLabel}
-                        </span>
-                      </div>
-
-                      <div className="mb-3 text-sm font-bold text-app-text-primary">{selectedOllamaModel.label}</div>
-                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
-                        {selectedOllamaModel.description}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
-                      <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
-                        Instalar no terminal
-                      </div>
-                      <code className="block rounded-xl border border-app-border bg-app-surface/40 px-3 py-2 text-[11px] text-app-text-primary">
-                        {selectedOllamaModel.installCommand}
-                      </code>
-                      <p className="mt-3 text-xs leading-relaxed text-app-text-secondary/60">
-                        Requer Ollama {selectedOllamaModel.requiresOllama}. Em PCs mais modestos, vale comecar por modelos leves.
-                      </p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm leading-relaxed text-app-text-secondary/65">
-                    Traduz usando uma API compativel com OpenAI. O provedor atual e <span className="text-app-text-primary">{selectedOpenAiProvider.label}</span>
-                    {" "}com <span className="text-app-text-primary">
-                      {selectedOpenAiProvider.id === "openrouter" &&
-                      openRouterModelMode === "auto-free"
-                        ? "modelos gratis automaticos"
-                        : `o modelo ${openAiCompatibleModel}`}
-                    </span>.
-                  </p>
-
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <span className="rounded bg-app-surface/60 px-2 py-1 text-[8px] font-bold uppercase tracking-tighter text-app-text-secondary">
-                          {selectedOpenAiProvider.label}
-                        </span>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                          Vision
-                        </span>
-                      </div>
-
-                      <div className="mb-3 break-all text-xs font-mono text-app-text-primary">{selectedOpenAiProvider.baseUrl}</div>
-                      <p className="text-xs leading-relaxed text-app-text-secondary/60">
-                        {selectedOpenAiProvider.description}
-                      </p>
-                      {selectedOpenAiProvider.id === "openrouter" && (
-                        <div className="mt-3 rounded-xl border border-emerald-500/15 bg-emerald-500/5 px-3 py-2 text-[11px] leading-relaxed text-emerald-500">
-                          No modo automatico, o app tenta apenas modelos vision gratuitos e pula para o proximo se bater cota.
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="rounded-2xl border border-app-border bg-app-bg/35 p-4">
-                      <div className="mb-3 flex items-center gap-2">
-                        <Key size={14} className="text-blue-400" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
-                          {selectedOpenAiProvider.requiresApiKey ? selectedOpenAiProvider.apiKeyLabel : "Servidor local"}
-                        </span>
-                      </div>
-
-                      {selectedOpenAiProvider.requiresApiKey ? (
-                        <input
-                          type="password"
-                          value={openAiCompatibleApiKey}
-                          onChange={(event) => setOpenAiCompatibleApiKey(event.target.value)}
-                          placeholder={selectedOpenAiProvider.apiKeyLabel}
-                          className="w-full rounded-xl border border-app-border bg-app-surface/40 px-3 py-3 text-xs font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30 focus:border-app-accent/30"
-                        />
-                      ) : (
-                        <p className="text-xs leading-relaxed text-app-text-secondary/60">
-                          Abra o servidor do LM Studio e mantenha o modelo vision carregado. Nao precisa colar chave no app.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="rounded-3xl border border-app-border bg-app-surface/20 p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <h4 className="text-sm font-bold uppercase tracking-widest text-app-text-secondary/60">
-                    {translationEngine === "gemini"
-                      ? "Modelos Gemini"
-                      : translationEngine === "ollama"
-                        ? "Modelos locais"
-                        : "APIs compativeis"}
-                  </h4>
-                  <p className="mt-1 text-xs text-app-text-secondary/50">
-                    {translationEngine === "gemini"
-                      ? "Troque o modelo na nuvem sem editar codigo. Alguns modelos pedem billing ou ainda estao em preview."
-                      : translationEngine === "ollama"
-                        ? "Escolha um modelo mais leve para ganhar velocidade ou um maior se quiser tentar mais qualidade."
-                        : "Escolha o provedor e o modelo vision que o app deve usar no AI Draft."}
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40">
-                    Selecionado agora
-                  </div>
-                  <div className="text-xs text-app-text-primary">
-                    {translationEngine === "gemini"
-                      ? selectedGeminiModel.label
-                      : translationEngine === "ollama"
-                        ? selectedOllamaModel.label
-                        : selectedOpenAiProvider.id === "openrouter" &&
-                            openRouterModelMode === "auto-free"
-                          ? "OpenRouter / Auto gratis"
-                          : `${selectedOpenAiProvider.label} / ${openAiCompatibleModel}`}
-                  </div>
-                </div>
-              </div>
-
-              {translationEngine === "gemini" ? (
-                <>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {GEMINI_MODEL_OPTIONS.map((model) => {
-                      const isSelected = geminiModel === model.id;
-
-                      return (
-                        <button
-                          key={model.id}
-                          type="button"
-                          onClick={() => {
-                            setGeminiModel(model.id);
-                            setTranslationEngine("gemini");
-                          }}
-                          className={`rounded-2xl border p-4 text-left transition-all ${
-                            isSelected
-                              ? "border-app-accent/30 bg-app-surface/80"
-                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-                          }`}
-                        >
-                          <div className="mb-3 flex items-start justify-between gap-3">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h5 className="text-sm font-bold text-app-text-primary">{model.label}</h5>
-                                {model.recommended && (
-                                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                                    Padrao
-                                  </span>
-                                )}
-                              </div>
-                              <p className="mt-1 text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
-                                {model.id}
-                              </p>
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                              {getGeminiAccessLabel(model.access)}
-                            </span>
-                          </div>
-
-                          <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
-                            {model.description}
-                          </p>
-
-                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
-                            <span className="text-app-text-secondary/50">
-                              {getGeminiFamilyLabel(model.family)}
-                            </span>
-                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
-                              {isSelected ? "Selecionado" : "Escolher"}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-4 rounded-2xl border border-app-border bg-app-bg/30 px-4 py-3 text-xs leading-relaxed text-app-text-secondary/60">
-                    Dica: <span className="text-app-text-primary">Gemini 2.5 Flash</span> e o melhor ponto de partida.
-                    Se voce tiver billing ativo ou quiser testar as novidades, pode trocar para a linha <span className="text-app-text-primary">Pro</span> ou para os modelos <span className="text-app-text-primary">Gemini 3</span>.
-                  </div>
-                </>
-              ) : translationEngine === "ollama" ? (
-                <>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {OLLAMA_MODEL_OPTIONS.map((model) => {
-                      const isSelected = ollamaModel === model.id;
-
-                      return (
-                        <button
-                          key={model.id}
-                          type="button"
-                          onClick={() => {
-                            setOllamaModel(model.id);
-                            setTranslationEngine("ollama");
-                          }}
-                          className={`rounded-2xl border p-4 text-left transition-all ${
-                            isSelected
-                              ? "border-app-accent/30 bg-app-surface/80"
-                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-                          }`}
-                        >
-                          <div className="mb-3 flex items-start justify-between gap-3">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h5 className="text-sm font-bold text-app-text-primary">{model.label}</h5>
-                                {model.recommended && (
-                                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                                    Boa opcao
-                                  </span>
-                                )}
-                              </div>
-                              <p className="mt-1 text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
-                                {model.id}
-                              </p>
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                              {model.sizeLabel}
-                            </span>
-                          </div>
-
-                          <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
-                            {model.description}
-                          </p>
-
-                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
-                            <span className="text-app-text-secondary/50">
-                              {getOllamaProfileLabel(model.profile)}
-                            </span>
-                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
-                              {isSelected ? "Selecionado" : "Escolher"}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-app-border bg-app-bg/30 px-4 py-3">
-                    <div className="text-xs text-app-text-secondary/60">
-                      Se voce quer praticidade, fique com <span className="text-app-text-primary">Gemini</span>.
-                      Se preferir testar tudo localmente, comece por <span className="text-app-text-primary">Qwen 3 VL 2B</span> em PCs mais fracos.
-                    </div>
-                    <div className="flex items-center gap-1 text-[9px] font-bold uppercase text-app-text-secondary/30">
-                      Escolha o que fizer mais sentido pra voce <ChevronRight size={10} />
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {OPENAI_COMPATIBLE_PROVIDERS.map((provider) => {
-                      const isSelected = selectedOpenAiProvider.id === provider.id;
-
-                      return (
-                        <button
-                          key={provider.id}
-                          type="button"
-                          onClick={() => handleOpenAiProviderSelect(provider.id)}
-                          className={`rounded-2xl border p-4 text-left transition-all ${
-                            isSelected
-                              ? "border-app-accent/30 bg-app-surface/80"
-                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-                          }`}
-                        >
-                          <div className="mb-3 flex items-start justify-between gap-3">
-                            <div>
-                              <h5 className="text-sm font-bold text-app-text-primary">{provider.label}</h5>
-                              <p className="mt-1 text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
-                                {provider.requiresApiKey ? "API Key" : "Local"}
-                              </p>
-                            </div>
-                            {provider.id === "openrouter" && (
-                              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                                Flexivel
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="min-h-[52px] text-xs leading-relaxed text-app-text-secondary/60">
-                            {provider.description}
-                          </p>
-
-                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
-                            <span className="max-w-[190px] truncate text-app-text-secondary/50">
-                              {provider.baseUrl.replace(/^https?:\/\//, "")}
-                            </span>
-                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
-                              {isSelected ? "Selecionado" : "Escolher"}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    {selectedOpenAiProvider.models.map((model) => {
-                      const isSelected = openAiCompatibleModel === model.id;
-
-                      return (
-                        <button
-                          key={model.id}
-                          type="button"
-                          onClick={() => {
-                            setOpenAiCompatibleModel(model.id);
-                            setOpenRouterModelMode(
-                              selectedOpenAiProvider.id === "openrouter" &&
-                                model.id === OPENROUTER_AUTO_FREE_MODEL_ID
-                                ? "auto-free"
-                                : "manual"
-                            );
-                            setTranslationEngine("openaiCompatible");
-                          }}
-                          className={`rounded-2xl border p-4 text-left transition-all ${
-                            isSelected
-                              ? "border-app-accent/30 bg-app-surface/80"
-                              : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-                          }`}
-                        >
-                          <div className="mb-3 flex items-start justify-between gap-3">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h5 className="text-sm font-bold text-app-text-primary">{model.label}</h5>
-                                {model.recommended && (
-                                  <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                                    Sugestao
-                                  </span>
-                                )}
-                              </div>
-                              <p className="mt-1 break-all text-[11px] font-mono uppercase tracking-widest text-app-text-secondary/40">
-                                {model.id === OPENROUTER_AUTO_FREE_MODEL_ID
-                                  ? "FILA GRATIS / VISION"
-                                  : model.id}
-                              </p>
-                            </div>
-                          </div>
-
-                          <p className="min-h-[48px] text-xs leading-relaxed text-app-text-secondary/60">
-                            {model.description}
-                          </p>
-
-                          <div className="mt-4 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em]">
-                            <span className="text-app-text-secondary/50">Vision</span>
-                            <span className={isSelected ? "text-app-text-primary" : "text-app-text-secondary/40"}>
-                              {isSelected && model.id === OPENROUTER_AUTO_FREE_MODEL_ID
-                                ? "Automatico"
-                                : isSelected
-                                  ? "Selecionado"
-                                  : "Escolher"}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-4 grid gap-3 rounded-2xl border border-app-border bg-app-bg/30 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-                    <label className="block">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">
-                        Modelo customizado avancado
-                      </span>
-                      <input
-                        type="text"
-                        value={
-                          selectedOpenAiProvider.id === "openrouter" &&
-                          openRouterModelMode === "auto-free"
-                            ? ""
-                            : openAiCompatibleModel
-                        }
-                        onChange={(event) => {
-                          setOpenAiCompatibleModel(event.target.value);
-                          setOpenRouterModelMode("manual");
-                          setTranslationEngine("openaiCompatible");
-                        }}
-                        placeholder={
-                          selectedOpenAiProvider.id === "openrouter"
-                            ? "Cole um ID manual, ex: google/gemini-2.5-flash"
-                            : selectedOpenAiModel.id
-                        }
-                        className="mt-2 w-full rounded-xl border border-app-border bg-app-surface/40 px-3 py-3 text-xs font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30 focus:border-app-accent/30"
-                      />
-                      <p className="mt-2 text-[11px] leading-relaxed text-app-text-secondary/45">
-                        Deixe vazio e escolha Auto gratis para o app cuidar da fila sem usar modelos pagos.
-                      </p>
-                    </label>
-
-                    <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-                      {selectedOpenAiProvider.id === "openrouter" && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleRefreshOpenRouterFreeModels}
-                          disabled={isRefreshingOpenRouterModels}
-                          className="rounded-xl border-emerald-500/20 px-5 py-6 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500 hover:bg-emerald-500/10"
-                        >
-                          {isRefreshingOpenRouterModels ? (
-                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                          )}
-                          Atualizar lista gratis
-                        </Button>
-                      )}
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          void openUrl(selectedOpenAiProvider.docsUrl);
-                        }}
-                        className="rounded-xl border-app-border px-5 py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"
-                      >
-                        Abrir docs
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-4 flex items-center gap-2">
-            <Monitor size={16} className="text-blue-500" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">
-              Aparencia
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <button
-              onClick={() => setTheme("dark-organic")}
-              className={`rounded-3xl border p-6 text-left transition-all ${
-                theme === "dark-organic"
-                  ? "border-app-accent/30 bg-app-surface/80"
-                  : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-              }`}
-            >
-              <h4 className="mb-1 text-lg font-bold italic text-app-text-primary">Dark Organic</h4>
-              <p className="text-xs leading-relaxed text-app-text-secondary/60">
-                Tema escuro para focar na leitura e trabalhar por mais tempo.
-              </p>
-              {theme === "dark-organic" && (
-                <div className="mt-4 text-[9px] font-black uppercase text-emerald-500">Ativo</div>
-              )}
-            </button>
-
-            <button
-              onClick={() => setTheme("paper-light")}
-              className={`rounded-3xl border p-6 text-left transition-all ${
-                theme === "paper-light"
-                  ? "border-app-accent/30 bg-app-surface/80 shadow-inner"
-                  : "border-app-border bg-app-surface/30 hover:bg-app-surface/50"
-              }`}
-            >
-              <h4 className="mb-1 text-lg font-bold italic text-app-text-primary">Paper Light</h4>
-              <p className="text-xs leading-relaxed text-app-text-secondary/60">
-                Tema claro com visual de papel, bom para ambientes iluminados.
-              </p>
-              {theme === "paper-light" && (
-                <div className="mt-4 text-[9px] font-black uppercase text-app-accent">Ativo</div>
-              )}
-            </button>
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-4 flex items-center gap-2">
-            <Database size={16} className="text-rose-500" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">
-              Seus dados
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-3xl border border-rose-500/10 bg-rose-500/5 p-6 transition-all group hover:bg-rose-500/10">
-              <h4 className="mb-1 text-lg font-bold italic text-rose-400">Limpar tudo</h4>
-              <p className="mb-6 text-xs leading-relaxed text-app-text-secondary/60">
-                Apaga historico, imagens em cache e configuracoes salvas neste computador.
-              </p>
-              <Button
-                onClick={() => setConfirmWipe(true)}
-                variant="destructive"
-                className="w-full rounded-2xl py-6 text-[10px] font-black uppercase tracking-widest"
-              >
-                <Trash2 size={16} className="mr-2" /> APAGAR DADOS DESTE APP
-              </Button>
-            </div>
-
-            <div className="rounded-3xl border border-app-border bg-app-surface/30 p-6 text-left transition-all group hover:bg-app-surface/50">
-              <h4 className="mb-1 text-lg font-bold italic text-app-text-primary">
-                Mostrar tutorial de novo
-              </h4>
-              <p className="mb-6 text-xs leading-relaxed text-app-text-secondary/60">
-                Traz de volta as dicas iniciais para quem quiser rever como o app funciona.
-              </p>
-              <Button
-                onClick={handleResetOnboarding}
-                variant="outline"
-                className="w-full rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-widest text-app-text-secondary hover:text-app-text-primary"
-              >
-                <RotateCcw size={16} className="mr-2" /> MOSTRAR TUTORIAL
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-4 flex items-center gap-2">
-            <Heart size={16} className="text-pink-500" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-app-text-secondary/60">
-              Apoiar o projeto
-            </h3>
-          </div>
-
-          <div className="rounded-3xl border border-pink-500/15 bg-pink-500/5 p-6">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-              <div className="max-w-[720px]">
-                <h4 className="text-lg font-bold italic text-app-text-primary">Curtiu o MangAI Translator?</h4>
-                <p className="mt-2 text-sm leading-relaxed text-app-text-secondary/65">
-                  Se o app te ajudou e voce quiser fortalecer o projeto, voce pode apoiar o desenvolvimento pelo Ko-fi.
-                  Isso ajuda bastante nas proximas melhorias, manutencao e tempo investido no app.
-                </p>
-              </div>
-
-              <Button
-                onClick={() => {
-                  void handleOpenSupport();
-                }}
-                className="min-w-[220px] rounded-2xl bg-[#FF5E5B] py-6 text-[10px] font-black uppercase tracking-[0.18em] text-white hover:bg-[#ff7b78]"
-              >
-                <Heart size={16} className="mr-2" />
-                Apoiar no Ko-fi
-              </Button>
-            </div>
-          </div>
-        </section>
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-5 lg:grid-cols-[245px_minmax(0,1fr)] lg:grid-rows-none">
+        <aside className="custom-scrollbar flex gap-2 overflow-x-auto rounded-[2rem] border border-app-border bg-app-bg/25 p-3 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
+          {SETTINGS_SECTIONS.map((section) => {
+            const Icon = section.icon;
+            const isActive = activeSection === section.id;
+            return (
+              <button key={section.id} type="button" onClick={() => setActiveSection(section.id)} className={cx("flex min-w-[150px] items-center gap-3 rounded-2xl border px-4 py-4 text-left transition-all lg:min-w-0", isActive ? "border-app-accent/30 bg-app-accent/10 text-app-text-primary" : "border-transparent text-app-text-secondary hover:border-app-border hover:bg-app-surface/30 hover:text-app-text-primary")}>
+                <span className="rounded-xl border border-current/20 bg-current/10 p-2"><Icon size={16} /></span>
+                <span className="min-w-0"><span className="block text-sm font-black uppercase tracking-tight">{section.label}</span><span className="block text-[9px] font-bold uppercase tracking-[0.2em] opacity-55">{section.kicker}</span></span>
+              </button>
+            );
+          })}
+        </aside>
+        <main className="custom-scrollbar min-h-0 overflow-y-auto rounded-[2rem] border border-app-border bg-app-bg/20 p-6">{renderActiveSection()}</main>
       </div>
 
-      <ConfirmModal
-        isOpen={confirmWipe}
-        onClose={() => setConfirmWipe(false)}
-        onConfirm={() => {
-          void handleWipeAll();
-        }}
-        title="Apagar dados do app?"
-        description="Esta acao nao pode ser desfeita. Suas traducoes salvas localmente, imagens em cache e chaves de API serao removidas deste computador."
-        confirmText="Sim, apagar dados"
-        variant="destructive"
-      />
-
-      <StatusModal
-        isOpen={statusModal.isOpen}
-        onClose={() => setStatusModal({ ...statusModal, isOpen: false })}
-        title={statusModal.title}
-        description={statusModal.description}
-        type={statusModal.type}
-      />
+      <ConfirmModal isOpen={confirmWipe} onClose={() => setConfirmWipe(false)} onConfirm={() => { void handleWipeAll(); }} title="Apagar dados do app?" description="Esta ação não pode ser desfeita. Suas traduções salvas localmente, imagens em cache e chaves de API serão removidas deste computador." confirmText="Sim, apagar dados" variant="destructive" />
+      <StatusModal isOpen={statusModal.isOpen} onClose={() => setStatusModal({ ...statusModal, isOpen: false })} title={statusModal.title} description={statusModal.description} type={statusModal.type} />
     </div>
   );
 };
