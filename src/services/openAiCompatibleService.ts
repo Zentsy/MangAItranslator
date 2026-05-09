@@ -19,7 +19,7 @@ const VALID_BLOCK_TYPE_VALUES = ["rect", "outside", "thought", "double", "none"]
 const ENGLISH_SIGNAL_PATTERN =
   /\b(i|you|he|she|we|they|the|this|that|these|those|letter|truth|right|now|think|thought|come|came|leave|wait|actually|didn'?t|don'?t|can'?t|won'?t|is|are|am|was|were|have|has|had|will|would|should|could|everything)\b/i;
 const PORTUGUESE_SIGNAL_PATTERN =
-  /\b(voce|você|eu|ele|ela|nos|nós|eles|elas|que|nao|não|sim|verdade|agora|carta|pensei|veio|venha|espera|espere|tudo|mesmo)\b/i;
+  /\b(voce|voc\u00ea|eu|ele|ela|nos|n\u00f3s|eles|elas|que|nao|n\u00e3o|sim|verdade|agora|carta|pensei|veio|venha|espera|espere|tudo|mesmo)\b/i;
 
 const TRANSLATION_SCHEMA_DESCRIPTION = `{
   "translations": [
@@ -178,17 +178,104 @@ const normalizeBlock = (value: unknown): OpenAiCompatibleTranslationBlock | null
   };
 };
 
+const getBlocksFromParsedJson = (
+  parsed: { translations?: unknown[]; blocks?: unknown[] } | unknown[]
+) => {
+  const candidates = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed.translations)
+      ? parsed.translations
+      : Array.isArray(parsed.blocks)
+        ? parsed.blocks
+        : [];
+
+  return candidates
+    .map(normalizeBlock)
+    .filter((block): block is OpenAiCompatibleTranslationBlock => Boolean(block));
+};
+
+const extractJsonObjects = (text: string) => {
+  const objects: string[] = [];
+  let startIndex = -1;
+  let depth = 0;
+  let isInString = false;
+  let isEscaped = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (isInString) {
+      if (isEscaped) {
+        isEscaped = false;
+      } else if (char === "\\") {
+        isEscaped = true;
+      } else if (char === '"') {
+        isInString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      isInString = true;
+      continue;
+    }
+
+    if (char === "{") {
+      if (depth === 0) {
+        startIndex = index;
+      }
+      depth += 1;
+      continue;
+    }
+
+    if (char === "}" && depth > 0) {
+      depth -= 1;
+
+      if (depth === 0 && startIndex >= 0) {
+        objects.push(text.slice(startIndex, index + 1));
+        startIndex = -1;
+      }
+    }
+  }
+
+  return objects;
+};
+
+const parseBlocksFromJsonText = (jsonText: string) => {
+  try {
+    const parsed = JSON.parse(jsonText) as { translations?: unknown[]; blocks?: unknown[] } | unknown[];
+    return getBlocksFromParsedJson(parsed);
+  } catch {
+    return [];
+  }
+};
+
 const parseTranslationResponse = (rawText: string): OpenAiCompatibleTranslationBlock[] => {
   const cleaned = cleanJson(rawText);
   if (!cleaned) {
     return [];
   }
 
-  let parsed: { translations?: unknown[]; blocks?: unknown[] } | unknown[];
+  const parsedBlocks = parseBlocksFromJsonText(cleaned);
+  if (parsedBlocks.length > 0) {
+    return parsedBlocks;
+  }
 
-  try {
-    parsed = JSON.parse(cleaned) as { translations?: unknown[]; blocks?: unknown[] } | unknown[];
-  } catch {
+  const jsonObjectBlocks = extractJsonObjects(cleaned)
+    .map(parseBlocksFromJsonText)
+    .filter((blocks) => blocks.length > 0);
+
+  if (jsonObjectBlocks.length > 0) {
+    for (let index = jsonObjectBlocks.length - 1; index >= 0; index -= 1) {
+      if (!looksLikeEnglishTranscription(jsonObjectBlocks[index])) {
+        return jsonObjectBlocks[index];
+      }
+    }
+
+    return jsonObjectBlocks[jsonObjectBlocks.length - 1];
+  }
+
+  {
     const recoveredBlocks = [...rawText.matchAll(/"text"\s*:\s*"([^"]+)"(?:\s*,\s*"type"\s*:\s*"([^"]+)")?/g)]
       .map((match) =>
         normalizeBlock({
@@ -208,18 +295,6 @@ const parseTranslationResponse = (rawText: string): OpenAiCompatibleTranslationB
       .filter((line) => line && !/[{}[\]]/.test(line) && !line.includes('"translations"'))
       .map((text) => ({ text, type: "none" }));
   }
-
-  const candidates = Array.isArray(parsed)
-    ? parsed
-    : Array.isArray(parsed.translations)
-      ? parsed.translations
-      : Array.isArray(parsed.blocks)
-        ? parsed.blocks
-        : [];
-
-  return candidates
-    .map(normalizeBlock)
-    .filter((block): block is OpenAiCompatibleTranslationBlock => Boolean(block));
 };
 
 const extractResponseText = (payload: unknown) => {
@@ -1008,14 +1083,16 @@ export const translateWithOpenAiCompatible = async (
         );
         const routerBlocks = parseTranslationResponse(extractResponseText(payload));
 
-        if (routerBlocks.length > 0) {
+        if (routerBlocks.length > 0 && !looksLikeEnglishTranscription(routerBlocks)) {
           parsedBlocks = routerBlocks;
         } else {
           lastFallbackError = new OpenAiCompatibleRequestError(
             "OPENAI_COMPATIBLE_BAD_REQUEST",
-            "OpenRouter respondeu sem blocos utilizaveis."
+            routerBlocks.length > 0
+              ? "OpenRouter respondeu em ingles em vez de traduzir."
+              : "OpenRouter respondeu sem blocos utilizaveis."
           );
-          console.warn(`${requestLabel} roteador OpenRouter respondeu vazio; tentando fallback local.`);
+          console.warn(`${requestLabel} roteador OpenRouter respondeu sem traducao util; tentando fallback local.`);
         }
       } catch (error) {
         lastFallbackError = error;
@@ -1050,16 +1127,18 @@ export const translateWithOpenAiCompatible = async (
           );
           const fallbackBlocks = parseTranslationResponse(extractResponseText(payload));
 
-          if (fallbackBlocks.length > 0) {
+          if (fallbackBlocks.length > 0 && !looksLikeEnglishTranscription(fallbackBlocks)) {
             parsedBlocks = fallbackBlocks;
             break;
           }
 
           lastFallbackError = new OpenAiCompatibleRequestError(
             "OPENAI_COMPATIBLE_BAD_REQUEST",
-            `${freeModel.name} respondeu sem blocos utilizaveis.`
+            fallbackBlocks.length > 0
+              ? `${freeModel.name} transcreveu em ingles em vez de traduzir.`
+              : `${freeModel.name} respondeu sem blocos utilizaveis.`
           );
-          console.warn(`${requestLabel} modelo gratis ${freeModel.id} respondeu vazio; tentando proximo.`);
+          console.warn(`${requestLabel} modelo gratis ${freeModel.id} respondeu sem traducao util; tentando proximo.`);
           continue;
         } catch (error) {
           lastFallbackError = error;

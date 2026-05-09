@@ -415,6 +415,14 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         })}
       </div>
 
+      {selectedOpenAiProvider.id === "openrouter" && (
+        <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs leading-relaxed text-app-text-secondary/80">
+          <span className="font-black uppercase tracking-[0.18em] text-amber-400">Aviso rápido:</span>{" "}
+          no modo grátis, a qualidade depende do modelo disponível no momento. O app tenta corrigir respostas
+          duplicadas ou mal formatadas, mas alguns modelos podem só transcrever em vez de traduzir.
+        </div>
+      )}
+
       <div className="rounded-3xl border border-app-border bg-app-bg/30 p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div><div className={labelClass}>Avançado</div><p className="mt-1 text-xs text-app-text-secondary/60">Use apenas se você já souber o ID exato do modelo.</p></div>
