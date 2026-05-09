@@ -6,28 +6,27 @@ Desktop app para localização assistida de mangá e quadrinhos.
   <a href="https://github.com/Zentsy/MangAItranslator/releases/latest">
     <img alt="Baixar para Windows x64" src="https://img.shields.io/badge/Baixar-Windows%20x64-00A884?style=for-the-badge&logo=windows&logoColor=white">
   </a>
-  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.3">
-    <img alt="Release atual v0.1.3" src="https://img.shields.io/badge/Release-v0.1.3-2F3342?style=for-the-badge">
+  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.2.0">
+    <img alt="Release atual v0.2.0" src="https://img.shields.io/badge/Release-v0.2.0-2F3342?style=for-the-badge">
   </a>
   <a href="https://ko-fi.com/zentsy">
     <img alt="Apoiar no Ko-fi" src="https://img.shields.io/badge/Apoiar-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white">
   </a>
   <a href="LICENSE">
-    <img alt="Licença MIT" src="https://img.shields.io/badge/Licença-MIT-0078D6?style=for-the-badge">
+    <img alt="Licença MIT" src="https://img.shields.io/badge/Licen%C3%A7a-MIT-0078D6?style=for-the-badge">
   </a>
 </p>
 
-O foco do app é simples: importar um capítulo, gerar um rascunho com IA, revisar bloco por bloco e exportar o resultado sem perder o contexto da página.
+O MangAI Translator ajuda você a importar um capítulo, gerar um rascunho com IA, revisar bloco por bloco e exportar o texto final sem perder o contexto da página.
 
-obs: A IA não traduz *para* você, mas sim **com** você! Ela comete erros e cometerá, ainda mais se estiver usando um modelo mais fraco. Então certifique-se de revisar o resultado.
+> A IA traduz **com** você, não **por** você. Modelos podem errar, transcrever em vez de traduzir ou interpretar balões fora de ordem. Revise sempre antes de publicar qualquer tradução.
 
 ## Download
 
 - Baixar a versão mais recente: [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases/latest)
-- Release atual: [v0.1.3](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.1.3)
+- Release atual: [v0.2.0](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.2.0)
 
 Se o projeto te ajudar e você quiser apoiar o desenvolvimento, também dá para contribuir em [Ko-fi](https://ko-fi.com/zentsy).
-
 
 ## Aviso para Windows SmartScreen
 
@@ -43,19 +42,31 @@ Se você baixou o app deste repositório oficial e quiser testar mesmo assim, re
 
 ## O que o app faz
 
-- importa uma pasta inteira do capítulo ou puxa as páginas vizinhas a partir de uma única imagem
+- importa uma pasta inteira do capítulo ou puxa páginas vizinhas a partir de uma única imagem
 - salva projetos localmente para continuar depois
-- gera rascunho com `Gemini` ou `Ollama`
+- gera rascunhos com Gemini, OpenRouter, LM Studio, Groq ou Ollama
 - permite revisar, reorganizar e editar blocos manualmente
 - exporta em `.txt` e `.docx`
-- checa novas versões no próprio app
+- checa novas versões pelo próprio app
 
-## Melhor forma de usar hoje
+## Motores de IA
 
-- `Gemini`: melhor experiência para a maioria das pessoas
-- `Ollama`: opção local/offline, mas pode ser bem mais lenta em máquinas modestas
+### Recomendado
 
-## Capturas de Tela
+- `Gemini`: melhor experiência geral para qualidade, OCR e consistência.
+- `Groq`: modo turbo para páginas leves; quando funciona bem, é quase instantâneo.
+- `OpenRouter Auto grátis`: tenta modelos vision gratuitos em fila, sem usar modelos pagos automaticamente.
+
+### Local
+
+- `LM Studio`: melhor opção local hoje. Funciona com modelos carregados no LM Studio e pode usar GPU dependendo da sua máquina.
+- `Ollama`: opção local simples e experimental. Pode ser bem mais lenta em CPU.
+
+### Importante sobre modelos grátis
+
+No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O app tenta corrigir respostas duplicadas, vazias ou mal formatadas, mas alguns modelos pequenos podem apenas transcrever o texto em vez de traduzir.
+
+## Capturas de tela
 
 ### Destaque
 
@@ -70,55 +81,46 @@ O editor é o coração do app, então a imagem principal fica aqui primeiro.
 | ![Dashboard com retomada de traduções](screenshots/retomar.png) | ![Modal de exportação](screenshots/exportar.png) |
 | Importe capítulos, acompanhe projetos recentes e volte rápido para o que estava traduzindo. | Exporte o capítulo final em `.txt` ou `.docx` sem sair do fluxo. |
 
-### Configuração
+### Configurações e tema
 
 | Modelos e motores | Tema claro |
 | --- | --- |
 | ![Seleção de modelos e motores](screenshots/modelos.png) | ![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png) |
-| Troque entre `Gemini` e `Ollama` e selecione o modelo mais adequado para o seu uso. | O app também tem tema claro para quem prefere uma interface mais limpa durante a revisão. |
+| Escolha entre nuvem, provedores compatíveis com OpenAI e modelos locais. | O app também tem tema claro para quem prefere uma interface mais limpa durante a revisão. |
 
 ## Fluxo rápido
 
-1. Escolha `Gemini` ou `Ollama`.
+1. Escolha um motor de IA.
 2. Importe um capítulo.
 3. Gere o `AI Draft`.
-4. **Revise** os blocos no editor.
+4. Revise os blocos no editor.
 5. Exporte em `.txt` ou `.docx`.
 
-## Como funcionam os motores
+## Novidades da v0.2.0
 
-### Gemini
-
-- usa a sua própria chave da API
-- é a opção recomendada para qualidade e velocidade
-- a chave é usada localmente no app para falar direto com a API do Google
-
-### Ollama
-
-- roda localmente no seu PC
-- é útil para uso offline ou mais privado
-- o desempenho depende bastante da máquina e do modelo escolhido
+- suporte a OpenRouter, LM Studio e Groq
+- modo OpenRouter grátis automático com fallback seguro
+- parsing mais robusto para respostas duplicadas ou JSON mal formatado
+- opção de Thinking para modelos que se beneficiam de raciocínio
+- opção para pedir ou não classificação de tipos de balão
+- tela de configurações reorganizada em seções
+- changelog dentro do app
 
 ## Roadmap
 
-### v0.2 - Mais motores de IA
+### Próximas melhorias
 
-- suporte a APIs compatíveis com OpenAI, começando por OpenRouter e LM Studio
-- suporte experimental ao Groq para modelos vision compatíveis
-- seleção mais clara de modelos com suporte a imagem
-- configuração simples de URL, chave e modelo para provedores externos
-
-### v0.3 - Qualidade de tradução
-
+- melhorar a seleção automática de modelos gratuitos
+- adicionar mais provedores via API, como Claude, GPT e outros modelos compatíveis
 - perfis de tradução por idioma de origem e destino
 - glossário simples para nomes, golpes, termos e formas de tratamento
 - revisão de naturalidade para melhorar o texto final depois do rascunho inicial
-- opção para reprocessar uma página ou bloco específico sem refazer o capítulo inteiro
 
 ### Futuro
 
-- code signing no Windows para reduzir o atrito com o SmartScreen e deixar a instalação mais confiável
-- leitura de mangás direto da fonte por meio de extensões independentes, em um modelo inspirado no ecossistema do Mihon
+- code signing no Windows para reduzir o atrito com o SmartScreen
+- leitura de mangás direto da fonte por extensões independentes, em um modelo inspirado no ecossistema do Mihon
+- suporte a inglês como idioma de saída, com prompts para traduzir direto de japonês, coreano ou mandarim
 
 ### Em pesquisa
 
@@ -151,7 +153,7 @@ cargo check
 
 ## Status do projeto
 
-O app já está funcional para uso real em Windows, mas continua em fase de beta. O foco atual é polir a experiência, validar o updater e corrigir bugs de uso real conforme a comunidade testar.
+O app já está funcional para uso real em Windows, mas continua em fase beta. O foco atual é polir a experiência, validar o updater e corrigir bugs de uso real conforme a comunidade testar.
 
 ## Uso responsável
 
