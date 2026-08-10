@@ -69,6 +69,7 @@ interface MangaStore {
   hasFinishedOnboarding: boolean;
   theme: AppTheme;
   glossary: GlossaryTerm[];
+  processingQueue: string[];
 
   setApiKey: (key: string) => void;
   setOpenRouterApiKey: (key: string) => void;
@@ -89,6 +90,8 @@ interface MangaStore {
   setHasFinishedOnboarding: (value: boolean) => void;
   setTheme: (theme: AppTheme) => void;
   setGlossary: (terms: GlossaryTerm[]) => void;
+  addToProcessingQueue: (pageId: string) => void;
+  removeFromProcessingQueue: (pageId: string) => void;
   addGlossaryTerm: (term: string, translation: string) => Promise<void>;
   removeGlossaryTerm: (id: string) => Promise<void>;
   resetOnboarding: () => void;
@@ -130,6 +133,7 @@ export const useMangaStore = create<MangaStore>()(
       hasFinishedOnboarding: false,
       theme: "dark-organic",
       glossary: [],
+      processingQueue: [],
 
       setApiKey: (apiKey) => {
         set({ apiKey });
@@ -156,6 +160,12 @@ export const useMangaStore = create<MangaStore>()(
       setHasFinishedOnboarding: (hasFinishedOnboarding) => set({ hasFinishedOnboarding }),
       setTheme: (theme) => set({ theme }),
       setGlossary: (glossary) => set({ glossary }),
+      addToProcessingQueue: (pageId) =>
+        set((state) => ({ processingQueue: [...state.processingQueue, pageId] })),
+      removeFromProcessingQueue: (pageId) =>
+        set((state) => ({
+          processingQueue: state.processingQueue.filter((id) => id !== pageId),
+        })),
       addGlossaryTerm: async (term, translation) => {
         const { currentProjectId } = get();
         if (!currentProjectId) return;
