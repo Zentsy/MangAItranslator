@@ -13,7 +13,7 @@ import { getOpenAiCompatibleProvider } from "@/config/openAiCompatibleProviders"
 import { useAppUpdater, type UpdateCheckResult } from "@/hooks/useAppUpdater";
 import { useMangaStore } from "@/store/useMangaStore";
 import { dbService, DBProject, resolveAssetUrl } from "@/services/dbService";
-import { loadSecret, saveSecretNow, stripLegacyKeysFromLocalStorage } from "@/services/secretsService";
+import { loadSecret, stripLegacyKeysFromLocalStorage } from "@/services/secretsService";
 import {
   LayoutGrid,
   FileImage,
@@ -105,7 +105,13 @@ function App() {
   });
   const { 
     apiKey, 
-    setApiKey, 
+    setApiKey,
+    openRouterApiKey,
+    setOpenRouterApiKey,
+    groqApiKey,
+    setGroqApiKey,
+    customApiKey,
+    setCustomApiKey,
     setPages, 
     setProjectId, 
     setPageIndex,
@@ -116,9 +122,7 @@ function App() {
     geminiModel,
     ollamaModel,
     openAiCompatibleProvider,
-    openAiCompatibleApiKey,
     openAiCompatibleModel,
-    setOpenAiCompatibleApiKey,
   } = useMangaStore();
   const selectedGeminiModel = getGeminiModelOption(geminiModel);
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
@@ -151,36 +155,29 @@ function App() {
   useEffect(() => {
     checkOllama();
 
-    // Bootstrap secrets
+      // Bootstrap secrets
     const bootstrapSecrets = async () => {
-      const geminiSecret = await loadSecret("gemini");
-      const openaiSecret = await loadSecret("openai-compatible");
+      const [geminiSecret, openrouterSecret, groqSecret, customSecret] = await Promise.all([
+        loadSecret("gemini"),
+        loadSecret("openrouter"),
+        loadSecret("groq"),
+        loadSecret("custom"),
+      ]);
 
-      let updatedGemini = geminiSecret;
-      let updatedOpenai = openaiSecret;
-
-      // Se o cofre estiver vazio, tenta migrar do store (localStorage legada)
-      if (!geminiSecret && apiKey) {
-        await saveSecretNow("gemini", apiKey);
-        updatedGemini = apiKey;
-      }
-      if (!openaiSecret && openAiCompatibleApiKey) {
-        await saveSecretNow("openai-compatible", openAiCompatibleApiKey);
-        updatedOpenai = openAiCompatibleApiKey;
-      }
-
-      // Atualiza o store sem disparar persistencia (ja que partialize ignora essas keys)
+      // Atualiza o store sem disparar persistencia
       useMangaStore.setState({ 
-        apiKey: updatedGemini || "", 
-        openAiCompatibleApiKey: updatedOpenai || "" 
+        apiKey: geminiSecret || "", 
+        openRouterApiKey: openrouterSecret || "",
+        groqApiKey: groqSecret || "",
+        customApiKey: customSecret || ""
       });
 
-      // Limpa do localStorage
+      // Limpa do localStorage (legado)
       stripLegacyKeysFromLocalStorage();
     };
 
     void bootstrapSecrets();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (currentView === 'dashboard' || currentView === 'library') {
@@ -413,8 +410,17 @@ function App() {
                           <input
                             type="password"
                             placeholder={selectedOpenAiProvider.apiKeyLabel}
-                            value={openAiCompatibleApiKey}
-                            onChange={(e) => setOpenAiCompatibleApiKey(e.target.value)}
+                            value={
+                              selectedOpenAiProvider.id === "openrouter" ? openRouterApiKey :
+                              selectedOpenAiProvider.id === "groq" ? groqApiKey :
+                              customApiKey
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (selectedOpenAiProvider.id === "openrouter") setOpenRouterApiKey(val);
+                              else if (selectedOpenAiProvider.id === "groq") setGroqApiKey(val);
+                              else setCustomApiKey(val);
+                            }}
                            className="w-40 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
                           />
                        </div>

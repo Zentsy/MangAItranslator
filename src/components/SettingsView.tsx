@@ -242,6 +242,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   const {
     apiKey,
     setApiKey,
+    openRouterApiKey,
+    setOpenRouterApiKey,
+    groqApiKey,
+    setGroqApiKey,
+    customApiKey,
+    setCustomApiKey,
     translationEngine,
     setTranslationEngine,
     geminiModel,
@@ -250,8 +256,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     setOllamaModel,
     openAiCompatibleProvider,
     setOpenAiCompatibleProvider,
-    openAiCompatibleApiKey,
-    setOpenAiCompatibleApiKey,
     openAiCompatibleModel,
     setOpenAiCompatibleModel,
     openRouterModelMode,
@@ -296,7 +300,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     setIsRefreshingOpenRouterModels(true);
     try {
       clearOpenRouterFreeModelsCache();
-      const models = await getOpenRouterFreeVisionModels(openAiCompatibleApiKey, true);
+      const models = await getOpenRouterFreeVisionModels(openRouterApiKey, true);
       setStatusModal({ isOpen: true, title: "Lista atualizada", description: `Encontramos ${models.length} modelo(s) grátis com vision no OpenRouter.`, type: "success" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível atualizar a lista agora.";
@@ -388,7 +392,22 @@ const SettingsView: React.FC<SettingsViewProps> = ({
       {selectedOpenAiProvider.requiresApiKey ? (
         <label className="block">
           <span className={labelClass}>{selectedOpenAiProvider.apiKeyLabel}</span>
-          <input type="password" value={openAiCompatibleApiKey} onChange={(event) => setOpenAiCompatibleApiKey(event.target.value)} placeholder={selectedOpenAiProvider.apiKeyLabel} className={cx(inputClass, "mt-2")} />
+          <input
+            type="password"
+            value={
+              selectedOpenAiProvider.id === "openrouter" ? openRouterApiKey :
+              selectedOpenAiProvider.id === "groq" ? groqApiKey :
+              customApiKey
+            }
+            onChange={(event) => {
+              const val = event.target.value;
+              if (selectedOpenAiProvider.id === "openrouter") setOpenRouterApiKey(val);
+              else if (selectedOpenAiProvider.id === "groq") setGroqApiKey(val);
+              else setCustomApiKey(val);
+            }}
+            placeholder={selectedOpenAiProvider.apiKeyLabel}
+            className={cx(inputClass, "mt-2")}
+          />
         </label>
       ) : (
         <div className={cardClass}>
@@ -513,9 +532,9 @@ const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="mb-4 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={18} className="text-emerald-400" /><h4 className="text-lg font-black italic">O que fica salvo?</h4></div>
           <div className="rounded-3xl border border-app-border bg-app-bg/30 px-5 py-2">
             <InfoRow label="Gemini key" value={apiKey ? "Cofre do SO" : "Não configurada"} />
-            <InfoRow label="APIs compatíveis" value={openAiCompatibleApiKey ? "Cofre do SO" : "Não configurada"} />
+            <InfoRow label="OpenRouter key" value={openRouterApiKey ? "Cofre do SO" : "Não configurada"} />
+            <InfoRow label="Groq key" value={groqApiKey ? "Cofre do SO" : "Não configurada"} />
             <InfoRow label="Projetos" value="SQLite local" />
-            <InfoRow label="Cache" value="Imagens e histórico local" />
           </div>
           <p className="mt-4 text-xs leading-relaxed text-app-text-secondary/60">O app armazena suas chaves no gerenciador de credenciais do sistema operacional (Windows Credential Manager / macOS Keychain). As chamadas são feitas direto para o provedor escolhido.</p>
         </div>

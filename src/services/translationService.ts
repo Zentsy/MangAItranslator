@@ -19,11 +19,13 @@ export interface TranslationResult {
 
 export const translatePage = async (
   engine: TranslationEngine,
-  apiKey: string,
+  apiKey: string, // Gemini
+  openRouterApiKey: string,
+  groqApiKey: string,
+  customApiKey: string,
   geminiModel: string,
   ollamaModel: string,
   openAiCompatibleProvider: OpenAiCompatibleProviderId,
-  openAiCompatibleApiKey: string,
   openAiCompatibleModel: string,
   openRouterModelMode: OpenRouterModelMode,
   aiThinkingEnabled: boolean,
@@ -72,9 +74,14 @@ export const translatePage = async (
     return;
   }
 
+  const currentProviderApiKey =
+    openAiCompatibleProvider === "openrouter" ? openRouterApiKey :
+    openAiCompatibleProvider === "groq" ? groqApiKey :
+    customApiKey;
+
   const results = await translateWithOpenAiCompatible(
     openAiCompatibleProvider,
-    openAiCompatibleApiKey,
+    currentProviderApiKey,
     openAiCompatibleProvider === "openrouter" && openRouterModelMode === "auto-free"
       ? OPENROUTER_AUTO_FREE_MODEL_ID
       : openAiCompatibleModel,

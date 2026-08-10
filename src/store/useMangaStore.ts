@@ -52,14 +52,16 @@ export interface MangaPage {
 interface MangaStore {
   pages: MangaPage[];
   currentPageIndex: number;
-  apiKey: string;
+  apiKey: string; // Gemini
+  openRouterApiKey: string;
+  groqApiKey: string;
+  customApiKey: string;
   useConvention: boolean;
   currentProjectId: string | null;
   translationEngine: TranslationEngine;
   geminiModel: string;
   ollamaModel: string;
   openAiCompatibleProvider: OpenAiCompatibleProviderId;
-  openAiCompatibleApiKey: string;
   openAiCompatibleModel: string;
   openRouterModelMode: OpenRouterModelMode;
   aiThinkingEnabled: boolean;
@@ -69,6 +71,9 @@ interface MangaStore {
   glossary: GlossaryTerm[];
 
   setApiKey: (key: string) => void;
+  setOpenRouterApiKey: (key: string) => void;
+  setGroqApiKey: (key: string) => void;
+  setCustomApiKey: (key: string) => void;
   setUseConvention: (value: boolean) => void;
   setProjectId: (id: string | null) => void;
   setPages: (pages: MangaPage[]) => void;
@@ -109,13 +114,15 @@ export const useMangaStore = create<MangaStore>()(
       pages: [],
       currentPageIndex: 0,
       apiKey: "",
+      openRouterApiKey: "",
+      groqApiKey: "",
+      customApiKey: "",
       useConvention: true,
       currentProjectId: null,
       translationEngine: "gemini",
       geminiModel: DEFAULT_GEMINI_MODEL,
       ollamaModel: DEFAULT_OLLAMA_MODEL,
       openAiCompatibleProvider: DEFAULT_OPENAI_COMPATIBLE_PROVIDER,
-      openAiCompatibleApiKey: "",
       openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
       openRouterModelMode: "auto-free",
       aiThinkingEnabled: false,
@@ -128,16 +135,17 @@ export const useMangaStore = create<MangaStore>()(
         set({ apiKey });
         queueSecretSave("gemini", apiKey);
       },
-      setUseConvention: (useConvention) => set({ useConvention }),
-      setProjectId: (currentProjectId) => set({ currentProjectId }),
-      setTranslationEngine: (translationEngine) => set({ translationEngine }),
-      setGeminiModel: (geminiModel) => set({ geminiModel }),
-      setOllamaModel: (ollamaModel) => set({ ollamaModel }),
-      setOpenAiCompatibleProvider: (openAiCompatibleProvider) =>
-        set({ openAiCompatibleProvider }),
-      setOpenAiCompatibleApiKey: (openAiCompatibleApiKey) => {
-        set({ openAiCompatibleApiKey });
-        queueSecretSave("openai-compatible", openAiCompatibleApiKey);
+      setOpenRouterApiKey: (openRouterApiKey) => {
+        set({ openRouterApiKey });
+        queueSecretSave("openrouter", openRouterApiKey);
+      },
+      setGroqApiKey: (groqApiKey) => {
+        set({ groqApiKey });
+        queueSecretSave("groq", groqApiKey);
+      },
+      setCustomApiKey: (customApiKey) => {
+        set({ customApiKey });
+        queueSecretSave("custom", customApiKey);
       },
       setOpenAiCompatibleModel: (openAiCompatibleModel) =>
         set({ openAiCompatibleModel }),
@@ -292,18 +300,22 @@ export const useMangaStore = create<MangaStore>()(
       clearStore: () => {
         clearAllPendingSaves();
         queueSecretSave("gemini", "");
-        queueSecretSave("openai-compatible", "");
+        queueSecretSave("openrouter", "");
+        queueSecretSave("groq", "");
+        queueSecretSave("custom", "");
         set({
           pages: [],
           currentPageIndex: 0,
           currentProjectId: null,
           apiKey: "",
+          openRouterApiKey: "",
+          groqApiKey: "",
+          customApiKey: "",
           useConvention: true,
           translationEngine: "gemini",
           geminiModel: DEFAULT_GEMINI_MODEL,
           ollamaModel: DEFAULT_OLLAMA_MODEL,
           openAiCompatibleProvider: DEFAULT_OPENAI_COMPATIBLE_PROVIDER,
-          openAiCompatibleApiKey: "",
           openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
           openRouterModelMode: "auto-free",
           aiThinkingEnabled: false,

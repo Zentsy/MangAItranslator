@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-export async function loadSecret(provider: "gemini" | "openai-compatible"): Promise<string | null> {
+export async function loadSecret(provider: "gemini" | "openrouter" | "groq" | "custom"): Promise<string | null> {
   try {
     return await invoke<string | null>("get_secret", { provider });
   } catch (error) {
@@ -9,7 +9,7 @@ export async function loadSecret(provider: "gemini" | "openai-compatible"): Prom
   }
 }
 
-export async function saveSecretNow(provider: "gemini" | "openai-compatible", value: string): Promise<void> {
+export async function saveSecretNow(provider: "gemini" | "openrouter" | "groq" | "custom", value: string): Promise<void> {
   try {
     await invoke("set_secret", { provider, value });
   } catch (error) {
@@ -18,7 +18,7 @@ export async function saveSecretNow(provider: "gemini" | "openai-compatible", va
 }
 
 let timeoutId: number | null = null;
-export function queueSecretSave(provider: "gemini" | "openai-compatible", value: string) {
+export function queueSecretSave(provider: "gemini" | "openrouter" | "groq" | "custom", value: string) {
   if (timeoutId) window.clearTimeout(timeoutId);
   timeoutId = window.setTimeout(() => {
     void saveSecretNow(provider, value);
