@@ -90,24 +90,14 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
     baseUrl: "https://api.groq.com/openai/v1",
     apiKeyLabel: "Groq API Key",
     requiresApiKey: true,
-    description: "Modo focado em velocidade extrema.",
-    docsUrl: "https://console.groq.com/docs/vision",
+    description: "Inferência ultra-rápida. Recomendado usar o modelo Qwen multimodal.",
+    docsUrl: "https://console.groq.com/docs/models",
     models: [
       {
         id: "qwen/qwen3.6-27b",
         label: "Qwen 3.6 27B",
-        description: "Modelo sugerido e testado com sucesso.",
+        description: "Modelo multimodal (Vision) testado e funcional no Groq.",
         recommended: true,
-      },
-      {
-        id: "llama-3.2-11b-vision-preview",
-        label: "Llama 3.2 11B (Vision)",
-        description: "Modelo oficial do Groq para processamento de imagens.",
-      },
-      {
-        id: "llama-3.2-90b-vision-preview",
-        label: "Llama 3.2 90B (Vision)",
-        description: "Versão robusta oficial do Groq para OCR complexo.",
       },
     ],
   },
