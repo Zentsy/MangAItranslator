@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -36,9 +37,9 @@ const GlossaryModal: React.FC<GlossaryModalProps> = ({ isOpen, onClose }) => {
             <Book className="text-app-text-secondary" />
             Glossario do Projeto
           </DialogTitle>
-          <p className="text-xs text-app-text-secondary/60 uppercase tracking-widest font-mono">
+          <DialogDescription className="text-xs text-app-text-secondary/60 uppercase tracking-widest font-mono">
             Defina termos especificos para manter a consistencia da IA
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="mt-4 flex flex-col gap-6">
