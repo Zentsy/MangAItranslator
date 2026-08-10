@@ -90,14 +90,29 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
     baseUrl: "https://api.groq.com/openai/v1",
     apiKeyLabel: "Groq API Key",
     requiresApiKey: true,
-    description: "Modo experimental focado em velocidade. Imagens muito grandes podem bater no limite da API.",
+    description: "Modo experimental focado em velocidade extrema.",
     docsUrl: "https://console.groq.com/docs/vision",
     models: [
       {
-        id: "meta-llama/llama-4-scout-17b-16e-instruct",
-        label: "Llama 4 Scout",
-        description: "Modelo multimodal em preview recomendado pela documentacao de vision do Groq.",
+        id: "llama-3.3-70b-versatile",
+        label: "Llama 3.3 70B",
+        description: "Equilibrio entre qualidade e velocidade via Groq.",
         recommended: true,
+      },
+      {
+        id: "llama-3.2-90b-vision-preview",
+        label: "Llama 3.2 90B Vision",
+        description: "O modelo mais forte para vision disponivel no Groq no momento.",
+      },
+      {
+        id: "llama-3.2-11b-vision-preview",
+        label: "Llama 3.2 11B Vision",
+        description: "Modelo mais leve e extremamente rapido.",
+      },
+      {
+        id: "llama-3.1-8b-instant",
+        label: "Llama 3.1 8B",
+        description: "Modelo legacional ultra-veloz.",
       },
     ],
   },

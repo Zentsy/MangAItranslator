@@ -337,7 +337,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
       <label className="block">
         <span className={labelClass}>Gemini API Key</span>
         <input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="Cole sua chave do Google AI Studio" className={cx(inputClass, "mt-2")} />
-        <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/60">A chave fica salva neste computador e o app fala direto com a API do Google.</p>
+        <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/60">A chave é armazenada de forma segura no cofre do sistema operacional.</p>
       </label>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -512,12 +512,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         <div className={panelClass}>
           <div className="mb-4 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={18} className="text-emerald-400" /><h4 className="text-lg font-black italic">O que fica salvo?</h4></div>
           <div className="rounded-3xl border border-app-border bg-app-bg/30 px-5 py-2">
-            <InfoRow label="Gemini key" value={apiKey ? "Salva localmente" : "Não configurada"} />
-            <InfoRow label="APIs compatíveis" value={openAiCompatibleApiKey ? "Salva localmente" : "Não configurada"} />
+            <InfoRow label="Gemini key" value={apiKey ? "Cofre do SO" : "Não configurada"} />
+            <InfoRow label="APIs compatíveis" value={openAiCompatibleApiKey ? "Cofre do SO" : "Não configurada"} />
             <InfoRow label="Projetos" value="SQLite local" />
             <InfoRow label="Cache" value="Imagens e histórico local" />
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-app-text-secondary/60">O app não envia sua chave para o desenvolvedor. As chamadas são feitas do seu computador para o provedor escolhido.</p>
+          <p className="mt-4 text-xs leading-relaxed text-app-text-secondary/60">O app armazena suas chaves no gerenciador de credenciais do sistema operacional (Windows Credential Manager / macOS Keychain). As chamadas são feitas direto para o provedor escolhido.</p>
         </div>
         <div className="space-y-4">
           <div className="rounded-[2rem] border border-app-border bg-app-surface/25 p-5"><h4 className="text-lg font-black italic text-app-text-primary">Tutorial inicial</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Reative as dicas do primeiro uso caso queira rever o fluxo do app.</p><Button onClick={handleResetOnboarding} variant="outline" className="mt-5 w-full rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-widest text-app-text-secondary hover:text-app-text-primary"><RotateCcw size={16} className="mr-2" /> Mostrar tutorial</Button></div>
