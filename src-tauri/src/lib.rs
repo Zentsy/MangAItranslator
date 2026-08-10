@@ -291,7 +291,7 @@ fn get_secret(provider: String) -> Result<Option<String>, String> {
 fn set_secret(provider: String, value: String) -> Result<(), String> {
     let entry = Entry::new("MangAI Translator", &provider).map_err(|e| e.to_string())?;
     if value.is_empty() {
-        match entry.delete_password() {
+        match entry.delete_credential() {
             Ok(_) => Ok(()),
             Err(keyring::Error::NoEntry) => Ok(()),
             Err(e) => Err(e.to_string()),
