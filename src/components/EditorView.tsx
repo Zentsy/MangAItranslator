@@ -34,6 +34,7 @@ import {
   Brain,
   Tags,
   Book,
+  Zap,
 } from "lucide-react";
 
 const MAX_AI_IMAGE_WIDTH = 1600;

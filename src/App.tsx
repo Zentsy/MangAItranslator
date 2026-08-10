@@ -6,6 +6,7 @@ import FileUpload from "@/components/FileUpload";
 import StatusModal, { StatusType } from "@/components/StatusModal";
 import BrandMark from "@/components/BrandMark";
 import UpdateModal from "@/components/UpdateModal";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { getGeminiModelOption } from "@/config/geminiModels";
 import { getOllamaModelOption } from "@/config/ollamaModels";
@@ -657,7 +658,9 @@ function App() {
 
             {currentView === 'editor' && (
               <div className="h-full p-4">
-                <EditorView onBack={() => setCurrentView('library')} />
+                <ErrorBoundary>
+                  <EditorView onBack={() => setCurrentView('library')} />
+                </ErrorBoundary>
               </div>
             )}
           </Suspense>
