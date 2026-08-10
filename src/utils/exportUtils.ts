@@ -30,7 +30,7 @@ LEGENDA DE SINAIS:
     const pageNum = (index + 1).toString().padStart(3, '0');
     const pageTitle = `>>> PÁGINA ${pageNum} [${page.name}] <<<`;
     
-    let pageBody = "";
+    let pageBody: string;
     if (page.blocks && page.blocks.length > 0) {
       pageBody = page.blocks.map(formatBlockTxt).join('\n');
     } else if (page.status === 'completed' && !page.blocks?.length) {
@@ -46,7 +46,7 @@ LEGENDA DE SINAIS:
 };
 
 const generateDocxBlob = async (pages: MangaPage[]) => {
-  const children: any[] = [
+  const children: Paragraph[] = [
     new Paragraph({
       text: "MANG-AI TRANSLATOR - EXPORTAÇÃO",
       heading: HeadingLevel.HEADING_1,
@@ -84,7 +84,7 @@ const generateDocxBlob = async (pages: MangaPage[]) => {
 
     if (page.blocks && page.blocks.length > 0) {
       page.blocks.forEach(block => {
-        let prefix = "";
+        let prefix: string;
         let color = "000000";
         switch (block.type) {
           case 'rect': prefix = "[RET] "; color = "2E7D32"; break;

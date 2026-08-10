@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -184,45 +184,6 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     return () => window.clearInterval(interval);
   }, [isTranslating, translationStartedAt]);
 
-  // Global Keyboard Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // AI Draft shortcut - ONLY with Shift
-      if (e.ctrlKey && e.shiftKey && e.key === 'Enter') {
-        e.preventDefault();
-        e.stopPropagation();
-        void handleTranslate();
-        return;
-      }
-
-      // Page navigation (only when not typing)
-      if (document.activeElement?.tagName !== 'TEXTAREA') {
-        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-          nextPage();
-        } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-          prevPage();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    currentPageIndex,
-    pages.length,
-    isTranslating,
-    apiKey,
-    translationEngine,
-    geminiModel,
-    ollamaModel,
-    openAiCompatibleProvider,
-    openAiCompatibleApiKey,
-    openAiCompatibleModel,
-    openRouterModelMode,
-    aiThinkingEnabled,
-    aiInferBlockTypesEnabled,
-  ]);
-
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, index: number) => {
     // Prevent Ctrl+Enter from bubbling to global handler (which triggers AI)
     if (e.ctrlKey && e.key === 'Enter') {
@@ -251,6 +212,8 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
+  // Usar o objeto currentPage inteiro como dep recarregaria a imagem a cada
+  // edicao de bloco; id/path ja bastam (disable na linha das deps).
   useEffect(() => {
     async function loadPageImage() {
       if (!currentPage) return;
@@ -274,7 +237,39 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
 
     loadPageImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPageIndex, currentPage?.id, currentPage?.path]);
+
+  // Atalhos globais de teclado. Registrado antes do early return abaixo para
+  // respeitar as Rules of Hooks (hooks nao podem ser condicionais).
+  // handleTranslate/nextPage/prevPage sao recriados a cada render; as deps
+  // abaixo ja cobrem os valores que eles leem (disable na linha das deps).
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isTyping = event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement;
+
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        void handleTranslate();
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        if (currentPage) {
+          void useMangaStore.getState().savePageToDb(currentPage.id);
+        }
+      }
+
+      if (!isTyping) {
+        if (event.key === 'ArrowRight' || event.key === 'd') nextPage();
+        if (event.key === 'ArrowLeft' || event.key === 'a') prevPage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPageIndex, currentPage?.id, isTranslating, apiKey, imgBase64, translationEngine, geminiModel]);
 
   if (!currentPage) return null;
 
@@ -346,7 +341,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           }
 
           const newBlocks = results.map((res) => ({
-            id: Math.random().toString(36).substring(7),
+            id: crypto.randomUUID(),
             text: res.text,
             type: (res.type ?? "none") as BlockType,
           }));
@@ -360,13 +355,14 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           setTranslationStatus(status.message);
         }
       );
-    } catch (error: any) {
+    } catch (error) {
       let friendlyMessage = "Ocorreu um erro inesperado ao processar a pagina.";
-      const errorStr = [error?.message, error?.statusText, error?.toString?.()]
+      const errorInfo = error as { message?: string; statusText?: string; code?: string } | null;
+      const errorStr = [errorInfo?.message, errorInfo?.statusText, String(error)]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-      const errorCode = typeof error?.code === "string" ? error.code : "";
+      const errorCode = typeof errorInfo?.code === "string" ? errorInfo.code : "";
 
       if (errorCode === "GEMINI_INVALID_KEY" || errorStr.includes("api key not valid") || errorStr.includes("invalid api key")) {
         friendlyMessage = "Sua chave de API do Gemini e invalida. Verifique-a nas configuracoes.";
@@ -394,17 +390,17 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       } else if (errorStr.includes("modelo do ollama nao encontrado") || errorStr.includes("not found")) {
         friendlyMessage = `O modelo ${ollamaModel} ainda nao foi baixado. Rode "ollama pull ${ollamaModel}" no terminal.`;
       } else if (errorCode === "OPENAI_COMPATIBLE_MISSING_KEY" || errorCode === "OPENAI_COMPATIBLE_INVALID_KEY") {
-        friendlyMessage = error?.message ?? `Confira a chave salva para ${selectedOpenAiProvider.label}.`;
+        friendlyMessage = errorInfo?.message ?? `Confira a chave salva para ${selectedOpenAiProvider.label}.`;
       } else if (errorCode === "OPENAI_COMPATIBLE_RATE_LIMIT") {
-        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} retornou limite de uso. Tente novamente em alguns minutos.`;
+        friendlyMessage = errorInfo?.message ?? `${selectedOpenAiProvider.label} retornou limite de uso. Tente novamente em alguns minutos.`;
       } else if (errorCode === "OPENAI_COMPATIBLE_FORBIDDEN") {
-        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} recusou a requisicao. Confira permissao, saldo e modelo.`;
+        friendlyMessage = errorInfo?.message ?? `${selectedOpenAiProvider.label} recusou a requisicao. Confira permissao, saldo e modelo.`;
       } else if (errorCode === "OPENAI_COMPATIBLE_BAD_REQUEST") {
-        friendlyMessage = error?.message ?? `Confira se ${openAiCompatibleModel} suporta vision em ${selectedOpenAiProvider.label}.`;
+        friendlyMessage = errorInfo?.message ?? `Confira se ${openAiCompatibleModel} suporta vision em ${selectedOpenAiProvider.label}.`;
       } else if (errorCode === "OPENAI_COMPATIBLE_TIMEOUT") {
-        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} demorou demais para responder.`;
+        friendlyMessage = errorInfo?.message ?? `${selectedOpenAiProvider.label} demorou demais para responder.`;
       } else if (errorCode === "OPENAI_COMPATIBLE_UNKNOWN") {
-        friendlyMessage = error?.message ?? `${selectedOpenAiProvider.label} retornou um erro inesperado.`;
+        friendlyMessage = errorInfo?.message ?? `${selectedOpenAiProvider.label} retornou um erro inesperado.`;
       } else if (errorStr.includes("network") || errorStr.includes("fetch")) {
         friendlyMessage = "Erro de conexao. Verifique sua internet ou o status dos servidores da IA.";
       }
@@ -471,7 +467,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           type: "success",
         });
       }
-    } catch (error: any) {
+    } catch {
       setStatusModal({
         isOpen: true,
         title: "Erro na Exportacao",
@@ -485,31 +481,6 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setFinishAfterExport(true);
     setShowExportModal(true);
   };
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const isTyping = event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLInputElement;
-
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault();
-        handleTranslate();
-      }
-
-      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-        event.preventDefault();
-        if (currentPage) {
-          void useMangaStore.getState().savePageToDb(currentPage.id);
-        }
-      }
-
-      if (!isTyping) {
-        if (event.key === 'ArrowRight' || event.key === 'd') nextPage();
-        if (event.key === 'ArrowLeft' || event.key === 'a') prevPage();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentPageIndex, currentPage?.id, isTranslating, apiKey, imgBase64, translationEngine, geminiModel]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-app-border bg-app-surface/20 backdrop-blur-sm">

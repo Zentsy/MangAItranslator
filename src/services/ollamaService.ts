@@ -327,7 +327,8 @@ export const translateImage = async (
       throw new Error(
         `Tempo limite excedido ao aguardar o Ollama (${Math.round(
           OLLAMA_REQUEST_TIMEOUT_MS / 60000
-        )} min).`
+        )} min).`,
+        { cause: error }
       );
     }
 

@@ -143,6 +143,12 @@ npm install
 npm run tauri -- dev
 ```
 
+### Lint
+
+```bash
+npm run lint
+```
+
 ### Build rápido
 
 ```bash
@@ -150,6 +156,8 @@ npm run build
 cd src-tauri
 cargo check
 ```
+
+Pull requests passam pela CI (`.github/workflows/ci.yml`), que roda lint, typecheck/build do frontend e `cargo check` do backend.
 
 ## Status do projeto
 

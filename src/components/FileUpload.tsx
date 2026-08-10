@@ -30,7 +30,7 @@ const detectProjectName = (filePath: string) => {
 };
 
 const buildPage = (cachedPath: string, originalPath: string) => ({
-  id: Math.random().toString(36).substring(7),
+  id: crypto.randomUUID(),
   url: convertFileSrc(normalizePath(cachedPath)),
   path: cachedPath,
   name: getFileName(originalPath),

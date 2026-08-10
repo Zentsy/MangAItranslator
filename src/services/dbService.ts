@@ -30,6 +30,28 @@ export interface DBProject {
   thumbnail_path?: string | null;
 }
 
+interface ProjectRow extends DBProject {
+  completed_pages: number;
+  total_pages: number;
+}
+
+interface PageRow {
+  id: string;
+  project_id: string;
+  path: string;
+  name: string;
+  status: MangaPage["status"];
+  order_index: number;
+}
+
+interface BlockRow {
+  id: string;
+  page_id: string;
+  text: string;
+  type: MangaPage["blocks"][number]["type"];
+  order_index: number;
+}
+
 export const dbService = {
   async getDb() {
     return await Database.load(DB_PATH);
@@ -37,7 +59,7 @@ export const dbService = {
 
   async createProject(name: string, chapter: string): Promise<string> {
     const db = await this.getDb();
-    const id = Math.random().toString(36).substring(7);
+    const id = crypto.randomUUID();
     await db.execute(
       "INSERT INTO projects (id, name, chapter, status) VALUES ($1, $2, $3, $4)",
       [id, name, chapter, "in_progress"]
@@ -47,7 +69,7 @@ export const dbService = {
 
   async getProjects(): Promise<DBProject[]> {
     const db = await this.getDb();
-    const projects = await db.select<any[]>(`
+    const projects = await db.select<ProjectRow[]>(`
       SELECT p.*,
       (SELECT path FROM pages WHERE project_id = p.id ORDER BY order_index ASC LIMIT 1) as thumbnail_path,
       (SELECT COUNT(*) FROM pages WHERE project_id = p.id AND status = 'completed') as completed_pages,
@@ -64,14 +86,14 @@ export const dbService = {
 
   async getProjectPages(projectId: string): Promise<MangaPage[]> {
     const db = await this.getDb();
-    const pages = await db.select<any[]>(
+    const pages = await db.select<PageRow[]>(
       "SELECT * FROM pages WHERE project_id = $1 ORDER BY order_index ASC",
       [projectId]
     );
 
     const fullPages: MangaPage[] = [];
     for (const page of pages) {
-      const blocks = await db.select<any[]>(
+      const blocks = await db.select<BlockRow[]>(
         "SELECT * FROM blocks WHERE page_id = $1 ORDER BY order_index ASC",
         [page.id]
       );

@@ -125,7 +125,7 @@ function App() {
     try {
       const status = await invoke<boolean>("check_ollama_status");
       setOllamaStatus(status);
-    } catch (e) {
+    } catch {
       setOllamaStatus(false);
     }
   }
