@@ -120,9 +120,21 @@ const stringifyGeminiDetails = (details: unknown) => {
     .join(" | ");
 };
 
-const normalizeGeminiError = (error: any) => {
-  const status = typeof error?.status === "number" ? error.status : undefined;
-  const rawMessage = [error?.message, error?.statusText, stringifyGeminiDetails(error?.errorDetails)]
+type GeminiErrorShape = {
+  status?: number;
+  message?: string;
+  statusText?: string;
+  errorDetails?: unknown;
+  code?: string;
+};
+
+const asGeminiErrorShape = (error: unknown): GeminiErrorShape =>
+  typeof error === "object" && error !== null ? (error as GeminiErrorShape) : {};
+
+const normalizeGeminiError = (error: unknown) => {
+  const errorShape = asGeminiErrorShape(error);
+  const status = typeof errorShape.status === "number" ? errorShape.status : undefined;
+  const rawMessage = [errorShape.message, errorShape.statusText, stringifyGeminiDetails(errorShape.errorDetails)]
     .filter(Boolean)
     .join(" | ");
   const message = rawMessage || "O Gemini retornou um erro inesperado.";
@@ -254,7 +266,7 @@ JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
       }
       throw parseError;
     }
-  } catch (error: any) {
+  } catch (error) {
     const normalizedError = normalizeGeminiError(error);
 
     if (retryCount < MAX_RETRIES && !NON_RETRYABLE_GEMINI_CODES.has(normalizedError.code)) {

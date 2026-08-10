@@ -4,7 +4,6 @@ import {
   GEMINI_MODEL_OPTIONS,
   getGeminiAccessLabel,
   getGeminiFamilyLabel,
-  getGeminiModelOption,
 } from "@/config/geminiModels";
 import {
   getOllamaModelOption,
@@ -19,7 +18,7 @@ import {
   OPENAI_COMPATIBLE_PROVIDERS,
   type OpenAiCompatibleProviderId,
 } from "@/config/openAiCompatibleProviders";
-import { useMangaStore, type TranslationEngine } from "@/store/useMangaStore";
+import { useMangaStore } from "@/store/useMangaStore";
 import { useTheme } from "@/contexts/ThemeContext";
 import { dbService } from "@/services/dbService";
 import {
@@ -276,7 +275,6 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     type: "info",
   });
 
-  const selectedGeminiModel = getGeminiModelOption(geminiModel);
   const selectedOllamaModel = getOllamaModelOption(ollamaModel);
   const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
   const selectedOpenAiModel = getOpenAiCompatibleModel(openAiCompatibleProvider, openAiCompatibleModel);

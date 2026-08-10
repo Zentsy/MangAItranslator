@@ -194,7 +194,7 @@ export const useMangaStore = create<MangaStore>()(
               ...page,
               blocks: [
                 ...page.blocks,
-                { id: Math.random().toString(36).substring(7), text: "", type: "none" },
+                { id: crypto.randomUUID(), text: "", type: "none" },
               ],
             };
           }),

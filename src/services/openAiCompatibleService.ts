@@ -373,7 +373,7 @@ const normalizeError = async (
   response: Response,
   providerLabel: string
 ): Promise<OpenAiCompatibleRequestError> => {
-  let details = "";
+  let details: string;
 
   try {
     details = await response.text();
