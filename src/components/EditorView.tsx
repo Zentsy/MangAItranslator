@@ -148,6 +148,9 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     clearStore,
     cancelPendingSaves,
     glossary,
+    processingQueue,
+    addToProcessingQueue,
+    removeFromProcessingQueue,
   } = useMangaStore();
 
   const { theme } = useTheme();
@@ -197,12 +200,18 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       e.preventDefault();
       
       if (index < (currentPage.blocks?.length || 0) - 1) {
-        textareaRefs.current[index + 1]?.focus();
+        const nextTextarea = textareaRefs.current[index + 1];
+        nextTextarea?.focus();
+        nextTextarea?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       } else {
         // Last block: go to next page
         if (currentPageIndex < pages.length - 1) {
           nextPage();
-          setTimeout(() => textareaRefs.current[0]?.focus(), 150);
+          setTimeout(() => {
+            const first = textareaRefs.current[0];
+            first?.focus();
+            first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 150);
         }
       }
     }
@@ -214,6 +223,25 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       if (keyNum >= 1 && keyNum <= 4) {
         e.preventDefault();
         updateBlock(currentPage.id, currentPage.blocks[index].id, { type: types[keyNum - 1] });
+      }
+    }
+
+    // Shortcut: M to merge with next
+    if (e.altKey && e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      const currentBlock = currentPage.blocks[index];
+      const nextBlock = currentPage.blocks[index + 1];
+      if (nextBlock) {
+        updateBlock(currentPage.id, currentBlock.id, { text: `${currentBlock.text} ${nextBlock.text}`.trim() });
+        removeBlock(currentPage.id, nextBlock.id);
+      }
+    }
+
+    // Shortcut: S to swap with next
+    if (e.altKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (index < (currentPage.blocks?.length || 0) - 1) {
+        reorderBlocks(currentPage.id, index, index + 1);
       }
     }
   };
@@ -440,6 +468,100 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     }
   };
 
+  const handleBatchTranslate = async (count = 5) => {
+    // Começa da pagina atual ate count paginas a frente
+    const startIndex = currentPageIndex;
+    const endIndex = Math.min(startIndex + count, pages.length);
+
+    for (let i = startIndex; i < endIndex; i++) {
+      const page = pages[i];
+      
+      // Pula se ja estiver concluida ou ja estiver na fila
+      if (page.status === 'completed' || processingQueue.includes(page.id)) {
+        continue;
+      }
+
+      // Adiciona na fila global
+      addToProcessingQueue(page.id);
+
+      // Dispara a traducao em background (sem await para nao travar o loop)
+      void (async () => {
+        try {
+          // Precisamos ler a imagem dessa pagina especifica
+          const cleanPath = page.path
+            .replace("http://asset.localhost/", "")
+            .replace(/%2F/g, "/")
+            .replace(/%3A/g, ":");
+
+          const contents = await readFile(cleanPath);
+          const blob = new Blob([contents], { type: inferImageMimeType(cleanPath) });
+          const reader = new FileReader();
+          
+          const base64Data = await new Promise<string>((resolve) => {
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+
+          const optimizedBase64 = await optimizeImageForAi(base64Data);
+
+          // Contexto da pagina anterior para o lote
+          let previousContext: string | null = null;
+          if (i > 0) {
+            const prevPage = pages[i - 1];
+            if (prevPage.blocks && prevPage.blocks.length > 0) {
+              previousContext = prevPage.blocks
+                .map((b) => `[${b.type}] ${b.text}`)
+                .join("\n");
+            }
+          }
+
+          await translatePage(
+            translationEngine,
+            apiKey,
+            openRouterApiKey,
+            groqApiKey,
+            customApiKey,
+            geminiModel,
+            ollamaModel,
+            openAiCompatibleProvider,
+            openAiCompatibleModel,
+            openRouterModelMode,
+            aiThinkingEnabled,
+            aiInferBlockTypesEnabled,
+            optimizedBase64,
+            glossary,
+            previousContext,
+            (results) => {
+              const newBlocks = results.map((res) => ({
+                id: crypto.randomUUID(),
+                text: res.text,
+                type: (res.type ?? "none") as BlockType,
+              }));
+              updatePage(page.id, {
+                blocks: newBlocks,
+                status: "completed",
+              });
+            }
+          );
+        } catch (error) {
+          console.error(`Erro no lote para pagina ${i}:`, error);
+        } finally {
+          removeFromProcessingQueue(page.id);
+        }
+      })();
+
+      // Pequeno delay entre disparos para nao floodar a API/Rede
+      await new Promise(r => setTimeout(r, 800));
+    }
+
+    setStatusModal({
+      isOpen: true,
+      title: "Lote Iniciado",
+      description: `Iniciamos a traducao automatica das proximas ${count} paginas em background.`,
+      type: "success",
+    });
+  };
+
   const getBlockColor = (type: BlockType) => {
     const isLight = theme === 'paper-light';
     switch (type) {
@@ -613,6 +735,16 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               <Flag size={16} /> FINALIZAR CAPITULO
             </Button>
           )}
+
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2 border-app-text-primary/20 font-bold text-app-text-primary hover:bg-app-text-primary hover:text-app-bg"
+            onClick={() => handleBatchTranslate(5)}
+            disabled={isTranslating}
+          >
+            <Zap size={16} /> BATCH 5
+          </Button>
 
           <Button
             size="sm"
@@ -884,19 +1016,27 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           <ChevronLeft size={20} /> ANTERIOR
         </Button>
         <div className="no-scrollbar flex max-w-[40%] items-center gap-2 overflow-x-auto px-4">
-          {pages.map((page, index) => (
-            <div
-              key={index}
-              className={`cursor-pointer flex-shrink-0 transition-all ${
-                index === currentPageIndex
-                  ? "h-1.5 w-8 bg-app-text-primary shadow-[0_0_8px_rgba(var(--app-text-primary),0.3)]"
-                  : page.status === "completed"
-                    ? "h-1.5 w-2 bg-emerald-500/40"
-                    : "h-1.5 w-2 bg-app-text-secondary/20 hover:bg-app-text-secondary/40"
-              }`}
-              onClick={() => useMangaStore.getState().setPageIndex(index)}
-            />
-          ))}
+          {pages.map((page, index) => {
+            const isProcessing = processingQueue.includes(page.id);
+            return (
+              <div
+                key={index}
+                title={isProcessing ? "Traduzindo em background..." : undefined}
+                className={`relative cursor-pointer flex-shrink-0 transition-all ${
+                  index === currentPageIndex
+                    ? "h-1.5 w-8 bg-app-text-primary shadow-[0_0_8px_rgba(var(--app-text-primary),0.3)]"
+                    : page.status === "completed"
+                      ? "h-1.5 w-2 bg-emerald-500/40"
+                      : "h-1.5 w-2 bg-app-text-secondary/20 hover:bg-app-text-secondary/40"
+                }`}
+                onClick={() => useMangaStore.getState().setPageIndex(index)}
+              >
+                {isProcessing && (
+                  <span className="absolute -top-1 left-0 right-0 h-0.5 animate-pulse bg-app-accent" />
+                )}
+              </div>
+            );
+          })}
         </div>
         <Button
           variant="ghost"
