@@ -314,8 +314,20 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           ? `Enviando imagem para ${selectedOpenAiProvider.label}...`
           : "Enviando imagem para o Gemini..."
     );
+    const base64 = await optimizeImageForAi(imgBase64);
+
+    // Contexto da pagina anterior
+    let previousContext: string | null = null;
+    if (currentPageIndex > 0) {
+      const prevPage = pages[currentPageIndex - 1];
+      if (prevPage.blocks && prevPage.blocks.length > 0) {
+        previousContext = prevPage.blocks
+          .map((b) => `[${b.type}] ${b.text}`)
+          .join("\n");
+      }
+    }
+
     try {
-      const base64 = await optimizeImageForAi(imgBase64);
       await translatePage(
         translationEngine,
         apiKey,
@@ -329,6 +341,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         aiInferBlockTypesEnabled,
         base64,
         glossary,
+        previousContext,
         (results) => {
           if (results.length === 0) {
             setStatusModal({

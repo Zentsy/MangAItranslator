@@ -30,6 +30,7 @@ export const translatePage = async (
   aiInferBlockTypesEnabled: boolean,
   base64Image: string,
   glossary: GlossaryTerm[],
+  previousContext: string | null,
   onResult: (results: TranslationResult[]) => void,
   onProgress?: (chunk: string) => void,
   onStatusChange?: (update: OllamaStatusUpdate | OpenAiCompatibleStatusUpdate) => void
@@ -45,6 +46,7 @@ export const translatePage = async (
       aiThinkingEnabled,
       aiInferBlockTypesEnabled,
       glossary,
+      previousContext,
       onResult
     );
     return;
@@ -57,6 +59,7 @@ export const translatePage = async (
       aiThinkingEnabled,
       aiInferBlockTypesEnabled,
       glossary,
+      previousContext,
       onProgress,
       onStatusChange
     );
@@ -79,6 +82,7 @@ export const translatePage = async (
     aiThinkingEnabled,
     aiInferBlockTypesEnabled,
     glossary,
+    previousContext,
     onStatusChange
   );
 

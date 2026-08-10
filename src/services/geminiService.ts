@@ -192,6 +192,7 @@ export const translateWithGemini = async (
   aiThinkingEnabled: boolean,
   aiInferBlockTypesEnabled: boolean,
   glossary: GlossaryTerm[],
+  previousContext: string | null,
   onResult: (blocks: { text: string; type?: "rect" | "outside" | "thought" | "double" | "none" }[]) => void,
   retryCount = 0
 ): Promise<void> => {
@@ -206,20 +207,22 @@ export const translateWithGemini = async (
 ${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
       : "";
 
+  const contextInstruction =
+    previousContext
+      ? `\nCONTEXTO DA PAGINA ANTERIOR (Use para manter continuidade):
+${previousContext}`
+      : "";
+
   const systemPrompt = `Voce e um tradutor especializado em mangas.
 Sua unica tarefa e ler o texto da imagem e devolver a traducao final em portugues brasileiro.
 REGRAS:
 - ORDEM: Siga rigorosamente a ordem de leitura (Direita para Esquerda, Cima para Baixo).
 - IDIOMA: Cada item em "translations.text" deve estar em PT-BR natural e legivel.
-- NAO COPIE O INGLES: Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.${glossaryInstruction}
+- NAO COPIE O INGLES: Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.${glossaryInstruction}${contextInstruction}
 - OCR: Se um balao estiver vazio, ilegivel ou sem texto relevante, nao invente conteudo.
 - ${getThinkingInstruction(aiThinkingEnabled)}
 - ${getTypeInstruction(aiInferBlockTypesEnabled)}
-- FORMATO: Responda somente em JSON valido seguindo o schema.
-
-Exemplo:
-English: "I love you."
-JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
+- FORMATO: Responda somente em JSON valido seguindo o schema.`;
   const thinkingConfig = getGeminiThinkingConfig(geminiModel, aiThinkingEnabled);
   const generationConfig: Record<string, unknown> = {
     temperature: 0.2,

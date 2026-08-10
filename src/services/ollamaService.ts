@@ -216,6 +216,7 @@ export const translateImage = async (
   thinkingEnabled = false,
   inferBlockTypes = false,
   glossary: GlossaryTerm[] = [],
+  previousContext: string | null = null,
   onChunk?: (chunk: string) => void,
   onStatusChange?: (update: OllamaStatusUpdate) => void
 ) => {
@@ -227,6 +228,12 @@ export const translateImage = async (
     glossary.length > 0
       ? `\nGLOSSARIO (Use estas traduções preferencialmente):
 ${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
+      : "";
+
+  const contextInstruction =
+    previousContext
+      ? `\nCONTEXTO DA PAGINA ANTERIOR (Use para manter continuidade):
+${previousContext}`
       : "";
 
   const endTimer = () => {
@@ -266,7 +273,7 @@ ${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
         messages: [
           {
             role: "system",
-            content: `${OLLAMA_SYSTEM_PROMPT}${getThinkingInstruction(thinkingEnabled)}${glossaryInstruction}`,
+            content: `${OLLAMA_SYSTEM_PROMPT}${getThinkingInstruction(thinkingEnabled)}${glossaryInstruction}${contextInstruction}`,
           },
           {
             role: "user",
