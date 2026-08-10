@@ -627,8 +627,21 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setShowExportModal(true);
   };
 
+  const isBatchProcessing = processingQueue.length > 0;
+
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-app-border bg-app-surface/20 backdrop-blur-sm">
+      {/* Batch Status Overlay */}
+      {isBatchProcessing && (
+        <div className="absolute right-6 top-20 z-[70] flex items-center gap-3 rounded-2xl border border-app-accent/30 bg-app-surface/90 px-4 py-2.5 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-app-accent border-t-transparent animate-spin" />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-app-text-primary">IA em Lote</span>
+            <span className="text-[9px] font-mono text-app-text-secondary/70">Processando {processingQueue.length} {processingQueue.length === 1 ? 'pagina' : 'paginas'}...</span>
+          </div>
+        </div>
+      )}
+
       <header className="flex items-center justify-between border-b border-white/5 bg-white/5 px-6 py-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={onBack} className="text-app-text-secondary hover:bg-app-surface/80 hover:text-app-text-primary">
@@ -935,8 +948,12 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                       <span>Proximo</span>
                    </div>
                    <div className="flex items-center justify-between">
-                      <span className="text-app-text-secondary/80">C+S+Ent</span>
-                      <span>AI Draft</span>
+                      <span className="text-app-text-secondary/80">Alt+S</span>
+                      <span>Swap (Trocar)</span>
+                   </div>
+                   <div className="flex items-center justify-between">
+                      <span className="text-app-text-secondary/80">Alt+M</span>
+                      <span>Merge (Unir)</span>
                    </div>
                    <div className="flex items-center justify-between">
                       <span className="text-app-text-secondary/80">Alt+1-4</span>
