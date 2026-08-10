@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, SchemaType, type ResponseSchema } from "@google/generative-ai";
+import { GlossaryTerm } from "./dbService";
 
 const MAX_RETRIES = 2;
 const NON_RETRYABLE_GEMINI_CODES = new Set([
@@ -190,6 +191,7 @@ export const translateWithGemini = async (
   base64Image: string,
   aiThinkingEnabled: boolean,
   aiInferBlockTypesEnabled: boolean,
+  glossary: GlossaryTerm[],
   onResult: (blocks: { text: string; type?: "rect" | "outside" | "thought" | "double" | "none" }[]) => void,
   retryCount = 0
 ): Promise<void> => {
@@ -198,12 +200,18 @@ export const translateWithGemini = async (
     model: geminiModel,
   });
 
+  const glossaryInstruction =
+    glossary.length > 0
+      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
+${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
+      : "";
+
   const systemPrompt = `Voce e um tradutor especializado em mangas.
 Sua unica tarefa e ler o texto da imagem e devolver a traducao final em portugues brasileiro.
 REGRAS:
 - ORDEM: Siga rigorosamente a ordem de leitura (Direita para Esquerda, Cima para Baixo).
 - IDIOMA: Cada item em "translations.text" deve estar em PT-BR natural e legivel.
-- NAO COPIE O INGLES: Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.
+- NAO COPIE O INGLES: Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.${glossaryInstruction}
 - OCR: Se um balao estiver vazio, ilegivel ou sem texto relevante, nao invente conteudo.
 - ${getThinkingInstruction(aiThinkingEnabled)}
 - ${getTypeInstruction(aiInferBlockTypesEnabled)}
@@ -260,6 +268,7 @@ JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
           base64Image,
           aiThinkingEnabled,
           aiInferBlockTypesEnabled,
+          glossary,
           onResult,
           retryCount + 1
         );
@@ -276,6 +285,7 @@ JSON correto: {"translations":[{"text":"Eu te amo."}]}`;
         base64Image,
         aiThinkingEnabled,
         aiInferBlockTypesEnabled,
+        glossary,
         onResult,
         retryCount + 1
       );

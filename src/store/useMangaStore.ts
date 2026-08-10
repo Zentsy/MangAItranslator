@@ -8,7 +8,8 @@ import {
   type OpenRouterModelMode,
   type OpenAiCompatibleProviderId,
 } from "@/config/openAiCompatibleProviders";
-import { dbService } from "@/services/dbService";
+import { dbService, GlossaryTerm } from "@/services/dbService";
+import { queueSecretSave } from "@/services/secretsService";
 
 const SAVE_DEBOUNCE_MS = 450;
 const pendingSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -65,6 +66,7 @@ interface MangaStore {
   aiInferBlockTypesEnabled: boolean;
   hasFinishedOnboarding: boolean;
   theme: AppTheme;
+  glossary: GlossaryTerm[];
 
   setApiKey: (key: string) => void;
   setUseConvention: (value: boolean) => void;
@@ -81,6 +83,9 @@ interface MangaStore {
   setAiInferBlockTypesEnabled: (enabled: boolean) => void;
   setHasFinishedOnboarding: (value: boolean) => void;
   setTheme: (theme: AppTheme) => void;
+  setGlossary: (terms: GlossaryTerm[]) => void;
+  addGlossaryTerm: (term: string, translation: string) => Promise<void>;
+  removeGlossaryTerm: (id: string) => Promise<void>;
   resetOnboarding: () => void;
   nextPage: () => void;
   prevPage: () => void;
@@ -117,8 +122,12 @@ export const useMangaStore = create<MangaStore>()(
       aiInferBlockTypesEnabled: false,
       hasFinishedOnboarding: false,
       theme: "dark-organic",
+      glossary: [],
 
-      setApiKey: (apiKey) => set({ apiKey }),
+      setApiKey: (apiKey) => {
+        set({ apiKey });
+        queueSecretSave("gemini", apiKey);
+      },
       setUseConvention: (useConvention) => set({ useConvention }),
       setProjectId: (currentProjectId) => set({ currentProjectId }),
       setTranslationEngine: (translationEngine) => set({ translationEngine }),
@@ -126,8 +135,10 @@ export const useMangaStore = create<MangaStore>()(
       setOllamaModel: (ollamaModel) => set({ ollamaModel }),
       setOpenAiCompatibleProvider: (openAiCompatibleProvider) =>
         set({ openAiCompatibleProvider }),
-      setOpenAiCompatibleApiKey: (openAiCompatibleApiKey) =>
-        set({ openAiCompatibleApiKey }),
+      setOpenAiCompatibleApiKey: (openAiCompatibleApiKey) => {
+        set({ openAiCompatibleApiKey });
+        queueSecretSave("openai-compatible", openAiCompatibleApiKey);
+      },
       setOpenAiCompatibleModel: (openAiCompatibleModel) =>
         set({ openAiCompatibleModel }),
       setOpenRouterModelMode: (openRouterModelMode) => set({ openRouterModelMode }),
@@ -136,6 +147,21 @@ export const useMangaStore = create<MangaStore>()(
         set({ aiInferBlockTypesEnabled }),
       setHasFinishedOnboarding: (hasFinishedOnboarding) => set({ hasFinishedOnboarding }),
       setTheme: (theme) => set({ theme }),
+      setGlossary: (glossary) => set({ glossary }),
+      addGlossaryTerm: async (term, translation) => {
+        const { currentProjectId } = get();
+        if (!currentProjectId) return;
+        const id = await dbService.upsertGlossaryTerm(currentProjectId, term, translation);
+        set((state) => ({
+          glossary: [...state.glossary, { id, project_id: currentProjectId, term, translation }],
+        }));
+      },
+      removeGlossaryTerm: async (id) => {
+        await dbService.deleteGlossaryTerm(id);
+        set((state) => ({
+          glossary: state.glossary.filter((t) => t.id !== id),
+        }));
+      },
       resetOnboarding: () => set({ hasFinishedOnboarding: false }),
       setPages: (pages) => {
         clearAllPendingSaves();
@@ -265,6 +291,8 @@ export const useMangaStore = create<MangaStore>()(
 
       clearStore: () => {
         clearAllPendingSaves();
+        queueSecretSave("gemini", "");
+        queueSecretSave("openai-compatible", "");
         set({
           pages: [],
           currentPageIndex: 0,
@@ -282,20 +310,19 @@ export const useMangaStore = create<MangaStore>()(
           aiInferBlockTypesEnabled: false,
           hasFinishedOnboarding: false,
           theme: "dark-organic",
+          glossary: [],
         });
       },
     }),
     {
       name: "manga-storage",
       partialize: (state) => ({
-        apiKey: state.apiKey,
         useConvention: state.useConvention,
         currentProjectId: state.currentProjectId,
         translationEngine: state.translationEngine,
         geminiModel: state.geminiModel,
         ollamaModel: state.ollamaModel,
         openAiCompatibleProvider: state.openAiCompatibleProvider,
-        openAiCompatibleApiKey: state.openAiCompatibleApiKey,
         openAiCompatibleModel: state.openAiCompatibleModel,
         openRouterModelMode: state.openRouterModelMode,
         aiThinkingEnabled: state.aiThinkingEnabled,

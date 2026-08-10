@@ -1,3 +1,5 @@
+import { GlossaryTerm } from "./dbService";
+
 const VALID_BLOCK_TYPES = new Set(["rect", "outside", "thought", "double", "none"]);
 const OLLAMA_REQUEST_TIMEOUT_MS = 8 * 60 * 1000;
 
@@ -213,12 +215,19 @@ export const translateImage = async (
   model: string,
   thinkingEnabled = false,
   inferBlockTypes = false,
+  glossary: GlossaryTerm[] = [],
   onChunk?: (chunk: string) => void,
   onStatusChange?: (update: OllamaStatusUpdate) => void
 ) => {
   const requestLabel = `[ollama] ${model} #${Date.now()}`;
   let timerRunning = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const glossaryInstruction =
+    glossary.length > 0
+      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
+${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
+      : "";
 
   const endTimer = () => {
     if (!timerRunning) {
@@ -257,7 +266,7 @@ export const translateImage = async (
         messages: [
           {
             role: "system",
-            content: `${OLLAMA_SYSTEM_PROMPT}${getThinkingInstruction(thinkingEnabled)}`,
+            content: `${OLLAMA_SYSTEM_PROMPT}${getThinkingInstruction(thinkingEnabled)}${glossaryInstruction}`,
           },
           {
             role: "user",

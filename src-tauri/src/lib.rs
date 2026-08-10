@@ -1,3 +1,4 @@
+use keyring::Entry;
 use serde::Deserialize;
 use sqlx::{Connection, SqliteConnection};
 use std::fs;
@@ -276,6 +277,30 @@ async fn wipe_all_data(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn get_secret(provider: String) -> Result<Option<String>, String> {
+    let entry = Entry::new("MangAI Translator", &provider).map_err(|e| e.to_string())?;
+    match entry.get_password() {
+        Ok(password) => Ok(Some(password)),
+        Err(keyring::Error::NoEntry) => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+fn set_secret(provider: String, value: String) -> Result<(), String> {
+    let entry = Entry::new("MangAI Translator", &provider).map_err(|e| e.to_string())?;
+    if value.is_empty() {
+        match entry.delete_password() {
+            Ok(_) => Ok(()),
+            Err(keyring::Error::NoEntry) => Ok(()),
+            Err(e) => Err(e.to_string()),
+        }
+    } else {
+        entry.set_password(&value).map_err(|e| e.to_string())
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let migrations = vec![Migration {
@@ -311,6 +336,19 @@ pub fn run() {
                 );
             ",
         kind: MigrationKind::Up,
+    }, Migration {
+        version: 2,
+        description: "create_glossary_table",
+        sql: "
+                CREATE TABLE glossary (
+                    id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL,
+                    term TEXT NOT NULL,
+                    translation TEXT NOT NULL,
+                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+                );
+            ",
+        kind: MigrationKind::Up,
     }];
 
     tauri::Builder::default()
@@ -333,7 +371,9 @@ pub fn run() {
             list_chapter_images,
             save_page_atomic,
             delete_project_data,
-            wipe_all_data
+            wipe_all_data,
+            get_secret,
+            set_secret
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

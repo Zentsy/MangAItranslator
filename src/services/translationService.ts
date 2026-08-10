@@ -10,6 +10,7 @@ import {
   type OpenRouterModelMode,
 } from "@/config/openAiCompatibleProviders";
 import { BlockType, TranslationEngine } from "@/store/useMangaStore";
+import { GlossaryTerm } from "./dbService";
 
 export interface TranslationResult {
   text: string;
@@ -28,6 +29,7 @@ export const translatePage = async (
   aiThinkingEnabled: boolean,
   aiInferBlockTypesEnabled: boolean,
   base64Image: string,
+  glossary: GlossaryTerm[],
   onResult: (results: TranslationResult[]) => void,
   onProgress?: (chunk: string) => void,
   onStatusChange?: (update: OllamaStatusUpdate | OpenAiCompatibleStatusUpdate) => void
@@ -42,6 +44,7 @@ export const translatePage = async (
       base64Image,
       aiThinkingEnabled,
       aiInferBlockTypesEnabled,
+      glossary,
       onResult
     );
     return;
@@ -53,6 +56,7 @@ export const translatePage = async (
       ollamaModel,
       aiThinkingEnabled,
       aiInferBlockTypesEnabled,
+      glossary,
       onProgress,
       onStatusChange
     );
@@ -74,6 +78,7 @@ export const translatePage = async (
     base64Image,
     aiThinkingEnabled,
     aiInferBlockTypesEnabled,
+    glossary,
     onStatusChange
   );
 

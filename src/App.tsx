@@ -1,13 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useTranslation } from "react-i18next";
 import MangaBackground from "@/components/MangaBackground";
-import EditorView from "@/components/EditorView";
-import LibraryView from "@/components/LibraryView";
-import SettingsView from "@/components/SettingsView";
 import FileUpload from "@/components/FileUpload";
 import StatusModal, { StatusType } from "@/components/StatusModal";
-import OnboardingOverlay from "@/components/OnboardingOverlay";
 import BrandMark from "@/components/BrandMark";
 import UpdateModal from "@/components/UpdateModal";
 import { Button } from "@/components/ui/button";
@@ -17,6 +13,7 @@ import { getOpenAiCompatibleProvider } from "@/config/openAiCompatibleProviders"
 import { useAppUpdater, type UpdateCheckResult } from "@/hooks/useAppUpdater";
 import { useMangaStore } from "@/store/useMangaStore";
 import { dbService, DBProject, resolveAssetUrl } from "@/services/dbService";
+import { loadSecret, saveSecretNow, stripLegacyKeysFromLocalStorage } from "@/services/secretsService";
 import {
   LayoutGrid,
   FileImage,
@@ -29,6 +26,17 @@ import {
   Play,
   RefreshCw,
 } from "lucide-react";
+
+const EditorView = lazy(() => import("@/components/EditorView"));
+const LibraryView = lazy(() => import("@/components/LibraryView"));
+const SettingsView = lazy(() => import("@/components/SettingsView"));
+const OnboardingOverlay = lazy(() => import("@/components/OnboardingOverlay"));
+
+const ViewLoader = () => (
+  <div className="flex h-full w-full items-center justify-center">
+    <div className="h-10 w-10 animate-spin rounded-full border-2 border-app-border border-t-app-text-primary" />
+  </div>
+);
 
 type AppView = "dashboard" | "editor" | "library" | "settings";
 
@@ -101,6 +109,7 @@ function App() {
     setPages, 
     setProjectId, 
     setPageIndex,
+    setGlossary,
     currentProjectId, 
     translationEngine, 
     setTranslationEngine,
@@ -141,7 +150,37 @@ function App() {
 
   useEffect(() => {
     checkOllama();
-  }, []);
+
+    // Bootstrap secrets
+    const bootstrapSecrets = async () => {
+      const geminiSecret = await loadSecret("gemini");
+      const openaiSecret = await loadSecret("openai-compatible");
+
+      let updatedGemini = geminiSecret;
+      let updatedOpenai = openaiSecret;
+
+      // Se o cofre estiver vazio, tenta migrar do store (localStorage legada)
+      if (!geminiSecret && apiKey) {
+        await saveSecretNow("gemini", apiKey);
+        updatedGemini = apiKey;
+      }
+      if (!openaiSecret && openAiCompatibleApiKey) {
+        await saveSecretNow("openai-compatible", openAiCompatibleApiKey);
+        updatedOpenai = openAiCompatibleApiKey;
+      }
+
+      // Atualiza o store sem disparar persistencia (ja que partialize ignora essas keys)
+      useMangaStore.setState({ 
+        apiKey: updatedGemini || "", 
+        openAiCompatibleApiKey: updatedOpenai || "" 
+      });
+
+      // Limpa do localStorage
+      stripLegacyKeysFromLocalStorage();
+    };
+
+    void bootstrapSecrets();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (currentView === 'dashboard' || currentView === 'library') {
@@ -181,8 +220,10 @@ function App() {
   const handleOpenProject = async (projectId: string) => {
     try {
       const pages = await dbService.getProjectPages(projectId);
+      const glossary = await dbService.getProjectGlossary(projectId);
       setPages(pages);
       setProjectId(projectId);
+      setGlossary(glossary);
       
       // Encontrar a primeira pagina que nao esta completada
       const firstIncompleteIndex = pages.findIndex(p => p.status !== 'completed');
@@ -255,361 +296,363 @@ function App() {
 
         {/* Main Content Area */}
         <div className="relative min-h-0 flex-1 overflow-hidden bg-app-bg text-app-text-primary">
-          {currentView === 'settings' && (
-            <div className="h-full overflow-y-auto p-6">
-              <SettingsView
-                onBack={() => setCurrentView('dashboard')}
-                appVersion={updater.appVersion}
-                availableUpdate={updater.availableUpdate}
-                isCheckingUpdates={updater.isChecking}
-                isInstallingUpdate={updater.isInstalling}
-                updateProgressPercent={updater.progressPercent}
-                updateStatusMessage={updater.statusMessage}
-                lastUpdateCheck={updater.lastCheckedAt}
-                updateError={updater.lastError}
-                onCheckForUpdates={handleManualUpdateCheck}
-                onInstallUpdate={updater.installUpdate}
-              />
-            </div>
-          )}
-
-          {currentView === 'dashboard' && (
-            <main className="relative flex h-full flex-col overflow-y-auto px-8 py-8 pb-10">
-              <OnboardingOverlay />
-              <div className="mx-auto flex w-full max-w-[1680px] flex-col">
-              <header className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-                <div className="max-w-[720px]">
-                  <BrandMark />
-                  <p className="mt-5 max-w-[620px] text-[14px] leading-relaxed text-app-text-secondary/62">
-                    Traduza capitulos com um fluxo editorial mais limpo: importe, gere o draft, refine os blocos e exporte sem perder contexto.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-start justify-start gap-3 xl:max-w-[760px] xl:justify-end">
-                   <button
-                      type="button"
-                      onClick={() => void handleManualUpdateCheck()}
-                      className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-app-text-secondary transition-all hover:bg-app-surface hover:text-app-text-primary"
-                    >
-                      <RefreshCw size={14} className={updater.isChecking ? "animate-spin" : ""} />
-                      {updater.availableUpdate ? `Atualizacao ${updater.availableUpdate.version}` : "Verificar atualizacao"}
-                    </button>
-                   <div className="flex flex-col gap-2 rounded-[1.6rem] border border-app-border bg-app-surface/50 px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => setTranslationEngine("gemini")}
-                          className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "gemini" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
-                        >
-                          Gemini
-                        </button>
-                        <button 
-                          onClick={() => setTranslationEngine("ollama")}
-                          className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "ollama" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
-                        >
-                          Ollama
-                        </button>
-                        <button
-                          onClick={() => setTranslationEngine("openaiCompatible")}
-                          className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "openaiCompatible" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
-                        >
-                          APIs
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-[0.16em]">
-                        {translationEngine === "gemini" ? (
-                          <>
-                            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-emerald-400">
-                              Recomendado
-                            </span>
-                            <span className="max-w-[260px] text-app-text-secondary/50">
-                              Melhor qualidade e fluxo principal do app
-                            </span>
-                          </>
-                        ) : translationEngine === "ollama" ? (
-                          <>
-                            <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-amber-400">
-                              Modo local
-                            </span>
-                            <span className="max-w-[260px] text-app-text-secondary/50">
-                              Roda no seu PC e pode variar bastante de velocidade
-                            </span>
-                          </>
-                        ) : translationEngine === "openaiCompatible" ? (
-                          <>
-                            <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-blue-400">
-                              API externa
-                            </span>
-                            <span className="max-w-[260px] text-app-text-secondary/50">
-                              {selectedOpenAiProvider.label} usando modelo vision compativel
-                            </span>
-                          </>
-                        ) : null}
-                      </div>
-                   </div>
-                   {translationEngine === "gemini" && (
-                     <div
-                        data-gemini-key-anchor="true"
-                        className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300"
-                      >
-                        <Key size={14} className="text-app-text-secondary" />
-                        <input 
-                          type="password" 
-                          placeholder="Gemini API Key"
-                          value={apiKey}
-                          onChange={(e) => setApiKey(e.target.value)}
-                         className="w-36 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
-                        />
-                     </div>
-                   )}
-                   {translationEngine === "openaiCompatible" && selectedOpenAiProvider.requiresApiKey && (
-                     <div
-                        className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300"
-                      >
-                        <Key size={14} className="text-app-text-secondary" />
-                        <input
-                          type="password"
-                          placeholder={selectedOpenAiProvider.apiKeyLabel}
-                          value={openAiCompatibleApiKey}
-                          onChange={(e) => setOpenAiCompatibleApiKey(e.target.value)}
-                         className="w-40 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
-                        />
-                     </div>
-                   )}
-                   {translationEngine === "gemini" && (
-                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
-                          Modelo
-                        </span>
-                        <span className="text-[10px] font-mono text-app-text-primary">
-                          {selectedGeminiModel.label}
-                        </span>
-                     </div>
-                   )}
-                   {translationEngine === "openaiCompatible" && (
-                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
-                          {selectedOpenAiProvider.label}
-                        </span>
-                        <span className="max-w-[220px] truncate text-[10px] font-mono text-app-text-primary">
-                          {openAiCompatibleModel}
-                        </span>
-                     </div>
-                   )}
-                   {translationEngine === "ollama" && (
-                     <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
-                          Modelo
-                        </span>
-                        <span className="text-[10px] font-mono text-app-text-primary">
-                          {selectedOllamaModel.label}
-                        </span>
-                     </div>
-                   )}
-                  <div className={`flex h-12 items-center gap-3 rounded-full border px-4 py-2 ${ollamaStatus ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-rose-500/20 bg-rose-500/5 text-rose-500'} transition-all`}>
-                    <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Ollama: {ollamaStatus ? t('common.online') : t('common.offline')}</span>
-                  </div>
-                </div>
-              </header>
-
-              <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-                <FileUpload onSuccess={() => setCurrentView('editor')} />
-                
-                <div 
-                  onClick={() => setCurrentView('library')}
-                  className="group relative cursor-pointer overflow-hidden rounded-[2rem] border border-app-border bg-app-surface/50 p-7 transition-all hover:bg-app-surface"
-                >
-                   <h3 className="mb-3 text-xl font-bold uppercase italic text-app-text-primary">{t('dashboard.history.title')}</h3>
-                   <p className="max-w-[420px] text-[14px] leading-relaxed text-app-text-secondary">{t('dashboard.history.description')}</p>
-                   <div className="mt-8 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-widest text-app-text-secondary/40 transition-all group-hover:text-app-text-primary">
-                      Acessar Biblioteca <ChevronRight size={12} />
-                   </div>
-                </div>
-              </section>
-
-              <section className="mt-10 min-h-0">
-                <div className="mb-4 flex items-end justify-between">
-                  <div>
-                    <h2 className="text-[1.8rem] font-black uppercase tracking-tighter italic text-app-text-primary">
-                      Retomar <span className="text-app-text-secondary/40">Traducoes</span>
-                    </h2>
-                    <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.22em] text-app-text-secondary/60">
-                      Continue rapido sem precisar abrir a aba de historico
-                    </p>
-                  </div>
-
-                  {recentProjects.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setCurrentView('library')}
-                      className="gap-2 text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
-                    >
-                      <History size={14} />
-                      Ver Tudo
-                    </Button>
-                  )}
-                </div>
-
-                {recentProjects.length === 0 ? (
-                  <div className="rounded-[2rem] border border-app-border bg-app-surface/30 p-8 text-app-text-secondary/60">
-                    <div className="flex items-center gap-3 text-sm font-bold uppercase tracking-wide">
-                      <Clock3 size={18} className="text-app-text-secondary/40" />
-                      Nenhuma traducao recente ainda
-                    </div>
-                    <p className="mt-3 max-w-[760px] text-[15px] leading-relaxed">
-                      Assim que voce importar um capitulo, ele aparece aqui para voce continuar do ponto em que parou.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-                    {recentProjects.map((project, index) => (
-                      <button
-                        key={project.id}
-                        type="button"
-                        onClick={() => handleOpenProject(project.id)}
-                        className={`group relative min-w-0 overflow-hidden rounded-3xl border text-left transition-all hover:-translate-y-0.5 hover:border-app-accent/20 hover:bg-app-surface/80 ${
-                          index === 0
-                            ? "border-app-border bg-gradient-to-br from-app-surface/50 via-app-surface/20 to-transparent lg:col-span-2"
-                            : "border-app-border bg-app-surface/40"
-                        }`}
-                      >
-                        {index === 0 ? (
-                          <div className="grid gap-0 lg:grid-cols-[minmax(0,1.4fr)_240px]">
-                            <div className="relative flex h-full min-w-0 flex-col justify-between p-5">
-                              <div>
-                                <div className="mb-4 flex items-center justify-between gap-3">
-                                  <span
-                                    className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
-                                      project.status === "completed"
-                                        ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                        : "border border-app-border bg-app-surface text-app-text-secondary"
-                                    }`}
-                                  >
-                                    {project.status === "completed" ? "Concluido" : "Em andamento"}
-                                  </span>
-                                  <span className="text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
-                                    {formatProjectDate(project.updated_at)}
-                                  </span>
-                                </div>
-
-                                <h3 className="max-w-3xl break-words text-[1.7rem] font-black uppercase tracking-tight leading-tight text-app-text-primary">
-                                  {project.name}
-                                </h3>
-
-                                <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-app-text-secondary">
-                                  Volte direto para o capitulo mais recente e continue refinando os blocos sem procurar no historico.
-                                </p>
-                              </div>
-
-                              <div className="relative mt-6">
-                                <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
-                                  <span>Progresso salvo</span>
-                                  <span>{Math.round(project.progress || 0)}%</span>
-                                </div>
-                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-app-surface">
-                                  <div
-                                    className="h-full bg-app-text-primary transition-all duration-700"
-                                    style={{ width: `${project.progress || 0}%` }}
-                                  />
-                                </div>
-
-                                <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
-                                  <span>Continuar traducao</span>
-                                  <Play size={12} />
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="relative hidden min-h-[220px] overflow-hidden border-l border-app-border lg:block">
-                              <ProjectThumbnail
-                                thumbnailPath={project.thumbnail_path}
-                                alt={`Preview de ${project.name}`}
-                                className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
-                                fallbackClassName="flex h-full items-center justify-center bg-app-surface text-app-text-secondary/20"
-                                iconSize={36}
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-l from-app-bg/10 via-transparent to-app-bg/80" />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex h-full min-w-0 flex-col p-5">
-                            <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-2xl border border-app-border bg-app-surface/50">
-                              <ProjectThumbnail
-                                thumbnailPath={project.thumbnail_path}
-                                alt={`Preview de ${project.name}`}
-                                className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
-                                fallbackClassName="flex h-full items-center justify-center text-app-text-secondary/20"
-                                iconSize={32}
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-app-bg/80 via-app-bg/15 to-transparent" />
-                            </div>
-
-                            <div className="flex h-full min-w-0 flex-col justify-between">
-                              <div>
-                                <div className="mb-4 flex items-center justify-between gap-3">
-                                  <span
-                                    className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
-                                      project.status === "completed"
-                                        ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                        : "border border-app-border bg-app-surface text-app-text-secondary"
-                                    }`}
-                                  >
-                                    {project.status === "completed" ? "Concluido" : "Em andamento"}
-                                  </span>
-                                  <span className="text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
-                                    {formatProjectDate(project.updated_at)}
-                                  </span>
-                                </div>
-
-                                <h3 className="break-words text-[1.65rem] font-black uppercase tracking-tight leading-tight text-app-text-primary">
-                                  {project.name}
-                                </h3>
-
-                                <p className="mt-3 text-[13px] leading-relaxed text-app-text-secondary">
-                                  Projeto recente pronto para continuar do ponto em que voce parou.
-                                </p>
-                              </div>
-
-                              <div className="relative mt-6">
-                                <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
-                                  <span>Progresso salvo</span>
-                                  <span>{Math.round(project.progress || 0)}%</span>
-                                </div>
-                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-app-surface">
-                                  <div
-                                    className="h-full bg-app-text-primary transition-all duration-700"
-                                    style={{ width: `${project.progress || 0}%` }}
-                                  />
-                                </div>
-
-                                <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
-                                  <span>Continuar traducao</span>
-                                  <Play size={12} />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </section>
+          <Suspense fallback={<ViewLoader />}>
+            {currentView === 'settings' && (
+              <div className="h-full overflow-y-auto p-6">
+                <SettingsView
+                  onBack={() => setCurrentView('dashboard')}
+                  appVersion={updater.appVersion}
+                  availableUpdate={updater.availableUpdate}
+                  isCheckingUpdates={updater.isChecking}
+                  isInstallingUpdate={updater.isInstalling}
+                  updateProgressPercent={updater.progressPercent}
+                  updateStatusMessage={updater.statusMessage}
+                  lastUpdateCheck={updater.lastCheckedAt}
+                  updateError={updater.lastError}
+                  onCheckForUpdates={handleManualUpdateCheck}
+                  onInstallUpdate={updater.installUpdate}
+                />
               </div>
-            </main>
-          )}
+            )}
 
-          {currentView === 'library' && (
-            <div className="h-full p-4">
-              <LibraryView onOpenProject={handleOpenProject} />
-            </div>
-          )}
+            {currentView === 'dashboard' && (
+              <main className="relative flex h-full flex-col overflow-y-auto px-8 py-8 pb-10">
+                <OnboardingOverlay />
+                <div className="mx-auto flex w-full max-w-[1680px] flex-col">
+                <header className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="max-w-[720px]">
+                    <BrandMark />
+                    <p className="mt-5 max-w-[620px] text-[14px] leading-relaxed text-app-text-secondary/62">
+                      Traduza capitulos com um fluxo editorial mais limpo: importe, gere o draft, refine os blocos e exporte sem perder contexto.
+                    </p>
+                  </div>
 
-          {currentView === 'editor' && (
-            <div className="h-full p-4">
-              <EditorView onBack={() => setCurrentView('library')} />
-            </div>
-          )}
+                  <div className="flex flex-wrap items-start justify-start gap-3 xl:max-w-[760px] xl:justify-end">
+                     <button
+                        type="button"
+                        onClick={() => void handleManualUpdateCheck()}
+                        className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-app-text-secondary transition-all hover:bg-app-surface hover:text-app-text-primary"
+                      >
+                        <RefreshCw size={14} className={updater.isChecking ? "animate-spin" : ""} />
+                        {updater.availableUpdate ? `Atualizacao ${updater.availableUpdate.version}` : "Verificar atualizacao"}
+                      </button>
+                     <div className="flex flex-col gap-2 rounded-[1.6rem] border border-app-border bg-app-surface/50 px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => setTranslationEngine("gemini")}
+                            className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "gemini" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
+                          >
+                            Gemini
+                          </button>
+                          <button 
+                            onClick={() => setTranslationEngine("ollama")}
+                            className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "ollama" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
+                          >
+                            Ollama
+                          </button>
+                          <button
+                            onClick={() => setTranslationEngine("openaiCompatible")}
+                            className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${translationEngine === "openaiCompatible" ? "bg-app-text-primary text-app-bg" : "text-app-text-secondary hover:text-app-text-primary"}`}
+                          >
+                            APIs
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-[0.16em]">
+                          {translationEngine === "gemini" ? (
+                            <>
+                              <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-emerald-400">
+                                Recomendado
+                              </span>
+                              <span className="max-w-[260px] text-app-text-secondary/50">
+                                Melhor qualidade e fluxo principal do app
+                              </span>
+                            </>
+                          ) : translationEngine === "ollama" ? (
+                            <>
+                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-1 text-amber-400">
+                                Modo local
+                              </span>
+                              <span className="max-w-[260px] text-app-text-secondary/50">
+                                Roda no seu PC e pode variar bastante de velocidade
+                              </span>
+                            </>
+                          ) : translationEngine === "openaiCompatible" ? (
+                            <>
+                              <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-1 text-blue-400">
+                                API externa
+                              </span>
+                              <span className="max-w-[260px] text-app-text-secondary/50">
+                                {selectedOpenAiProvider.label} usando modelo vision compativel
+                              </span>
+                            </>
+                          ) : null}
+                        </div>
+                     </div>
+                     {translationEngine === "gemini" && (
+                       <div
+                          data-gemini-key-anchor="true"
+                          className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300"
+                        >
+                          <Key size={14} className="text-app-text-secondary" />
+                          <input 
+                            type="password" 
+                            placeholder="Gemini API Key"
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                           className="w-36 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
+                          />
+                       </div>
+                     )}
+                     {translationEngine === "openaiCompatible" && selectedOpenAiProvider.requiresApiKey && (
+                       <div
+                          className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300"
+                        >
+                          <Key size={14} className="text-app-text-secondary" />
+                          <input
+                            type="password"
+                            placeholder={selectedOpenAiProvider.apiKeyLabel}
+                            value={openAiCompatibleApiKey}
+                            onChange={(e) => setOpenAiCompatibleApiKey(e.target.value)}
+                           className="w-40 bg-transparent border-none text-[10px] font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30"
+                          />
+                       </div>
+                     )}
+                     {translationEngine === "gemini" && (
+                       <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
+                            Modelo
+                          </span>
+                          <span className="text-[10px] font-mono text-app-text-primary">
+                            {selectedGeminiModel.label}
+                          </span>
+                       </div>
+                     )}
+                     {translationEngine === "openaiCompatible" && (
+                       <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
+                            {selectedOpenAiProvider.label}
+                          </span>
+                          <span className="max-w-[220px] truncate text-[10px] font-mono text-app-text-primary">
+                            {openAiCompatibleModel}
+                          </span>
+                       </div>
+                     )}
+                     {translationEngine === "ollama" && (
+                       <div className="flex h-12 items-center gap-2 rounded-full border border-app-border bg-app-surface/50 px-4 py-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/60">
+                            Modelo
+                          </span>
+                          <span className="text-[10px] font-mono text-app-text-primary">
+                            {selectedOllamaModel.label}
+                          </span>
+                       </div>
+                     )}
+                    <div className={`flex h-12 items-center gap-3 rounded-full border px-4 py-2 ${ollamaStatus ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-500' : 'border-rose-500/20 bg-rose-500/5 text-rose-500'} transition-all`}>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Ollama: {ollamaStatus ? t('common.online') : t('common.offline')}</span>
+                    </div>
+                  </div>
+                </header>
+
+                <section className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                  <FileUpload onSuccess={() => setCurrentView('editor')} />
+                  
+                  <div 
+                    onClick={() => setCurrentView('library')}
+                    className="group relative cursor-pointer overflow-hidden rounded-[2rem] border border-app-border bg-app-surface/50 p-7 transition-all hover:bg-app-surface"
+                  >
+                     <h3 className="mb-3 text-xl font-bold uppercase italic text-app-text-primary">{t('dashboard.history.title')}</h3>
+                     <p className="max-w-[420px] text-[14px] leading-relaxed text-app-text-secondary">{t('dashboard.history.description')}</p>
+                     <div className="mt-8 flex items-center justify-end gap-1 text-[10px] font-bold uppercase tracking-widest text-app-text-secondary/40 transition-all group-hover:text-app-text-primary">
+                        Acessar Biblioteca <ChevronRight size={12} />
+                     </div>
+                  </div>
+                </section>
+
+                <section className="mt-10 min-h-0">
+                  <div className="mb-4 flex items-end justify-between">
+                    <div>
+                      <h2 className="text-[1.8rem] font-black uppercase tracking-tighter italic text-app-text-primary">
+                        Retomar <span className="text-app-text-secondary/40">Traducoes</span>
+                      </h2>
+                      <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.22em] text-app-text-secondary/60">
+                        Continue rapido sem precisar abrir a aba de historico
+                      </p>
+                    </div>
+
+                    {recentProjects.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCurrentView('library')}
+                        className="gap-2 text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
+                      >
+                        <History size={14} />
+                        Ver Tudo
+                      </Button>
+                    )}
+                  </div>
+
+                  {recentProjects.length === 0 ? (
+                    <div className="rounded-[2rem] border border-app-border bg-app-surface/30 p-8 text-app-text-secondary/60">
+                      <div className="flex items-center gap-3 text-sm font-bold uppercase tracking-wide">
+                        <Clock3 size={18} className="text-app-text-secondary/40" />
+                        Nenhuma traducao recente ainda
+                      </div>
+                      <p className="mt-3 max-w-[760px] text-[15px] leading-relaxed">
+                        Assim que voce importar um capitulo, ele aparece aqui para voce continuar do ponto em que parou.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                      {recentProjects.map((project, index) => (
+                        <button
+                          key={project.id}
+                          type="button"
+                          onClick={() => handleOpenProject(project.id)}
+                          className={`group relative min-w-0 overflow-hidden rounded-3xl border text-left transition-all hover:-translate-y-0.5 hover:border-app-accent/20 hover:bg-app-surface/80 ${
+                            index === 0
+                              ? "border-app-border bg-gradient-to-br from-app-surface/50 via-app-surface/20 to-transparent lg:col-span-2"
+                              : "border-app-border bg-app-surface/40"
+                          }`}
+                        >
+                          {index === 0 ? (
+                            <div className="grid gap-0 lg:grid-cols-[minmax(0,1.4fr)_240px]">
+                              <div className="relative flex h-full min-w-0 flex-col justify-between p-5">
+                                <div>
+                                  <div className="mb-4 flex items-center justify-between gap-3">
+                                    <span
+                                      className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
+                                        project.status === "completed"
+                                          ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                          : "border border-app-border bg-app-surface text-app-text-secondary"
+                                      }`}
+                                    >
+                                      {project.status === "completed" ? "Concluido" : "Em andamento"}
+                                    </span>
+                                    <span className="text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                                      {formatProjectDate(project.updated_at)}
+                                    </span>
+                                  </div>
+
+                                  <h3 className="max-w-3xl break-words text-[1.7rem] font-black uppercase tracking-tight leading-tight text-app-text-primary">
+                                    {project.name}
+                                  </h3>
+
+                                  <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-app-text-secondary">
+                                    Volte direto para o capitulo mais recente e continue refinando os blocos sem procurar no historico.
+                                  </p>
+                                </div>
+
+                                <div className="relative mt-6">
+                                  <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
+                                    <span>Progresso salvo</span>
+                                    <span>{Math.round(project.progress || 0)}%</span>
+                                  </div>
+                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-app-surface">
+                                    <div
+                                      className="h-full bg-app-text-primary transition-all duration-700"
+                                      style={{ width: `${project.progress || 0}%` }}
+                                    />
+                                  </div>
+
+                                  <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
+                                    <span>Continuar traducao</span>
+                                    <Play size={12} />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="relative hidden min-h-[220px] overflow-hidden border-l border-app-border lg:block">
+                                <ProjectThumbnail
+                                  thumbnailPath={project.thumbnail_path}
+                                  alt={`Preview de ${project.name}`}
+                                  className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
+                                  fallbackClassName="flex h-full items-center justify-center bg-app-surface text-app-text-secondary/20"
+                                  iconSize={36}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-l from-app-bg/10 via-transparent to-app-bg/80" />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex h-full min-w-0 flex-col p-5">
+                              <div className="relative mb-4 aspect-[16/10] overflow-hidden rounded-2xl border border-app-border bg-app-surface/50">
+                                <ProjectThumbnail
+                                  thumbnailPath={project.thumbnail_path}
+                                  alt={`Preview de ${project.name}`}
+                                  className="h-full w-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105"
+                                  fallbackClassName="flex h-full items-center justify-center text-app-text-secondary/20"
+                                  iconSize={32}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-app-bg/80 via-app-bg/15 to-transparent" />
+                              </div>
+
+                              <div className="flex h-full min-w-0 flex-col justify-between">
+                                <div>
+                                  <div className="mb-4 flex items-center justify-between gap-3">
+                                    <span
+                                      className={`rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.25em] ${
+                                        project.status === "completed"
+                                          ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                                          : "border border-app-border bg-app-surface text-app-text-secondary"
+                                      }`}
+                                    >
+                                      {project.status === "completed" ? "Concluido" : "Em andamento"}
+                                    </span>
+                                    <span className="text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/40">
+                                      {formatProjectDate(project.updated_at)}
+                                    </span>
+                                  </div>
+
+                                  <h3 className="break-words text-[1.65rem] font-black uppercase tracking-tight leading-tight text-app-text-primary">
+                                    {project.name}
+                                  </h3>
+
+                                  <p className="mt-3 text-[13px] leading-relaxed text-app-text-secondary">
+                                    Projeto recente pronto para continuar do ponto em que voce parou.
+                                  </p>
+                                </div>
+
+                                <div className="relative mt-6">
+                                  <div className="mb-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-app-text-secondary/60">
+                                    <span>Progresso salvo</span>
+                                    <span>{Math.round(project.progress || 0)}%</span>
+                                  </div>
+                                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-app-surface">
+                                    <div
+                                      className="h-full bg-app-text-primary transition-all duration-700"
+                                      style={{ width: `${project.progress || 0}%` }}
+                                    />
+                                  </div>
+
+                                  <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/40 transition-colors group-hover:text-app-text-primary">
+                                    <span>Continuar traducao</span>
+                                    <Play size={12} />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </section>
+                </div>
+              </main>
+            )}
+
+            {currentView === 'library' && (
+              <div className="h-full p-4">
+                <LibraryView onOpenProject={handleOpenProject} />
+              </div>
+            )}
+
+            {currentView === 'editor' && (
+              <div className="h-full p-4">
+                <EditorView onBack={() => setCurrentView('library')} />
+              </div>
+            )}
+          </Suspense>
         </div>
 
         <StatusModal

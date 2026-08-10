@@ -30,6 +30,13 @@ export interface DBProject {
   thumbnail_path?: string | null;
 }
 
+export interface GlossaryTerm {
+  id: string;
+  project_id: string;
+  term: string;
+  translation: string;
+}
+
 interface ProjectRow extends DBProject {
   completed_pages: number;
   total_pages: number;
@@ -140,5 +147,28 @@ export const dbService = {
       "UPDATE projects SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
       [status, id]
     );
+  },
+
+  async getProjectGlossary(projectId: string): Promise<GlossaryTerm[]> {
+    const db = await this.getDb();
+    return await db.select<GlossaryTerm[]>(
+      "SELECT * FROM glossary WHERE project_id = $1 ORDER BY term ASC",
+      [projectId]
+    );
+  },
+
+  async upsertGlossaryTerm(projectId: string, term: string, translation: string, id?: string): Promise<string> {
+    const db = await this.getDb();
+    const termId = id || crypto.randomUUID();
+    await db.execute(
+      "INSERT OR REPLACE INTO glossary (id, project_id, term, translation) VALUES ($1, $2, $3, $4)",
+      [termId, projectId, term, translation]
+    );
+    return termId;
+  },
+
+  async deleteGlossaryTerm(id: string) {
+    const db = await this.getDb();
+    await db.execute("DELETE FROM glossary WHERE id = $1", [id]);
   },
 };

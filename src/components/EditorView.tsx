@@ -12,6 +12,7 @@ import CyberLoading from "@/components/CyberLoading";
 import ConfirmModal from "@/components/ConfirmModal";
 import StatusModal, { StatusType } from "@/components/StatusModal";
 import ExportModal from "@/components/ExportModal";
+import GlossaryModal from "@/components/GlossaryModal";
 import { readFile } from "@tauri-apps/plugin-fs";
 import {
   ChevronLeft,
@@ -32,6 +33,7 @@ import {
   Flag,
   Brain,
   Tags,
+  Book,
 } from "lucide-react";
 
 const MAX_AI_IMAGE_WIDTH = 1600;
@@ -143,6 +145,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     currentProjectId,
     clearStore,
     cancelPendingSaves,
+    glossary,
   } = useMangaStore();
 
   const { theme } = useTheme();
@@ -156,6 +159,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [imgBase64, setImgBase64] = useState<string>("");
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showGlossaryModal, setShowGlossaryModal] = useState(false);
   const [finishAfterExport, setFinishAfterExport] = useState(false);
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean;
@@ -324,6 +328,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         aiThinkingEnabled,
         aiInferBlockTypesEnabled,
         base64,
+        glossary,
         (results) => {
           if (results.length === 0) {
             setStatusModal({
@@ -558,6 +563,15 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           >
             <Tags size={14} />
             {aiInferBlockTypesEnabled ? "TIPOS ON" : "TIPOS OFF"}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowGlossaryModal(true)}
+            className="gap-2 border-app-border text-app-text-secondary hover:bg-app-surface hover:text-app-text-primary"
+          >
+            <Book size={14} /> GLOSSARIO
           </Button>
 
           <Button
@@ -836,6 +850,11 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           setFinishAfterExport(false);
         }}
         onExport={handleExport}
+      />
+
+      <GlossaryModal
+        isOpen={showGlossaryModal}
+        onClose={() => setShowGlossaryModal(false)}
       />
 
       <footer className="flex h-16 items-center justify-between border-t border-app-border bg-app-surface/40 px-6">

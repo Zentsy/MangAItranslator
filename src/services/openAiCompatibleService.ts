@@ -4,6 +4,7 @@ import {
   type OpenAiCompatibleProviderId,
 } from "@/config/openAiCompatibleProviders";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { GlossaryTerm } from "./dbService";
 
 const OPENAI_COMPATIBLE_REQUEST_TIMEOUT_MS: Record<OpenAiCompatibleProviderId, number> = {
   openrouter: 5 * 60 * 1000,
@@ -51,8 +52,14 @@ const getTypeInstruction = (inferBlockTypes: boolean) =>
     ? 'TIPO: quando conseguir inferir com confianca, use "rect", "outside", "thought", "double" ou "none".'
     : 'TIPO: nao classifique balao/container. Use "none" como type em todos os blocos.';
 
-const buildSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean) =>
-  `${SYSTEM_PROMPT}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
+const buildSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean, glossary: GlossaryTerm[] = []) => {
+  const glossaryInstruction =
+    glossary.length > 0
+      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
+${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
+      : "";
+  return `${SYSTEM_PROMPT}${glossaryInstruction}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
+};
 
 const buildUserPrompt = (inferBlockTypes: boolean) => `Analise esta pagina de manga e retorne somente o JSON solicitado.
 Cada bloco deve conter a traducao final em PT-BR.${
@@ -70,8 +77,14 @@ REGRAS:
 - Nao explique nada.
 - Responda somente em JSON valido no schema solicitado.`;
 
-const buildRepairSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean) =>
-  `${REPAIR_SYSTEM_PROMPT}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
+const buildRepairSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean, glossary: GlossaryTerm[] = []) => {
+  const glossaryInstruction =
+    glossary.length > 0
+      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
+${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
+      : "";
+  return `${REPAIR_SYSTEM_PROMPT}${glossaryInstruction}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
+};
 
 const TRANSLATION_RESPONSE_SCHEMA = {
   type: "object",
@@ -524,7 +537,8 @@ const buildOpenRouterAutoFreeVisionRequestBody = (
   base64Image: string,
   includeResponseFormat: boolean,
   thinkingEnabled: boolean,
-  inferBlockTypes: boolean
+  inferBlockTypes: boolean,
+  glossary: GlossaryTerm[]
 ) => ({
   models: modelIds,
   stream: false,
@@ -538,7 +552,7 @@ const buildOpenRouterAutoFreeVisionRequestBody = (
   messages: [
     {
       role: "system",
-      content: buildSystemPrompt(thinkingEnabled, inferBlockTypes),
+      content: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary),
     },
     {
       role: "user",
@@ -564,11 +578,12 @@ const buildVisionRequestBody = (
   base64Image: string,
   includeResponseFormat: boolean,
   thinkingEnabled: boolean,
-  inferBlockTypes: boolean
+  inferBlockTypes: boolean,
+  glossary: GlossaryTerm[]
 ) => buildChatRequestBody(providerId, model, [
   {
     role: "system",
-    content: buildSystemPrompt(thinkingEnabled, inferBlockTypes),
+    content: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary),
   },
   {
     role: "user",
@@ -593,11 +608,12 @@ const buildRepairRequestBody = (
   blocks: OpenAiCompatibleTranslationBlock[],
   includeResponseFormat: boolean,
   thinkingEnabled: boolean,
-  inferBlockTypes: boolean
+  inferBlockTypes: boolean,
+  glossary: GlossaryTerm[]
 ) => buildChatRequestBody(providerId, model, [
   {
     role: "system",
-    content: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes),
+    content: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes, glossary),
   },
   {
     role: "user",
@@ -787,6 +803,7 @@ const buildLmStudioNativeVisionRequestBody = (
   base64Image: string,
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
+  glossary: GlossaryTerm[],
   includeReasoning = true
 ) => ({
   model,
@@ -800,7 +817,7 @@ const buildLmStudioNativeVisionRequestBody = (
       data_url: `data:image/jpeg;base64,${base64Image}`,
     },
   ],
-  system_prompt: buildSystemPrompt(thinkingEnabled, inferBlockTypes),
+  system_prompt: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary),
   stream: false,
   temperature: 0.2,
   max_output_tokens: 2048,
@@ -814,6 +831,7 @@ const buildLmStudioNativeRepairRequestBody = (
   blocks: OpenAiCompatibleTranslationBlock[],
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
+  glossary: GlossaryTerm[],
   includeReasoning = true
 ) => ({
   model,
@@ -824,7 +842,7 @@ const buildLmStudioNativeRepairRequestBody = (
   }
 
 ${JSON.stringify({ translations: blocks }, null, 2)}`,
-  system_prompt: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes),
+  system_prompt: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes, glossary),
   stream: false,
   temperature: 0.2,
   max_output_tokens: 2048,
@@ -840,6 +858,7 @@ export const translateWithOpenAiCompatible = async (
   base64Image: string,
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
+  glossary: GlossaryTerm[],
   onStatusChange?: (update: OpenAiCompatibleStatusUpdate) => void
 ) => {
   const provider = getOpenAiCompatibleProvider(providerId);
@@ -982,7 +1001,8 @@ export const translateWithOpenAiCompatible = async (
           base64Image,
           includeResponseFormat,
           attemptThinkingEnabled,
-          inferBlockTypes
+          inferBlockTypes,
+          glossary
         )
       );
     } catch (error) {
@@ -999,7 +1019,8 @@ export const translateWithOpenAiCompatible = async (
           base64Image,
           false,
           attemptThinkingEnabled,
-          inferBlockTypes
+          inferBlockTypes,
+          glossary
         )
       );
     }
@@ -1016,7 +1037,8 @@ export const translateWithOpenAiCompatible = async (
           base64Image,
           includeResponseFormat,
           thinkingEnabled,
-          inferBlockTypes
+          inferBlockTypes,
+          glossary
         )
       );
     } catch (error) {
@@ -1032,7 +1054,8 @@ export const translateWithOpenAiCompatible = async (
           base64Image,
           false,
           thinkingEnabled,
-          inferBlockTypes
+          inferBlockTypes,
+          glossary
         )
       );
     }
@@ -1170,7 +1193,8 @@ export const translateWithOpenAiCompatible = async (
             lmStudioModel,
             base64Image,
             thinkingEnabled,
-            inferBlockTypes
+            inferBlockTypes,
+            glossary
           )
         );
       } catch (error) {
@@ -1181,7 +1205,7 @@ export const translateWithOpenAiCompatible = async (
 
         console.warn(`${requestLabel} endpoint nativo falhou; tentando endpoint OpenAI-compatible.`);
         payload = await sendRequest(
-          buildVisionRequestBody(provider.id, model, base64Image, true, thinkingEnabled, inferBlockTypes)
+          buildVisionRequestBody(provider.id, model, base64Image, true, thinkingEnabled, inferBlockTypes, glossary)
         );
       }
     } else {
@@ -1218,7 +1242,8 @@ export const translateWithOpenAiCompatible = async (
             lmStudioModel,
             parsedBlocks,
             thinkingEnabled,
-            inferBlockTypes
+            inferBlockTypes,
+            glossary
           )
         );
       } catch (error) {
@@ -1229,7 +1254,7 @@ export const translateWithOpenAiCompatible = async (
 
         console.warn(`${requestLabel} reparo nativo falhou; tentando reparo OpenAI-compatible.`);
         repairPayload = await sendRequest(
-          buildRepairRequestBody(provider.id, model, parsedBlocks, true, thinkingEnabled, inferBlockTypes)
+          buildRepairRequestBody(provider.id, model, parsedBlocks, true, thinkingEnabled, inferBlockTypes, glossary)
         );
       }
 
