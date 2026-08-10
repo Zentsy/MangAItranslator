@@ -151,6 +151,20 @@ export const useMangaStore = create<MangaStore>()(
         set({ customApiKey });
         queueSecretSave("custom", customApiKey);
       },
+      setUseConvention: (useConvention) => set({ useConvention }),
+      setProjectId: (currentProjectId) => set({ currentProjectId }),
+      setTranslationEngine: (translationEngine) => set({ translationEngine }),
+      setGeminiModel: (geminiModel) => set({ geminiModel }),
+      setOllamaModel: (ollamaModel) => set({ ollamaModel }),
+      setOpenAiCompatibleProvider: (openAiCompatibleProvider) =>
+        set({ openAiCompatibleProvider }),
+      setOpenAiCompatibleApiKey: (key) => {
+        // Wrapper para compatibilidade com componentes antigos
+        const { openAiCompatibleProvider } = get();
+        if (openAiCompatibleProvider === "openrouter") get().setOpenRouterApiKey(key);
+        else if (openAiCompatibleProvider === "groq") get().setGroqApiKey(key);
+        else get().setCustomApiKey(key);
+      },
       setOpenAiCompatibleModel: (openAiCompatibleModel) =>
         set({ openAiCompatibleModel }),
       setOpenRouterModelMode: (openRouterModelMode) => set({ openRouterModelMode }),
