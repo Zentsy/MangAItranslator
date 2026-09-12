@@ -8,8 +8,8 @@ Desktop app para localização assistida de mangá e quadrinhos.
   <a href="https://github.com/Zentsy/MangAItranslator/releases/latest">
     <img alt="Baixar para Windows x64" src="https://img.shields.io/badge/Baixar-Windows%20x64-00A884?style=for-the-badge&logo=windows&logoColor=white">
   </a>
-  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.2.0">
-    <img alt="Release atual v0.2.0" src="https://img.shields.io/badge/Release-v0.2.0-2F3342?style=for-the-badge">
+  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0">
+    <img alt="Release atual v0.3.0" src="https://img.shields.io/badge/Release-v0.3.0-2F3342?style=for-the-badge">
   </a>
   <a href="https://ko-fi.com/zentsy">
     <img alt="Apoiar no Ko-fi" src="https://img.shields.io/badge/Apoiar-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white">
@@ -26,7 +26,7 @@ O MangAI Translator ajuda você a importar um capítulo, gerar um rascunho com I
 ## Download
 
 - Baixar a versão mais recente: [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases/latest)
-- Release atual: [v0.2.0](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.2.0)
+- Release atual: [v0.3.0](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0)
 
 Se o projeto te ajudar e você quiser apoiar o desenvolvimento, também dá para contribuir em [Ko-fi](https://ko-fi.com/zentsy).
 
@@ -44,37 +44,35 @@ Se você baixou o app deste repositório oficial e quiser testar mesmo assim, re
 
 ## O que o app faz
 
-- importa uma pasta inteira do capítulo ou puxa páginas vizinhas a partir de uma única imagem
-- salva projetos localmente para continuar depois
-- gera rascunhos com Gemini, OpenRouter, LM Studio, Groq ou Ollama
-- permite revisar, reorganizar e editar blocos manualmente
-- exporta em `.txt` e `.docx`
-- checa novas versões pelo próprio app
+- importa pastas completas de capítulos ou páginas avulsas com detecção de vizinhas
+- tradução em lote assíncrona (batch queue) com monitor de progresso em tempo real
+- glossário local por projeto persistido em SQLite para coerência de termos, nomes e golpes
+- memória de contexto de curto prazo entre páginas para consistência narrativa
+- atalhos de alta produtividade (`M` para mesclar balões, `S` para trocar ordem, navegação por teclado)
+- cofre seguro de chaves com isolamento por provedor e proteção nativa do keyring do SO
+- suporte a motores de ponta: Gemini, OpenRouter, Groq, LM Studio e Ollama
+- revisão de blocos no editor com preservação e formatação editorial
+- exportação final em `.txt` e `.docx`
+- checagem e atualização automática pelo próprio app
 
 ## Motores de IA
 
 ### Recomendado
 
-- `Gemini`: melhor experiência geral para qualidade, OCR e consistência.
-- `Groq`: modo turbo para páginas leves; quando funciona bem, é quase instantâneo.
-- `OpenRouter Auto grátis`: tenta modelos vision gratuitos em fila, sem usar modelos pagos automaticamente.
+- `Gemini`: melhor experiência geral para qualidade, OCR e consistência (Gemini 3.8 Flash nativo).
+- `Groq`: modo turbo para páginas leves com velocidade quase instantânea no hardware LPU.
+- `OpenRouter Auto grátis`: seleciona automaticamente modelos vision gratuitos com fallback seguro.
 
 ### Local
 
-- `LM Studio`: melhor opção local hoje. Funciona com modelos carregados no LM Studio e pode usar GPU dependendo da sua máquina.
-- `Ollama`: opção local simples e experimental. Pode ser bem mais lenta em CPU.
+- `LM Studio`: melhor opção local hoje. Suporta aceleração por GPU e modelos vision modernos como Qwen 3 VL.
+- `Ollama`: opção local simples e experimental para quem já usa o ecossistema Ollama.
 
 ### Importante sobre modelos grátis
 
 No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O app tenta corrigir respostas duplicadas, vazias ou mal formatadas, mas alguns modelos pequenos podem apenas transcrever o texto em vez de traduzir.
 
 ## Capturas de tela
-
-### Destaque
-
-O editor é o coração do app, agora com monitor de progresso em tempo real e tradução em lote integrada.
-
-![Editor com revisão de blocos e monitor de lote](screenshots/editor.png)
 
 ### Fluxo de Trabalho & Produtividade
 
@@ -93,7 +91,7 @@ O editor é o coração do app, agora com monitor de progresso em tempo real e t
 | Modelos e Motores (v0.3.0) | Tema Claro |
 | --- | --- |
 | ![Seleção de modelos e motores](screenshots/configs_v3.png) | ![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png) |
-| Gemini 3.8 Flash, Claude Sonnet 5, GPT-6 Astra, Groq LPU e modelos locais. | Interface de alto contraste pensada para leitura de mangá em qualquer tema. |
+| Gemini 3.8 Flash, Claude Sonnet 5, GPT-6 Astra, Groq LPU e modelos locais. | Interface editorial de alto contraste adaptada para revisão diurna. |
 
 ## Fluxo rápido
 
