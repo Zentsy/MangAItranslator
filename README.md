@@ -74,6 +74,12 @@ No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O 
 
 ## Capturas de tela
 
+### Destaque
+
+O editor é o coração do app, agora com monitor de tradução em lote em tempo real, integração direta de glossário e atalhos rápidos de revisão (`M`, `S`).
+
+![Editor com revisão de blocos e monitor de lote](screenshots/editor.png)
+
 ### Fluxo de Trabalho & Produtividade
 
 | Tradução em Lote (Batch) | Glossário por Projeto |
