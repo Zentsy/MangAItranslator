@@ -84,8 +84,22 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: s
 
 const CHANGELOG_ITEMS = [
   {
-    version: "v0.2.0",
+    version: "v0.3.0",
     badge: "Novo",
+    title: "Identidade Nanquim, Tradução em Lote e Produtividade",
+    items: [
+      "Nova identidade visual autêntica inspirada em Nanquim & Pena G.",
+      "Tradução em lote sequencial com monitor de progresso em tempo real.",
+      "Glossário local persistente por projeto com armazenamento SQLite.",
+      "Memória de curto prazo entre páginas consecutivas para coerência narrativa.",
+      "Atalhos de alta velocidade no editor: M (mesclar balões) e S (trocar ordem).",
+      "Cofre seguro de credenciais com isolamento de chaves no keyring do SO.",
+      "Modelos atualizados: Gemini 3.8 Flash nativo, Claude Sonnet 5, GPT-6 Astra e Qwen 3.8.",
+    ],
+  },
+  {
+    version: "v0.2.0",
+    badge: "Anterior",
     title: "Suporte amplo a modelos e APIs",
     items: [
       "OpenRouter com modo grátis automático e fallback seguro.",
