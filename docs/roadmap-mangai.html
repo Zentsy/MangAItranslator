@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MangAI Translator — Interactive Roadmap</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0f14;
+      --bg-panel: rgba(23, 26, 35, 0.85);
+      --bg-card: rgba(30, 34, 48, 0.7);
+      --border: rgba(24, 211, 173, 0.2);
+      --border-strong: rgba(59, 255, 211, 0.5);
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --faint: #6b7280;
+      --teal: #18d3ad;
+      --cyan: #3bffd3;
+      --violet: #ad8cff;
+      --yellow: #f0c66a;
+      --rose: #ff7a90;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      --radius: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(24, 211, 173, 0.12), transparent 30rem),
+        radial-gradient(circle at 90% 10%, rgba(173, 140, 255, 0.12), transparent 30rem),
+        linear-gradient(145deg, #0b0d12 0%, #11141c 50%, #090b0f 100%);
+      color: var(--text);
+      padding: 30px 24px 60px;
+    }
+
+    .container {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+
+    header.app-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 24px 32px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-title h1 {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #3bffd3, #18d3ad 40%, #ad8cff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-title p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #18d3ad, #0ea5e9);
+      border-color: #3bffd3;
+      color: #06090e;
+      box-shadow: 0 4px 20px rgba(24, 211, 173, 0.3);
+    }
+
+    .btn.primary:hover {
+      box-shadow: 0 6px 25px rgba(24, 211, 173, 0.45);
+    }
+
+    .status-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      padding: 16px 20px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      backdrop-filter: blur(8px);
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--teal);
+    }
+
+    .stat-card span {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+
+    .column {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .column header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .column-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-count {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .add-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .add-btn:hover {
+      background: var(--teal);
+      color: #06090e;
+      border-color: var(--cyan);
+    }
+
+    .cards-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .tag.green { background: rgba(24, 211, 173, 0.15); color: #3bffd3; border: 1px solid rgba(24, 211, 173, 0.4); }
+    .tag.yellow { background: rgba(240, 198, 106, 0.15); color: #f0c66a; border: 1px solid rgba(240, 198, 106, 0.4); }
+    .tag.violet { background: rgba(173, 140, 255, 0.15); color: #ad8cff; border: 1px solid rgba(173, 140, 255, 0.4); }
+    .tag.rose { background: rgba(255, 122, 144, 0.15); color: #ff7a90; border: 1px solid rgba(255, 122, 144, 0.4); }
+    .tag.cyan { background: rgba(59, 255, 211, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: var(--faint);
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .del-btn:hover {
+      color: var(--rose);
+      background: rgba(255, 122, 144, 0.15);
+    }
+
+    .card h3 {
+      font-size: 0.98rem;
+      font-weight: 750;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .card p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    [contenteditable="true"] {
+      outline: none;
+      border-radius: 4px;
+      padding: 1px 4px;
+      transition: background 0.2s;
+    }
+
+    [contenteditable="true"]:focus {
+      background: rgba(59, 255, 211, 0.1);
+      box-shadow: 0 0 0 1px var(--cyan);
+    }
+
+    .save-indicator {
+      font-size: 0.8rem;
+      color: var(--teal);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #import-file { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <div class="header-title">
+        <h1>MangAI Translator — Roadmap Interativo</h1>
+        <p contenteditable="true" data-edit="subtitle">
+          Painel dinâmico de arquitetura, entregas de ciclo, TODOs e exploração de features.
+        </p>
+      </div>
+      <div class="header-actions">
+        <span class="save-indicator" id="save-status">✓ Salvo localmente</span>
+        <button class="btn primary" type="button" id="save-btn">Salvar (Ctrl+S)</button>
+        <button class="btn" type="button" id="export-btn">Exportar JSON</button>
+        <button class="btn" type="button" id="import-btn">Importar JSON</button>
+        <button class="btn" type="button" id="reset-btn">Restaurar Padrão</button>
+        <input type="file" id="import-file" accept=".json,application/json" />
+      </div>
+    </header>
+
+    <div class="status-bar">
+      <div class="stat-card">
+        <strong>Dual Remote Ativo</strong>
+        <span>origin (DEV privado) &bull; public (PROD releases)</span>
+      </div>
+      <div class="stat-card">
+        <strong>Ciclo Atual</strong>
+        <span>v0.3.0 &bull; Foco em Batch, Glossário e Memória</span>
+      </div>
+      <div class="stat-card">
+        <strong>UI/UX Identity</strong>
+        <span>Zero minimalismo &bull; Modais customizados &bull; Sem alerts do SO</span>
+      </div>
+      <div class="stat-card">
+        <strong>TODO Crítico</strong>
+        <span>Landing page em site/ e alinhamento do download v0.3.0</span>
+      </div>
+    </div>
+
+    <main class="board" id="board-columns"></main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "mangai-interactive-roadmap-v2";
+
+    const defaultState = {
+      subtitle: "Painel dinâmico de arquitetura, entregas de ciclo, TODOs e exploração de features.",
+      columns: [
+        {
+          id: "atual",
+          title: "Fase v0.3.0 (Em Validação)",
+          tagColor: "green",
+          cards: [
+            {
+              tag: "BATCH",
+              title: "Tradução em Lote Sequencial",
+              body: "Fila de processamento assíncrono gerenciada no store com monitor de progresso em tempo real no EditorView."
+            },
+            {
+              tag: "GLOSSARY",
+              title: "Glossário por Projeto",
+              body: "Modal de termos persistidos via SQLite no dbService. Injeção direta de regras nos prompts de tradução."
+            },
+            {
+              tag: "CONTEXT",
+              title: "Memória de Curto Prazo",
+              body: "Injeção automática do texto da página anterior para manter consistência de diálogos, pronomes e nomes."
+            },
+            {
+              tag: "SHORTCUTS",
+              title: "Atalhos de Teclado Power-User",
+              body: "Teclas de merge de balões (M), troca de ordem (S) e rolagem suave para acelerar a revisão do capítulo."
+            },
+            {
+              tag: "VAULT",
+              title: "Cofre de Chaves Independentes",
+              body: "Chaves de API separadas por provedor salvas no keyring do sistema operacional via Tauri Rust bridge."
+            },
+            {
+              tag: "BRANDING",
+              title: "Nova Identidade Visual v2",
+              body: "Logo oficial vetorizada atualizada no BrandMark e novas capturas da interface v0.2/v0.3."
+            }
+          ]
+        },
+        {
+          id: "todos",
+          title: "TODOs Imediatos",
+          tagColor: "yellow",
+          cards: [
+            {
+              tag: "LANDING",
+              title: "Landing Page Pública (site/)",
+              body: "Configurar deploy gratuito no GitHub Pages ou Cloudflare Pages da pasta site/ com botão apontando para a release v0.3.0."
+            },
+            {
+              tag: "VERSIONING",
+              title: "Sincronização de Versão v0.3.0",
+              body: "Alinhar package.json, Cargo.toml e tauri.conf.json com a nova versão 0.3.0 antes de gerar a tag oficial."
+            },
+            {
+              tag: "SCREENSHOTS",
+              title: "Limpeza de Imagens Legadas",
+              body: "Substituir screenshots antigas no README pelo configs_v2.png e validar o preview do editor."
+            }
+          ]
+        },
+        {
+          id: "backlog",
+          title: "Backlog (v0.4.0)",
+          tagColor: "cyan",
+          cards: [
+            {
+              tag: "AI",
+              title: "Auto-Free OpenRouter Aprimorado",
+              body: "Detecção e rotação mais inteligente de modelos vision gratuitos sem risco de acionar modelos pagos."
+            },
+            {
+              tag: "PROFILES",
+              title: "Perfis de Tradução por Idioma",
+              body: "Presets configuráveis para japonês, coreano e chinês com prompts direcionados à ortografia e honoríficos."
+            },
+            {
+              tag: "REVIEW",
+              title: "Segunda Passada de Naturalidade",
+              body: "Revisão assistida por IA após o primeiro rascunho para tornar diálogos mais fluidos em português."
+            }
+          ]
+        },
+        {
+          id: "research",
+          title: "Pesquisa & Futuro",
+          tagColor: "violet",
+          cards: [
+            {
+              tag: "EXTENSIONS",
+              title: "Extensões Estilo Mihon",
+              body: "Pesquisa sobre arquitetura de extensões independentes para importação direta de capítulos sem acoplar scraping pesado no core."
+            },
+            {
+              tag: "OVERLAY",
+              title: "Exportação com Tradução Visual",
+              body: "Renderização do texto traduzido diretamente por cima da imagem da página com preenchimento limpo."
+            },
+            {
+              tag: "INPAINTING",
+              title: "Tipografia e Redraw Assistido",
+              body: "Pesquisa de modelos leves de inpainting para remoção automática de texto dentro dos balões."
+            },
+            {
+              tag: "SIGNING",
+              title: "Code Signing no Windows",
+              body: "Avaliação de certificado de desenvolvedor para eliminar alertas do Windows SmartScreen no instalador."
+            }
+          ]
+        }
+      ]
+    };
+
+    let state = load();
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : structuredClone(defaultState);
+      } catch (e) {
+        return structuredClone(defaultState);
+      }
+    }
+
+    function save(msg = "Salvo localmente") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const ind = document.getElementById("save-status");
+      ind.textContent = `✓ ${msg}`;
+      setTimeout(() => { ind.textContent = "✓ Salvo localmente"; }, 2500);
+    }
+
+    function render() {
+      document.querySelector("[data-edit='subtitle']").textContent = state.subtitle || defaultState.subtitle;
+      const board = document.getElementById("board-columns");
+      board.innerHTML = "";
+
+      state.columns.forEach((col, colIdx) => {
+        const colEl = document.createElement("section");
+        colEl.className = "column";
+        colEl.innerHTML = `
+          <header>
+            <div class="column-title">
+              <span contenteditable="true" data-col-idx="${colIdx}">${col.title}</span>
+              <span class="badge-count">${col.cards.length}</span>
+            </div>
+            <button class="add-btn" data-add-col="${colIdx}" title="Adicionar Card">+</button>
+          </header>
+          <div class="cards-container" data-container-col="${colIdx}"></div>
+        `;
+
+        const container = colEl.querySelector("[data-container-col]");
+        col.cards.forEach((card, cardIdx) => {
+          const cardEl = document.createElement("article");
+          cardEl.className = "card";
+          cardEl.innerHTML = `
+            <div class="card-meta">
+              <span class="tag ${col.tagColor || 'green'}" contenteditable="true" data-card-tag="${colIdx}:${cardIdx}">${card.tag}</span>
+              <button class="del-btn" data-del-card="${colIdx}:${cardIdx}" title="Excluir">&times;</button>
+            </div>
+            <h3 contenteditable="true" data-card-title="${colIdx}:${cardIdx}">${card.title}</h3>
+            <p contenteditable="true" data-card-body="${colIdx}:${cardIdx}">${card.body}</p>
+          `;
+          container.appendChild(cardEl);
+        });
+
+        board.appendChild(colEl);
+      });
+    }
+
+    document.addEventListener("input", (e) => {
+      const t = e.target;
+      if (!t.isContentEditable) return;
+
+      if (t.dataset.edit === "subtitle") {
+        state.subtitle = t.textContent.trim();
+      } else if (t.dataset.colIdx !== undefined) {
+        state.columns[t.dataset.colIdx].title = t.textContent.trim();
+      } else if (t.dataset.cardTag) {
+        const [c, i] = t.dataset.cardTag.split(":").map(Number);
+        state.columns[c].cards[i].tag = t.textContent.trim();
+      } else if (t.dataset.cardTitle) {
+        const [c, i] = t.dataset.cardTitle.split(":").map(Number);
+        state.columns[c].cards[i].title = t.textContent.trim();
+      } else if (t.dataset.cardBody) {
+        const [c, i] = t.dataset.cardBody.split(":").map(Number);
+        state.columns[c].cards[i].body = t.textContent.trim();
+      }
+      save();
+    });
+
+    document.addEventListener("click", (e) => {
+      const addBtn = e.target.closest("[data-add-col]");
+      if (addBtn) {
+        const colIdx = Number(addBtn.dataset.addCol);
+        state.columns[colIdx].cards.unshift({
+          tag: "NOVO",
+          title: "Novo Item de Roadmap",
+          body: "Clique para descrever este item, objetivo ou requisito técnico."
+        });
+        render();
+        save("Card adicionado");
+        return;
+      }
+
+      const delBtn = e.target.closest("[data-del-card]");
+      if (delBtn) {
+        const [c, i] = delBtn.dataset.delCard.split(":").map(Number);
+        state.columns[c].cards.splice(i, 1);
+        render();
+        save("Card removido");
+        return;
+      }
+    });
+
+    document.getElementById("save-btn").addEventListener("click", () => save("Salvo manualmente"));
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        save("Salvo manualmente");
+      }
+    });
+
+    document.getElementById("export-btn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `mangai-roadmap-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    const fileInput = document.getElementById("import-file");
+    document.getElementById("import-btn").addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", async () => {
+      if (!fileInput.files || !fileInput.files[0]) return;
+      try {
+        const text = await fileInput.files[0].text();
+        state = JSON.parse(text);
+        render();
+        save("JSON importado com sucesso");
+      } catch (err) {
+        alert("Erro ao importar arquivo JSON.");
+      } finally {
+        fileInput.value = "";
+      }
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      if (confirm("Restaurar o roadmap para o modelo padrão?")) {
+        state = structuredClone(defaultState);
+        render();
+        save("Roadmap restaurado");
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

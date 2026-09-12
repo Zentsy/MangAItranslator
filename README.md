@@ -1,5 +1,7 @@
 # MangAI Translator
 
+![MangAI Translator Banner](screenshots/banner_nanquim.png)
+
 Desktop app para localização assistida de mangá e quadrinhos.
 
 <p>
@@ -70,51 +72,55 @@ No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O 
 
 ### Destaque
 
-O editor é o coração do app, então a imagem principal fica aqui primeiro.
+O editor é o coração do app, agora com monitor de progresso em tempo real e tradução em lote integrada.
 
-![Editor com revisão de blocos](screenshots/editor.png)
+![Editor com revisão de blocos e monitor de lote](screenshots/editor.png)
 
-### Fluxo principal
+### Fluxo de Trabalho & Produtividade
 
-| Dashboard | Exportação |
+| Tradução em Lote (Batch) | Glossário por Projeto |
 | --- | --- |
-| ![Dashboard com retomada de traduções](screenshots/retomar.png) | ![Modal de exportação](screenshots/exportar.png) |
+| ![Fila de tradução em lote](screenshots/batch.png) | ![Modal de glossário persistente](screenshots/Glossario-v3.png) |
+| Enfileire múltiplas páginas e acompanhe o progresso em tempo real enquanto revisa. | Defina termos, nomes e golpes persistidos em SQLite injetados nos prompts. |
+
+| Dashboard e Projetos | Exportação Editorial |
+| --- | --- |
+| ![Dashboard com projetos recentes](screenshots/home.png) | ![Modal de exportação](screenshots/exportar.png) |
 | Importe capítulos, acompanhe projetos recentes e volte rápido para o que estava traduzindo. | Exporte o capítulo final em `.txt` ou `.docx` sem sair do fluxo. |
 
 ### Configurações e tema
 
-| Modelos e motores | Tema claro |
+| Modelos e Motores (v0.3.0) | Tema Claro |
 | --- | --- |
-| ![Seleção de modelos e motores](screenshots/modelos.png) | ![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png) |
-| Escolha entre nuvem, provedores compatíveis com OpenAI e modelos locais. | O app também tem tema claro para quem prefere uma interface mais limpa durante a revisão. |
+| ![Seleção de modelos e motores](screenshots/configs_v3.png) | ![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png) |
+| Gemini 3.8 Flash, Claude Sonnet 5, GPT-6 Astra, Groq LPU e modelos locais. | Interface de alto contraste pensada para leitura de mangá em qualquer tema. |
 
 ## Fluxo rápido
 
 1. Escolha um motor de IA.
 2. Importe um capítulo.
-3. Gere o `AI Draft`.
-4. Revise os blocos no editor.
+3. Gere o `AI Draft` (individual ou em lote).
+4. Revise os blocos no editor com atalhos (`M`, `S`).
 5. Exporte em `.txt` ou `.docx`.
 
-## Novidades da v0.2.0
+## Novidades da v0.3.0
 
-- suporte a OpenRouter, LM Studio e Groq
-- modo OpenRouter grátis automático com fallback seguro
-- parsing mais robusto para respostas duplicadas ou JSON mal formatado
-- opção de Thinking para modelos que se beneficiam de raciocínio
-- opção para pedir ou não classificação de tipos de balão
-- tela de configurações reorganizada em seções
-- changelog dentro do app
+- **Identidade Visual Nanquim & Pena G**: Nova arte autêntica com estética densa de mangá editorial.
+- **Tradução em Lote (Batch Queue)**: Processamento sequencial de múltiplas páginas com monitor de progresso no cabeçalho do editor.
+- **Glossário Persistente por Projeto**: Termos, pronomes e golpes salvos em SQLite local e injetados nos prompts.
+- **Memória de Curto Prazo**: Contexto entre páginas consecutivas para manter consistência de pronomes e falas contínuas.
+- **Atalhos Rápidos de Edição**: Teclas `M` para mesclar balões adjacentes e `S` para inverter ordem de leitura.
+- **Cofre de Chaves Seguro (Keyring)**: Isolamento das API keys de cada provedor no gerenciador de credenciais seguro do SO.
+- **Modelos de Última Geração**: Gemini 3.8 Flash, Claude Sonnet 5, Claude Fable 5.1, GPT-6 Astra e Qwen 3.8 27B via Groq.
 
 ## Roadmap
 
 ### Próximas melhorias
 
-- melhorar a seleção automática de modelos gratuitos
-- adicionar mais provedores via API, como Claude, GPT e outros modelos compatíveis
 - perfis de tradução por idioma de origem e destino
-- glossário simples para nomes, golpes, termos e formas de tratamento
 - revisão de naturalidade para melhorar o texto final depois do rascunho inicial
+- exportação visual com tradução aplicada diretamente sobre a imagem
+- ferramentas de limpeza de balões, redraw e typesetting assistido
 
 ### Futuro
 

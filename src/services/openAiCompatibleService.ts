@@ -817,6 +817,7 @@ const buildLmStudioNativeVisionRequestBody = (
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
+  previousContext: string | null = null,
   includeReasoning = true
 ) => ({
   model,
@@ -830,7 +831,7 @@ const buildLmStudioNativeVisionRequestBody = (
       data_url: `data:image/jpeg;base64,${base64Image}`,
     },
   ],
-  system_prompt: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary),
+  system_prompt: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary, previousContext),
   stream: false,
   temperature: 0.2,
   max_output_tokens: 2048,
@@ -845,6 +846,7 @@ const buildLmStudioNativeRepairRequestBody = (
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
+  previousContext: string | null = null,
   includeReasoning = true
 ) => ({
   model,
@@ -855,7 +857,7 @@ const buildLmStudioNativeRepairRequestBody = (
   }
 
 ${JSON.stringify({ translations: blocks }, null, 2)}`,
-  system_prompt: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes, glossary),
+  system_prompt: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes, glossary, previousContext),
   stream: false,
   temperature: 0.2,
   max_output_tokens: 2048,

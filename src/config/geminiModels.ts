@@ -7,44 +7,86 @@ export interface GeminiModelOption {
   recommended?: boolean;
 }
 
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
 
 export const GEMINI_MODEL_OPTIONS: GeminiModelOption[] = [
   {
-    id: "gemini-2.5-flash-lite",
-    label: "Gemini 2.5 Flash-Lite",
+    id: "gemini-3.8-flash",
+    label: "Gemini 3.8 Flash",
+    family: "flash",
+    access: "free",
+    description: "Modelo de última geração. Máxima velocidade com raciocínio multimodal de alta precisão.",
+    recommended: true,
+  },
+  {
+    id: "gemini-3.7-flash",
+    label: "Gemini 3.7 Flash",
+    family: "flash",
+    access: "free",
+    description: "Modelo avançado da série 3 com raciocínio híbrido e alta acurácia visual.",
+  },
+  {
+    id: "gemini-3.6-flash",
+    label: "Gemini 3.6 Flash",
+    family: "flash",
+    access: "free",
+    description: "Versão ágil e estável para leitura rápida de quadrinhos e mangás.",
+  },
+  {
+    id: "gemini-3.5-flash",
+    label: "Gemini 3.5 Flash",
+    family: "flash",
+    access: "free",
+    description: "Excelente precisão em balões densos e detecção de caracteres japoneses complexos.",
+  },
+  {
+    id: "gemini-3.5-flash-lite",
+    label: "Gemini 3.5 Flash-Lite",
     family: "flash-lite",
     access: "free",
-    description: "Opcao mais leve e economica para testes rapidos e uso diario simples.",
+    description: "Opção ultraleve e econômica para páginas simples e alta velocidade.",
+  },
+  {
+    id: "gemini-3.1-pro-preview",
+    label: "Gemini 3.1 Pro (Preview)",
+    family: "pro",
+    access: "preview",
+    description: "Topo absoluto de linha para OCR complexo, onomatopeias estilizadas e balões difíceis.",
+  },
+  {
+    id: "gemini-3-flash-preview",
+    label: "Gemini 3 Flash (Preview)",
+    family: "flash",
+    access: "preview",
+    description: "Preview multimodal experimental da família Gemini 3.",
   },
   {
     id: "gemini-2.5-flash",
     label: "Gemini 2.5 Flash",
     family: "flash",
     access: "free",
-    description: "Melhor equilibrio entre velocidade, OCR e qualidade para a maioria dos capitulos.",
-    recommended: true,
+    description: "Equilíbrio comprovado e amplamente testado na cota gratuita.",
   },
   {
     id: "gemini-2.5-pro",
     label: "Gemini 2.5 Pro",
     family: "pro",
     access: "paid",
-    description: "Opcao mais forte para quem quer mais qualidade e ja tem billing ativo no Google AI.",
+    description: "Opção robusta da geração 2.5 para contas com faturamento ativo.",
   },
   {
-    id: "gemini-3-flash-preview",
-    label: "Gemini 3 Flash Preview",
+    id: "gemini-2.5-flash-lite",
+    label: "Gemini 2.5 Flash-Lite",
+    family: "flash-lite",
+    access: "free",
+    description: "Versão econômica e leve da geração 2.5.",
+  },
+  {
+    id: "gemini-2.0-flash",
+    label: "Gemini 2.0 Flash",
     family: "flash",
-    access: "preview",
-    description: "Versao mais nova da linha Flash. Boa para testar ganhos de raciocinio e visao.",
-  },
-  {
-    id: "gemini-3-pro-preview",
-    label: "Gemini 3 Pro Preview",
-    family: "pro",
-    access: "preview",
-    description: "Preview avancado para quem quer o topo da linha e aceita custo maior e possiveis mudancas.",
+    access: "free",
+    description: "Modelo clássico de alta compatibilidade e estabilidade comprovada.",
   },
 ];
 

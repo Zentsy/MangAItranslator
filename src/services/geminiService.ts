@@ -272,6 +272,7 @@ REGRAS:
           aiThinkingEnabled,
           aiInferBlockTypesEnabled,
           glossary,
+          previousContext,
           onResult,
           retryCount + 1
         );
@@ -289,6 +290,7 @@ REGRAS:
         aiThinkingEnabled,
         aiInferBlockTypesEnabled,
         glossary,
+        previousContext,
         onResult,
         retryCount + 1
       );

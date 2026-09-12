@@ -310,6 +310,12 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   const pageImageSrc = currentPage.url || "";
   const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
+  const currentOpenAiApiKey =
+    openAiCompatibleProvider === "openrouter"
+      ? openRouterApiKey
+      : openAiCompatibleProvider === "groq"
+        ? groqApiKey
+        : customApiKey;
 
   const handleTranslate = async () => {
     if (translationEngine === "gemini" && !apiKey) {
@@ -325,7 +331,7 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (
       translationEngine === "openaiCompatible" &&
       selectedOpenAiProvider.requiresApiKey &&
-      !openAiCompatibleApiKey
+      !currentOpenAiApiKey
     ) {
       setStatusModal({
         isOpen: true,

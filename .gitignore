@@ -35,8 +35,15 @@ models/
 
 # Internal planning / workspace docs
 conductor/
+.agents/
+.codex/
+.gemini/
+
+# Landing page (em desenvolvimento / WIP)
+site/
 
 #testes
 testes.txt
 testes/
 testes.md
+
