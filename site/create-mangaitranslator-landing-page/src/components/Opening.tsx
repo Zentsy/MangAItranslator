@@ -138,7 +138,7 @@ export default function Opening() {
           <Reveal delay={220}>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <a
-                href={LINKS.latest}
+                href={LINKS.downloadDirect}
                 target="_blank"
                 rel="noreferrer"
                 className="group flex items-center gap-3 border-[3px] border-ink bg-ink px-7 py-4 font-display text-xl tracking-wide text-paper shadow-[7px_7px_0_var(--color-verm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[10px_10px_0_var(--color-verm)] active:translate-y-0 active:shadow-none"

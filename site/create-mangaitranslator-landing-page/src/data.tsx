@@ -13,6 +13,8 @@ import {
 export const LINKS = {
   repo: "https://github.com/Zentsy/MangAItranslator",
   latest: "https://github.com/Zentsy/MangAItranslator/releases/latest",
+  downloadDirect:
+    "https://github.com/Zentsy/MangAItranslator/releases/download/v0.3.0/MangAI.Translator_0.3.0_x64-setup.exe",
   v030: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0",
   issues: "https://github.com/Zentsy/MangAItranslator/issues",
   license: "https://github.com/Zentsy/MangAItranslator/blob/master/LICENSE",
