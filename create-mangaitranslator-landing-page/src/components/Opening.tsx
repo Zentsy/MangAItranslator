@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LINKS, TICKER } from "../data";
+import { LINKS, TICKER, useDownloadInfo } from "../data";
 import { Reveal, ScrambleText, usePRM } from "../fx";
 import { IconGithub, IconKofi, IconNib, IconSplat, IconStarSm, IconWindows } from "../icons";
 import { cn } from "../utils/cn";
@@ -47,6 +47,7 @@ export function Ticker({
 }
 
 export default function Opening() {
+  const { downloadUrl, version } = useDownloadInfo();
   const prm = usePRM();
   const [par, setPar] = useState({ x: 0, y: 0 });
 
@@ -86,7 +87,7 @@ export default function Opening() {
         <div className="relative lg:col-span-7">
           <Reveal>
             <div className="flex flex-wrap items-center gap-2 font-pixel text-xs">
-              <span className="bg-verm px-2 py-1 text-paper">RELEASE v0.3.0</span>
+              <span className="bg-verm px-2 py-1 text-paper">RELEASE {version}</span>
               <span className="border-2 border-ink px-2 py-1">WINDOWS x64</span>
               <span className="border-2 border-ink px-2 py-1">LICENÇA MIT</span>
               <span className="border-2 border-ink px-2 py-1">TAURI · RUST · REACT</span>
@@ -138,7 +139,7 @@ export default function Opening() {
           <Reveal delay={220}>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <a
-                href={LINKS.downloadDirect}
+                href={downloadUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="group flex items-center gap-3 border-[3px] border-ink bg-ink px-7 py-4 font-display text-xl tracking-wide text-paper shadow-[7px_7px_0_var(--color-verm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[10px_10px_0_var(--color-verm)] active:translate-y-0 active:shadow-none"

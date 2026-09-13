@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from "react";
 import {
   IconImport,
   IconQueue,
@@ -20,6 +20,48 @@ export const LINKS = {
   license: "https://github.com/Zentsy/MangAItranslator/blob/master/LICENSE",
   kofi: "https://ko-fi.com/zentsy",
 };
+
+export type DownloadInfo = {
+  downloadUrl: string;
+  version: string;
+};
+
+export const DownloadContext = createContext<DownloadInfo>({
+  downloadUrl: LINKS.downloadDirect,
+  version: "v0.3.0",
+});
+
+export function DownloadProvider({ children }: { children: ReactNode }) {
+  const [info, setInfo] = useState<DownloadInfo>({
+    downloadUrl: LINKS.downloadDirect,
+    version: "v0.3.0",
+  });
+
+  useEffect(() => {
+    fetch("https://api.github.com/repos/Zentsy/MangAItranslator/releases/latest")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        const exe = data.assets?.find(
+          (a: { name?: string; browser_download_url?: string }) =>
+            typeof a.name === "string" && a.name.endsWith(".exe") && !a.name.endsWith(".sig")
+        );
+        if (exe?.browser_download_url) {
+          setInfo({
+            downloadUrl: exe.browser_download_url,
+            version: data.tag_name || "v0.3.0",
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  return <DownloadContext.Provider value={info}>{children}</DownloadContext.Provider>;
+}
+
+export function useDownloadInfo() {
+  return useContext(DownloadContext);
+}
 
 const SHOT = (f: string) =>
   `https://raw.githubusercontent.com/Zentsy/MangAItranslator/master/screenshots/${f}`;
