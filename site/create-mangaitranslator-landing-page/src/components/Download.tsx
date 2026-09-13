@@ -1,5 +1,5 @@
 import { APP_LOGO } from "../assets/logoBase64";
-import { LINKS } from "../data";
+import { LINKS, useDownloadInfo } from "../data";
 import { Reveal } from "../fx";
 import {
   IconGithub,
@@ -8,16 +8,17 @@ import {
   IconWindows,
 } from "../icons";
 
-const SPECS = [
-  { k: "versão", v: "v0.3.0 · beta público" },
-  { k: "plataforma", v: "Windows x64 (instalador)" },
-  { k: "stack", v: "Tauri · Rust · React" },
-  { k: "licença", v: "MIT — open source" },
-  { k: "atualização", v: "automática, pelo próprio app" },
-  { k: "segurança", v: "API keys no keyring do SO" },
-];
-
 export function Download() {
+  const { downloadUrl, version } = useDownloadInfo();
+  const specs = [
+    { k: "versão", v: `${version} · beta público` },
+    { k: "plataforma", v: "Windows x64 (instalador)" },
+    { k: "stack", v: "Tauri · Rust · React" },
+    { k: "licença", v: "MIT — open source" },
+    { k: "atualização", v: "automática, pelo próprio app" },
+    { k: "segurança", v: "API keys no keyring do SO" },
+  ];
+
   return (
     <section id="baixar" className="relative scroll-mt-20 bg-paper py-24">
       <div className="mx-auto max-w-7xl px-5">
@@ -45,7 +46,7 @@ export function Download() {
 
                 <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center sm:flex-wrap">
                   <a
-                    href={LINKS.downloadDirect}
+                    href={downloadUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="group flex items-center justify-center gap-3 border-[3px] border-paper bg-verm px-8 py-5 font-display text-2xl tracking-wide text-paper shadow-[8px_8px_0_var(--color-paper)] transition-all duration-200 hover:-translate-y-1 hover:bg-verm2 active:translate-y-0 active:shadow-none"
@@ -75,7 +76,7 @@ export function Download() {
                   </div>
                 </div>
                 <p className="mt-4 font-pixel text-xs text-paper/50">
-                  v0.3.0 · instalador .exe · sem conta, sem telemetria escondida
+                  {version} · instalador .exe · sem conta, sem telemetria escondida
                 </p>
               </div>
 
@@ -84,7 +85,7 @@ export function Download() {
                   ficha técnica
                 </p>
                 <dl className="mt-4">
-                  {SPECS.map((s) => (
+                  {specs.map((s) => (
                     <div
                       key={s.k}
                       className="group flex items-baseline justify-between gap-4 border-b-2 border-paper/15 py-3.5 transition-colors duration-200 hover:border-verm"

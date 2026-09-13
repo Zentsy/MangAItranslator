@@ -183,6 +183,21 @@ npm run dev
 
 O deploy para produção gera um bundle standalone unificado (`site/index.html`) publicado no GitHub Pages via branch `gh-pages`.
 
+### Publicação de Novas Versões (Release SOP)
+
+Ao lançar uma nova versão (ex.: `v0.3.1`, `v0.4.0`):
+
+1. **Sincronia SemVer**: Incrementar a versão de forma estrita em:
+   - `package.json`
+   - `src-tauri/tauri.conf.json`
+   - `src-tauri/Cargo.toml`
+2. **Compilar e Publicar no GitHub**:
+   - Gerar o executável via `npm run tauri -- build`.
+   - Publicar a release no GitHub com o arquivo `MangAI.Translator_<versão>_x64-setup.exe`.
+3. **Download Direto na Landing Page**:
+   - **Automático via API**: A landing page consulta a API do GitHub (`/releases/latest`) em segundo plano para capturar o `.exe` mais recente em tempo real, sem exigir rebuild imediato para que os novos visitantes baixem a versão mais nova.
+   - **Fallback Estático (Offline)**: Para manter o bundle standalone 100% atualizado mesmo offline, atualize `site/create-mangaitranslator-landing-page/src/data.tsx` (`downloadDirect` e versão de fallback), execute `npm run build` na pasta do site e envie para a branch `gh-pages`.
+
 Pull requests passam pela CI (`.github/workflows/ci.yml`), que roda lint, typecheck/build do frontend e `cargo check` do backend.
 
 ## Status do projeto

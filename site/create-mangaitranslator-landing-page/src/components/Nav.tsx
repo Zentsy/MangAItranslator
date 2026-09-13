@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { APP_LOGO } from "../assets/logoBase64";
-import { LINKS } from "../data";
+import { LINKS, useDownloadInfo } from "../data";
 import { IconWindows } from "../icons";
 import { cn } from "../utils/cn";
 
@@ -13,6 +13,7 @@ const NAV = [
 ];
 
 export default function Nav() {
+  const { downloadUrl, version } = useDownloadInfo();
   const [scrolled, setScrolled] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -55,7 +56,7 @@ export default function Nav() {
               MANGAI<span className="text-verm">.</span>
             </span>
             <span className="block font-pixel text-[10px] text-paper/60">
-              トランスレーター v0.3.0
+              トランスレーター {version}
             </span>
           </span>
         </a>
@@ -74,10 +75,10 @@ export default function Nav() {
 
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden border-2 border-paper/30 px-2 py-1 font-pixel text-xs text-paper/70 sm:block">
-            v0.3.0 · beta
+            {version} · beta
           </span>
           <a
-            href={LINKS.downloadDirect}
+            href={downloadUrl}
             target="_blank"
             rel="noreferrer"
             className="group flex items-center gap-2 border-[3px] border-paper bg-verm px-4 py-2 font-display text-sm tracking-wider text-paper shadow-[4px_4px_0_var(--color-paper)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-verm2 active:translate-y-0 active:shadow-none"
