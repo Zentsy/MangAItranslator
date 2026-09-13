@@ -77,7 +77,7 @@ export default function Nav() {
             v0.3.0 · beta
           </span>
           <a
-            href={LINKS.latest}
+            href={LINKS.downloadDirect}
             target="_blank"
             rel="noreferrer"
             className="group flex items-center gap-2 border-[3px] border-paper bg-verm px-4 py-2 font-display text-sm tracking-wider text-paper shadow-[4px_4px_0_var(--color-paper)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-verm2 active:translate-y-0 active:shadow-none"

@@ -45,7 +45,7 @@ export function Download() {
 
                 <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center sm:flex-wrap">
                   <a
-                    href={LINKS.latest}
+                    href={LINKS.downloadDirect}
                     target="_blank"
                     rel="noreferrer"
                     className="group flex items-center justify-center gap-3 border-[3px] border-paper bg-verm px-8 py-5 font-display text-2xl tracking-wide text-paper shadow-[8px_8px_0_var(--color-paper)] transition-all duration-200 hover:-translate-y-1 hover:bg-verm2 active:translate-y-0 active:shadow-none"
