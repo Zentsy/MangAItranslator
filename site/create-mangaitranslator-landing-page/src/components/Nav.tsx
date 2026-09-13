@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { APP_LOGO } from "../assets/logoBase64";
 import { LINKS } from "../data";
-import { IconNib, IconWindows } from "../icons";
+import { IconWindows } from "../icons";
 import { cn } from "../utils/cn";
 
 const NAV = [
@@ -41,8 +42,13 @@ export default function Nav() {
       />
       <nav className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-5">
         <a href="#topo" className="group flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center border-[3px] border-paper bg-verm text-paper transition-transform duration-300 group-hover:-rotate-12">
-            <IconNib className="h-6 w-6" />
+          <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[0.55rem] border-2 border-paper/90 bg-ink shadow-[2px_2px_0_var(--color-verm)] transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-105">
+            <img
+              src={APP_LOGO}
+              alt="MangAI Logo"
+              className="h-full w-full object-cover select-none"
+              draggable={false}
+            />
           </span>
           <span className="leading-none">
             <span className="block font-display text-xl tracking-wide">

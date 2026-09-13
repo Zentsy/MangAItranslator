@@ -1,9 +1,9 @@
+import { APP_LOGO } from "../assets/logoBase64";
 import { LINKS } from "../data";
 import { Reveal } from "../fx";
 import {
   IconGithub,
   IconKofi,
-  IconNib,
   IconWarn,
   IconWindows,
 } from "../icons";
@@ -138,9 +138,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-5">
         <div className="grid gap-12 md:grid-cols-[1.5fr_1fr_1fr]">
           <div>
-            <a href="#topo" className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center border-[3px] border-paper bg-verm text-paper">
-                <IconNib className="h-6 w-6" />
+            <a href="#topo" className="group flex items-center gap-3">
+              <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[0.55rem] border-2 border-paper/90 bg-ink shadow-[2px_2px_0_var(--color-verm)] transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-105">
+                <img
+                  src={APP_LOGO}
+                  alt="MangAI Logo"
+                  className="h-full w-full object-cover select-none"
+                  draggable={false}
+                />
               </span>
               <span className="font-display text-2xl tracking-wide">
                 MANGAI<span className="text-verm">.</span>
