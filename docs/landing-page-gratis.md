@@ -20,22 +20,24 @@ Depois abra:
 http://127.0.0.1:4173/
 ```
 
-## Como publicar de graça
+## Como publicar no GitHub Pages (Já configurado com a branch gh-pages)
 
-### GitHub Pages
+A branch `gh-pages` já foi gerada e enviada para os remotes `public` e `origin`. Ela contém o bundle standalone unificado (`index.html`) e o arquivo `.nojekyll`.
 
-1. Configure o GitHub Pages para publicar a pasta `site` ou copie o conteúdo dela para a branch/pasta usada pelo Pages.
-2. O arquivo principal precisa continuar sendo `index.html`.
-3. A URL gratuita normalmente fica em um subdomínio do GitHub Pages.
+### Ativação no repositório GitHub:
+1. Acesse: `https://github.com/Zentsy/MangAItranslator/settings/pages`
+2. Na seção **Build and deployment**:
+   - **Source**: Selecione `Deploy from a branch`
+   - **Branch**: Selecione `gh-pages` e pasta `/ (root)`
+   - Clique no botão **Save**.
+3. O GitHub Pages iniciará a publicação imediatamente. Em cerca de 30 a 60 segundos, o site estará no ar na URL oficial:
+   **`https://zentsy.github.io/MangAItranslator/`**
 
-### Cloudflare Pages, Netlify ou Vercel
+---
 
-1. Crie um projeto apontando para este repositório.
-2. Configure a pasta de publicação como `site`.
-3. Não use comando de build para esta landing, porque ela é HTML/CSS puro.
+## Alertas e Boas Práticas
 
-## Alertas importantes
+- **Zero dependências externas**: O bundle é compilado via `vite-plugin-singlefile`, contendo todos os componentes, scripts e estilos em um arquivo único.
+- **Imagens e Assets**: As screenshots e logos são consumidas via CDN direta do repositório oficial no GitHub.
+- **Link de Download**: O botão principal direciona para a release oficial estável `v0.3.0` e para a página de releases mais recente (`/releases/latest`).
 
-- Para ficar 100% grátis, use o subdomínio gratuito do provedor. Domínio próprio normalmente é pago.
-- Não coloque backend só para uma página de download. Para esta necessidade, HTML/CSS estático é suficiente.
-- O botão de download aponta para `https://github.com/Zentsy/MangAItranslator/releases/latest`. Publique os instaladores nessa página de releases para o link funcionar bem.

@@ -39,8 +39,10 @@ conductor/
 .codex/
 .gemini/
 
-# Landing page (em desenvolvimento / WIP)
-site/
+# Landing page (ignorar node_modules e dist gerado pelo Vite)
+site/**/node_modules/
+site/**/dist/
+site/**/.vite/
 
 #testes
 testes.txt

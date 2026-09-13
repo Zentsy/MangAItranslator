@@ -1,0 +1,308 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f3efe3;
+  --color-parch: #e9e2cf;
+  --color-ink: #1b181d;
+  --color-ink2: #262229;
+  --color-ink3: #37323b;
+  --color-verm: #e8382b;
+  --color-verm2: #b5271d;
+  --color-teal: #00a884;
+  --color-kofi: #ff5e5b;
+  --font-display: "Anton", "Archivo", sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-brush: "Yuji Syuku", serif;
+  --font-pixel: "DotGothic16", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+html,
+body {
+  overflow-x: clip;
+}
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-verm);
+  color: var(--color-paper);
+}
+:focus-visible {
+  outline: 3px solid var(--color-verm);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink);
+  border: 2px solid var(--color-paper);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-verm);
+}
+
+/* ---------- texturas ---------- */
+.halftone {
+  background-image: radial-gradient(circle, rgba(27, 24, 29, 0.22) 1.1px, transparent 1.5px);
+  background-size: 11px 11px;
+}
+.halftone-paper {
+  background-image: radial-gradient(circle, rgba(243, 239, 227, 0.16) 1.1px, transparent 1.5px);
+  background-size: 11px 11px;
+}
+.halftone-verm {
+  background-image: radial-gradient(circle, rgba(232, 56, 43, 0.4) 1.1px, transparent 1.5px);
+  background-size: 10px 10px;
+}
+.speedlines {
+  background-image: repeating-linear-gradient(
+    115deg,
+    transparent 0 26px,
+    rgba(243, 239, 227, 0.05) 26px 28px
+  );
+}
+.noise-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- contorno tipográfico ---------- */
+.otl-ink {
+  -webkit-text-stroke: 2px var(--color-ink);
+  color: transparent;
+}
+.otl-paper {
+  -webkit-text-stroke: 2px var(--color-paper);
+  color: transparent;
+}
+.otl-verm {
+  -webkit-text-stroke: 2.5px var(--color-verm);
+  color: transparent;
+}
+
+/* ---------- reveal on scroll ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------- marquee ---------- */
+.marquee {
+  overflow: hidden;
+  user-select: none;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeX 26s linear infinite;
+}
+.marquee-reverse {
+  animation-direction: reverse;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marqueeX {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- keyframes ---------- */
+@keyframes caretB {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.caret {
+  animation: caretB 1.1s steps(1, end) infinite;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(7px);
+  }
+}
+.floaty {
+  animation: floaty 5.5s ease-in-out infinite;
+}
+
+@keyframes stampIn {
+  0% {
+    opacity: 0;
+    transform: scale(2.3) rotate(-30deg);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(0.93) rotate(-11deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-12deg);
+  }
+}
+.stamp {
+  opacity: 0;
+  animation: stampIn 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) 1s forwards;
+}
+
+@keyframes drift {
+  to {
+    background-position: 22px 22px;
+  }
+}
+.halftone-drift {
+  animation: drift 7s linear infinite;
+}
+
+@keyframes stripes {
+  to {
+    background-position: 19.8px 0;
+  }
+}
+.bar-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(243, 239, 227, 0.4) 0 7px,
+    transparent 7px 14px
+  );
+  animation: stripes 0.9s linear infinite;
+}
+
+.draw-underline {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1s cubic-bezier(0.65, 0, 0.25, 1) 1.1s forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ---------- peças ---------- */
+.keycap {
+  font-family: var(--font-pixel);
+  display: inline-grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  border: 3px solid var(--color-ink);
+  box-shadow: 0 4px 0 var(--color-ink);
+  border-radius: 0.45rem;
+  font-size: 1.15rem;
+}
+
+.tape {
+  position: absolute;
+  width: 5.2rem;
+  height: 1.3rem;
+  background: rgba(232, 56, 43, 0.88);
+  box-shadow: 0 1px 0 rgba(27, 24, 29, 0.4);
+}
+
+.hazard {
+  position: relative;
+}
+.hazard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 10px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-verm) 0 12px,
+    var(--color-ink) 12px 24px
+  );
+}
+
+.writing-v {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  letter-spacing: 0.4em;
+}
+
+.link-slash {
+  position: relative;
+}
+.link-slash::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 3px;
+  width: 100%;
+  background: var(--color-verm);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-slash:hover::after,
+.link-slash:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .stamp {
+    opacity: 1;
+    transform: rotate(-12deg);
+  }
+  .draw-underline {
+    stroke-dashoffset: 0;
+  }
+  .marquee-track {
+    animation: none !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
