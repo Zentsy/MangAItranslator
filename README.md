@@ -2,9 +2,12 @@
 
 ![MangAI Translator Banner](screenshots/banner_nanquim.png)
 
-Desktop app para localização assistida de mangá e quadrinhos.
+Desktop app para localização assistida de mangá e quadrinhos. Conheça a demonstração visual e recursos no [Website Oficial](https://zentsy.github.io/MangAItranslator/).
 
 <p>
+  <a href="https://zentsy.github.io/MangAItranslator/">
+    <img alt="Website Oficial" src="https://img.shields.io/badge/Website-Oficial-E8382B?style=for-the-badge&logo=googlechrome&logoColor=white">
+  </a>
   <a href="https://github.com/Zentsy/MangAItranslator/releases/latest">
     <img alt="Baixar para Windows x64" src="https://img.shields.io/badge/Baixar-Windows%20x64-00A884?style=for-the-badge&logo=windows&logoColor=white">
   </a>
@@ -23,12 +26,13 @@ O MangAI Translator ajuda você a importar um capítulo, gerar um rascunho com I
 
 > A IA traduz **com** você, não **por** você. Modelos podem errar, transcrever em vez de traduzir ou interpretar balões fora de ordem. Revise sempre antes de publicar qualquer tradução.
 
-## Download
+## 🌐 Website & Download
 
-- Baixar a versão mais recente: [GitHub Releases](https://github.com/Zentsy/MangAItranslator/releases/latest)
-- Release atual: [v0.3.0](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0)
+- **Site Oficial**: [zentsy.github.io/MangAItranslator](https://zentsy.github.io/MangAItranslator/) — Apresentação visual detalhada, fluxo de trabalho, galeria e download rápido.
+- **Baixar a versão mais recente**: [GitHub Releases (Instalador Windows x64)](https://github.com/Zentsy/MangAItranslator/releases/latest)
+- **Release atual**: [v0.3.0](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0)
 
-Se o projeto te ajudar e você quiser apoiar o desenvolvimento, também dá para contribuir em [Ko-fi](https://ko-fi.com/zentsy).
+Se o projeto te ajudar e você quiser apoiar o desenvolvimento contínuo, você pode contribuir no [Ko-fi](https://ko-fi.com/zentsy).
 
 ## Aviso para Windows SmartScreen
 
@@ -166,6 +170,18 @@ npm run build
 cd src-tauri
 cargo check
 ```
+
+### Landing Page Oficial (site/)
+
+A landing page pública do projeto é construída com React 19, Vite e Tailwind CSS v4 na pasta `site/create-mangaitranslator-landing-page`:
+
+```bash
+cd site/create-mangaitranslator-landing-page
+npm install
+npm run dev
+```
+
+O deploy para produção gera um bundle standalone unificado (`site/index.html`) publicado no GitHub Pages via branch `gh-pages`.
 
 Pull requests passam pela CI (`.github/workflows/ci.yml`), que roda lint, typecheck/build do frontend e `cargo check` do backend.
 
