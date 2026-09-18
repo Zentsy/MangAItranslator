@@ -45,7 +45,7 @@ LEGENDA DE SINAIS:
   return header + content;
 };
 
-const generateDocxBlob = async (pages: MangaPage[]) => {
+const generateDocxBlob = async (pages: MangaPage[]): Promise<Uint8Array> => {
   const children: Paragraph[] = [
     new Paragraph({
       text: "MANG-AI TRANSLATOR - EXPORTAÇÃO",
@@ -119,7 +119,8 @@ const generateDocxBlob = async (pages: MangaPage[]) => {
   });
 
   const doc = new Document({ sections: [{ children }] });
-  return await Packer.toBuffer(doc);
+  const buffer = await Packer.toArrayBuffer(doc);
+  return new Uint8Array(buffer);
 };
 
 export const exportProject = async (pages: MangaPage[], format: 'txt' | 'docx'): Promise<boolean> => {

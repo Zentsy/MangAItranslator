@@ -618,11 +618,12 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           type: "success",
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("Erro na exportacao:", error);
       setStatusModal({
         isOpen: true,
         title: "Erro na Exportacao",
-        description: "Nao foi possivel salvar o arquivo. Verifique as permissoes de pasta.",
+        description: error instanceof Error ? `Nao foi possivel salvar o arquivo: ${error.message}` : "Nao foi possivel salvar o arquivo.",
         type: "error",
       });
     }

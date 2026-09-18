@@ -14,8 +14,8 @@ export const LINKS = {
   repo: "https://github.com/Zentsy/MangAItranslator",
   latest: "https://github.com/Zentsy/MangAItranslator/releases/latest",
   downloadDirect:
-    "https://github.com/Zentsy/MangAItranslator/releases/download/v0.3.0/MangAI.Translator_0.3.0_x64-setup.exe",
-  v030: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0",
+    "https://github.com/Zentsy/MangAItranslator/releases/download/v0.3.1/MangAI.Translator_0.3.1_x64-setup.exe",
+  v030: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.1",
   issues: "https://github.com/Zentsy/MangAItranslator/issues",
   license: "https://github.com/Zentsy/MangAItranslator/blob/master/LICENSE",
   kofi: "https://ko-fi.com/zentsy",
@@ -28,13 +28,13 @@ export type DownloadInfo = {
 
 export const DownloadContext = createContext<DownloadInfo>({
   downloadUrl: LINKS.downloadDirect,
-  version: "v0.3.0",
+  version: "v0.3.1",
 });
 
 export function DownloadProvider({ children }: { children: ReactNode }) {
   const [info, setInfo] = useState<DownloadInfo>({
     downloadUrl: LINKS.downloadDirect,
-    version: "v0.3.0",
+    version: "v0.3.1",
   });
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export function DownloadProvider({ children }: { children: ReactNode }) {
         if (exe?.browser_download_url) {
           setInfo({
             downloadUrl: exe.browser_download_url,
-            version: data.tag_name || "v0.3.0",
+            version: data.tag_name || "v0.3.1",
           });
         }
       })

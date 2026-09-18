@@ -11,8 +11,8 @@ Desktop app para localização assistida de mangá e quadrinhos. Conheça a demo
   <a href="https://github.com/Zentsy/MangAItranslator/releases/latest">
     <img alt="Baixar para Windows x64" src="https://img.shields.io/badge/Baixar-Windows%20x64-00A884?style=for-the-badge&logo=windows&logoColor=white">
   </a>
-  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0">
-    <img alt="Release atual v0.3.0" src="https://img.shields.io/badge/Release-v0.3.0-2F3342?style=for-the-badge">
+  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.1">
+    <img alt="Release atual v0.3.1" src="https://img.shields.io/badge/Release-v0.3.1-2F3342?style=for-the-badge">
   </a>
   <a href="https://ko-fi.com/zentsy">
     <img alt="Apoiar no Ko-fi" src="https://img.shields.io/badge/Apoiar-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white">
@@ -30,7 +30,7 @@ O MangAI Translator ajuda você a importar um capítulo, gerar um rascunho com I
 
 - **Site Oficial**: [zentsy.github.io/MangAItranslator](https://zentsy.github.io/MangAItranslator/) — Apresentação visual detalhada, fluxo de trabalho, galeria e download rápido.
 - **Baixar a versão mais recente**: [GitHub Releases (Instalador Windows x64)](https://github.com/Zentsy/MangAItranslator/releases/latest)
-- **Release atual**: [v0.3.0](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.0)
+- **Release atual**: [v0.3.1](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.1)
 
 Se o projeto te ajudar e você quiser apoiar o desenvolvimento contínuo, você pode contribuir no [Ko-fi](https://ko-fi.com/zentsy).
 

@@ -84,8 +84,18 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: s
 
 const CHANGELOG_ITEMS = [
   {
-    version: "v0.3.0",
+    version: "v0.3.1",
     badge: "Novo",
+    title: "Correção na Exportação Word (.docx)",
+    items: [
+      "Correção do erro na exportação para Word (.docx) em ambientes WebView2/browser.",
+      "Geração do documento via ArrayBuffer binário nativo para gravação estável.",
+      "Apresentação detalhada da causa real de falha no modal em vez de mensagem genérica.",
+    ],
+  },
+  {
+    version: "v0.3.0",
+    badge: "Anterior",
     title: "Identidade Nanquim, Tradução em Lote e Produtividade",
     items: [
       "Nova identidade visual autêntica inspirada em Nanquim & Pena G.",
