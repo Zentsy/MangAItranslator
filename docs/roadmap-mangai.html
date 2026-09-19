@@ -12,19 +12,22 @@
       --paper: #f3efe3;
       --paper-warm: #faf7f0;
       --parch: #e9e2cf;
+      --parch-dark: #ded5bf;
       --ink: #1b181d;
       --ink-soft: #2d2931;
       --ink-muted: #5e5764;
       --ink-faint: #8f8697;
       --verm: #e8382b;
       --verm-dark: #b5271d;
-      --verm-bg: rgba(232, 56, 43, 0.12);
+      --verm-bg: rgba(232, 56, 43, 0.1);
       --teal: #00a884;
       --teal-bg: rgba(0, 168, 132, 0.12);
       --gold: #d97706;
       --gold-bg: rgba(217, 119, 6, 0.12);
       --violet: #7c3aed;
       --violet-bg: rgba(124, 58, 237, 0.12);
+      --blue: #2563eb;
+      --blue-bg: rgba(37, 99, 235, 0.1);
       --kofi: #ff5e5b;
       --border-ink: 2.5px solid var(--ink);
       --border-ink-thin: 1.5px solid var(--ink);
@@ -53,7 +56,6 @@
       background-size: 11px 11px;
     }
 
-    /* Textura de ruído / papel vintage */
     .noise-layer {
       position: fixed;
       inset: 0;
@@ -65,13 +67,12 @@
     }
 
     .container {
-      max-width: 1540px;
+      max-width: 1600px;
       margin: 0 auto;
       position: relative;
       z-index: 1;
     }
 
-    /* Faixa de perigo / hazard editorial no topo */
     .hazard-top {
       height: 10px;
       background: repeating-linear-gradient(
@@ -84,7 +85,6 @@
       box-shadow: var(--shadow-brutal-sm);
     }
 
-    /* Cabeçalho Editorial Mangá */
     header.editorial-header {
       background: var(--paper-warm);
       border: var(--border-ink);
@@ -130,14 +130,14 @@
     .kanji-stamp {
       display: inline-grid;
       place-items: center;
-      width: 52px;
-      height: 52px;
+      width: 54px;
+      height: 54px;
       background: var(--verm);
       color: var(--paper);
       border: var(--border-ink);
       box-shadow: var(--shadow-brutal-sm);
       font-family: var(--font-brush);
-      font-size: 1.8rem;
+      font-size: 1.85rem;
       font-weight: 900;
       line-height: 1;
       transform: rotate(-3deg);
@@ -170,7 +170,7 @@
       font-family: var(--font-brush);
       font-size: 1.15rem;
       color: var(--verm);
-      margin-left: 6px;
+      margin-left: 8px;
     }
 
     .header-controls {
@@ -249,11 +249,11 @@
     }
 
     .subtitle-text {
-      max-width: 900px;
+      max-width: 950px;
       font-weight: 500;
     }
 
-    /* Painel de Estatísticas / Cartões de Status */
+    /* Painel de Estatísticas */
     .status-strip {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -292,9 +292,6 @@
       color: var(--verm);
       font-weight: 700;
       margin-bottom: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     .stat-box .stat-value {
@@ -312,13 +309,19 @@
       font-weight: 500;
     }
 
-    /* Barra de Ações, Filtros e Busca */
+    /* Barra de Ações, Filtros Duplos e Busca */
     .toolbar-panel {
       background: var(--paper-warm);
       border: var(--border-ink);
       box-shadow: var(--shadow-brutal);
-      padding: 14px 20px;
+      padding: 16px 20px;
       margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .toolbar-top-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
@@ -332,10 +335,10 @@
       gap: 8px;
       background: var(--paper);
       border: var(--border-ink-thin);
-      padding: 6px 14px;
+      padding: 7px 14px;
       min-width: 280px;
       flex: 1;
-      max-width: 440px;
+      max-width: 480px;
       box-shadow: inset 1px 1px 0 rgba(0,0,0,0.1);
     }
 
@@ -354,7 +357,27 @@
       color: var(--ink-faint);
     }
 
-    .filter-tags {
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(27, 24, 29, 0.2);
+    }
+
+    .filter-row-label {
+      font-family: var(--font-pixel);
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--ink);
+      margin-right: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .filter-chips {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
@@ -374,7 +397,7 @@
       user-select: none;
     }
 
-    .filter-chip:hover, .filter-chip.active {
+    .filter-chip:hover {
       background: var(--ink);
       color: var(--paper);
       transform: translateY(-1px);
@@ -384,12 +407,19 @@
       background: var(--verm);
       border-color: var(--ink);
       color: #fff;
+      box-shadow: var(--shadow-brutal-sm);
     }
 
-    /* Visão Kanban (Manga Panels) */
+    .filter-chip.version-chip.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--paper);
+    }
+
+    /* Visão Kanban Principal */
     .board-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
       gap: 24px;
       align-items: start;
     }
@@ -421,12 +451,12 @@
     }
 
     .col-hanko {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border: 2px solid var(--verm);
       color: var(--verm);
       font-family: var(--font-brush);
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: 900;
       display: grid;
       place-items: center;
@@ -476,26 +506,88 @@
       transform: translate(-1px, -1px);
     }
 
-    .cards-deck {
+    .column-content {
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      min-height: 120px;
+      gap: 16px;
+    }
+
+    /* Faixa de Divisão / Banner de Versão dentro da Coluna */
+    .release-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: rgba(233, 226, 207, 0.4);
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      padding: 12px 10px 10px;
+    }
+
+    .release-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px 8px;
+      border-bottom: 1.5px dashed var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .release-title-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .version-tag-pill {
+      font-family: var(--font-pixel);
+      font-size: 0.8rem;
+      font-weight: 800;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 2px 8px;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+    }
+
+    .release-name {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+    }
+
+    .release-meta-badge {
+      font-family: var(--font-pixel);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--verm-dark);
+      background: var(--verm-bg);
+      border: 1px solid var(--verm);
+      padding: 2px 6px;
+      border-radius: 2px;
+    }
+
+    .release-cards-deck {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     /* Cartão de Item de Roadmap */
     .manga-card {
       background: #ffffff;
-      border: var(--border-ink);
-      box-shadow: var(--shadow-brutal);
-      padding: 16px;
+      border: var(--border-ink-thin);
+      box-shadow: var(--shadow-brutal-sm);
+      padding: 14px;
       transition: all 0.18s ease;
       position: relative;
     }
 
     .manga-card:hover {
-      transform: translate(-3px, -3px);
-      box-shadow: var(--shadow-brutal-hover);
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-brutal);
       border-color: var(--ink);
     }
 
@@ -504,9 +596,9 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      margin-bottom: 10px;
-      border-bottom: 1px solid rgba(27, 24, 29, 0.12);
-      padding-bottom: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(27, 24, 29, 0.1);
+      padding-bottom: 6px;
     }
 
     .tag-cluster {
@@ -535,16 +627,6 @@
     .card-tag.tag-ocr { background: #ffedd5; color: #c2410c; }
     .card-tag.tag-future { background: #ede9fe; color: #5b21b6; }
 
-    .card-version {
-      font-family: var(--font-pixel);
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: var(--ink);
-      color: #fff;
-      padding: 2px 7px;
-      border-radius: 2px;
-    }
-
     .card-btn-del {
       background: none;
       border: none;
@@ -564,49 +646,40 @@
 
     .card-title {
       font-family: var(--font-body);
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       font-weight: 800;
       color: var(--ink);
       line-height: 1.25;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .card-body {
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       color: var(--ink-soft);
       line-height: 1.45;
       font-weight: 500;
     }
 
-    .card-body ul {
-      margin-top: 6px;
-      padding-left: 18px;
-    }
-
-    .card-body li {
-      margin-bottom: 4px;
-    }
-
     .stamp-overlay {
       position: absolute;
-      bottom: 8px;
-      right: 12px;
+      bottom: 6px;
+      right: 10px;
       font-family: var(--font-brush);
-      font-size: 1.3rem;
+      font-size: 1.15rem;
       font-weight: 900;
       color: var(--verm);
-      border: 2px solid var(--verm);
-      padding: 0 6px;
-      border-radius: 4px;
-      opacity: 0.25;
-      transform: rotate(-12deg);
+      border: 1.5px solid var(--verm);
+      padding: 0 5px;
+      border-radius: 3px;
+      opacity: 0.22;
+      transform: rotate(-10deg);
       pointer-events: none;
       user-select: none;
     }
 
     .manga-card:hover .stamp-overlay {
-      opacity: 0.8;
-      transform: rotate(-8deg) scale(1.05);
+      opacity: 0.75;
+      transform: rotate(-6deg) scale(1.05);
       transition: all 0.2s ease;
     }
 
@@ -699,24 +772,6 @@
       line-height: 1.5;
     }
 
-    .milestone-deliverables {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 8px;
-    }
-
-    .deliverable-chip {
-      background: var(--paper);
-      border: 1px solid var(--ink);
-      padding: 6px 10px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
     /* Contenteditable focus styles */
     [contenteditable="true"] {
       outline: none;
@@ -731,7 +786,6 @@
 
     #import-file { display: none; }
 
-    /* Responsividade */
     @media (max-width: 768px) {
       body { padding: 16px 12px 60px; }
       header.editorial-header { padding: 16px; }
@@ -810,24 +864,42 @@
       </div>
     </section>
 
-    <!-- Barra de Ferramentas, Busca e Filtros -->
+    <!-- Barra de Ferramentas, Busca e Filtros Duplos -->
     <div class="toolbar-panel">
-      <div class="search-box">
-        <span style="font-size: 1.1rem; color: var(--verm);">✒</span>
-        <input type="text" id="search-input" placeholder="Pesquisar entregas, TODOs, modelos, bugs ou tags..." />
+      <div class="toolbar-top-row">
+        <div class="search-box">
+          <span style="font-size: 1.1rem; color: var(--verm);">✒</span>
+          <input type="text" id="search-input" placeholder="Pesquisar entregas, TODOs, modelos, bugs ou tags..." />
+        </div>
+
+        <div class="filter-chips" id="category-filter-container">
+          <span class="filter-row-label">CATEGORIA:</span>
+          <button class="filter-chip active" data-filter="all">TODAS</button>
+          <button class="filter-chip" data-filter="BATCH">BATCH</button>
+          <button class="filter-chip" data-filter="AI">IA / MODELOS</button>
+          <button class="filter-chip" data-filter="UI">UI / UX</button>
+          <button class="filter-chip" data-filter="GLOSSARY">GLOSSÁRIO</button>
+          <button class="filter-chip" data-filter="VAULT">KEYRING</button>
+          <button class="filter-chip" data-filter="RELEASE">RELEASE</button>
+          <button class="filter-chip" data-filter="OCR">OCR</button>
+          <button class="filter-chip" data-filter="FUTURO">FUTURO</button>
+        </div>
       </div>
 
-      <div class="filter-tags" id="filter-container">
-        <span style="font-family: var(--font-pixel); font-size: 0.75rem; font-weight: 700; color: var(--ink-faint); margin-right: 4px;">FILTRO:</span>
-        <button class="filter-chip active" data-filter="all">TODOS</button>
-        <button class="filter-chip" data-filter="BATCH">BATCH</button>
-        <button class="filter-chip" data-filter="AI">IA / MODELOS</button>
-        <button class="filter-chip" data-filter="UI">UI / UX</button>
-        <button class="filter-chip" data-filter="GLOSSARY">GLOSSÁRIO</button>
-        <button class="filter-chip" data-filter="VAULT">KEYRING</button>
-        <button class="filter-chip" data-filter="RELEASE">RELEASE</button>
-        <button class="filter-chip" data-filter="OCR">OCR</button>
-        <button class="filter-chip" data-filter="FUTURO">FUTURO</button>
+      <!-- Filtro Dedicado por Versão -->
+      <div class="filter-row">
+        <span class="filter-row-label">🔖 FILTRAR POR VERSÃO:</span>
+        <div class="filter-chips" id="version-filter-container">
+          <button class="filter-chip version-chip active" data-ver-filter="all">TODAS AS VERSÕES</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.3.1">v0.3.1 (Patch Atual)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.3.0">v0.3.0 (Fase Nanquim)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.2.0">v0.2.0 (Multi-Modelos)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.1.x">v0.1.x (Fundação MVP)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.3.2">v0.3.2 (Imediato)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.4.0">v0.4.0 (Próxima Fase)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.5.0">v0.5.0 (Colaboração)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v1.0.0">v1.0.0 (Marco Maior)</button>
+        </div>
       </div>
     </div>
 
@@ -841,7 +913,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "mangai-interactive-roadmap-nanquim-v3";
+    const STORAGE_KEY = "mangai-interactive-roadmap-nanquim-v3-grouped";
 
     const defaultState = {
       subtitle: "Painel dinâmico do projeto: histórico de versões entregues, tarefas ativas (TODOs) e planejamento dos próximos ciclos sob a identidade autêntica Nanquim & Pena G.",
@@ -850,110 +922,138 @@
           id: "done",
           title: "Entregue & Concluído",
           hanko: "済",
-          cards: [
+          groups: [
             {
               version: "v0.3.1",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "Correção de Exportação Word (.docx)",
-              body: "Substituição do Packer.toBuffer por Packer.toArrayBuffer + Uint8Array compatível com WebView2/browser, eliminando o erro 'nodebuffer is not supported'. Diagnóstico transparente no modal.",
-              stamp: "RESOLVIDO"
+              name: "Release v0.3.1 (Patch Atual)",
+              badge: "Set / 2026",
+              cards: [
+                {
+                  version: "v0.3.1",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Correção de Exportação Word (.docx)",
+                  body: "Substituição do Packer.toBuffer por Packer.toArrayBuffer + Uint8Array compatível com WebView2/browser, eliminando o erro 'nodebuffer is not supported'. Diagnóstico transparente no modal.",
+                  stamp: "RESOLVIDO"
+                }
+              ]
             },
             {
               version: "v0.3.0",
-              tag: "BATCH",
-              tagClass: "tag-batch",
-              title: "Tradução em Lote Sequencial (Batch)",
-              body: "Fila de processamento assíncrono entre páginas com monitor de progresso em tempo real, cancelamento seguro e processamento em background no EditorView.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.3.0",
-              tag: "GLOSSARY",
-              tagClass: "tag-vault",
-              title: "Glossário por Projeto com SQLite",
-              body: "Tabela local 'glossary' persistida no SQLite do app. Gerenciamento de termos com injeção automática de regras léxicas nos prompts de tradução.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.3.0",
-              tag: "AI",
-              tagClass: "tag-ai",
-              title: "Memória de Curto Prazo entre Páginas",
-              body: "Injeção automática do texto e contexto da página imediatamente anterior para preservar coerência narrativa, honoríficos e pronomes.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.3.0",
-              tag: "UI",
-              tagClass: "tag-ui",
-              title: "Atalhos de Teclado Power-User",
-              body: "Teclas de merge rápido de balões adjacentes (M), troca de ordem (S) e navegação ágil para acelerar a revisão das páginas.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.3.0",
-              tag: "VAULT",
-              tagClass: "tag-vault",
-              title: "Cofre Seguro no Keyring do SO",
-              body: "Armazenamento seguro de chaves de API individuais por provedor diretamente no Windows Credential Manager via plugin Rust customizado.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.3.0",
-              tag: "UI",
-              tagClass: "tag-ui",
-              title: "Identidade Nanquim & Pena G",
-              body: "Nova identidade visual autêntica: logo oficial vetorizada, ícones multi-resolução para Windows/macOS/Linux e novo pacote de screenshots.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.3.0",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "Landing Page Oficial no GitHub Pages",
-              body: "Publicada em https://zentsy.github.io/MangAItranslator/ com resolução dinâmica do instalador mais recente via API do GitHub.",
-              stamp: "NO AR"
+              name: "Release v0.3.0 (Identidade Nanquim & Batch)",
+              badge: "Set / 2026",
+              cards: [
+                {
+                  version: "v0.3.0",
+                  tag: "BATCH",
+                  tagClass: "tag-batch",
+                  title: "Tradução em Lote Sequencial (Batch)",
+                  body: "Fila de processamento assíncrono entre páginas com monitor de progresso em tempo real, cancelamento seguro e processamento em background no EditorView.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.3.0",
+                  tag: "GLOSSARY",
+                  tagClass: "tag-vault",
+                  title: "Glossário por Projeto com SQLite",
+                  body: "Tabela local 'glossary' persistida no SQLite do app. Gerenciamento de termos com injeção automática de regras léxicas nos prompts de tradução.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.3.0",
+                  tag: "AI",
+                  tagClass: "tag-ai",
+                  title: "Memória de Curto Prazo entre Páginas",
+                  body: "Injeção automática do texto e contexto da página imediatamente anterior para preservar coerência narrativa, honoríficos e pronomes.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.3.0",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Atalhos de Teclado Power-User",
+                  body: "Teclas de merge rápido de balões adjacentes (M), troca de ordem (S) e navegação ágil para acelerar a revisão das páginas.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.3.0",
+                  tag: "VAULT",
+                  tagClass: "tag-vault",
+                  title: "Cofre Seguro no Keyring do SO",
+                  body: "Armazenamento seguro de chaves de API individuais por provedor diretamente no Windows Credential Manager via plugin Rust customizado.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.3.0",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Identidade Nanquim & Pena G",
+                  body: "Nova identidade visual autêntica: logo oficial vetorizada, ícones multi-resolução para Windows/macOS/Linux e novo pacote de screenshots.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.3.0",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Landing Page Oficial no GitHub Pages",
+                  body: "Publicada em https://zentsy.github.io/MangAItranslator/ com resolução dinâmica do instalador mais recente via API do GitHub.",
+                  stamp: "NO AR"
+                }
+              ]
             },
             {
               version: "v0.2.0",
-              tag: "AI",
-              tagClass: "tag-ai",
-              title: "Multi-Provedores & Modo Free",
-              body: "Suporte completo a OpenRouter (com detecção inteligente de modelos vision grátis), LM Studio local, Groq Cloud e Google Gemini nativo.",
-              stamp: "ENTREGUE"
+              name: "Release v0.2.0 (Multi-Modelos & APIs)",
+              badge: "Abr / 2026",
+              cards: [
+                {
+                  version: "v0.2.0",
+                  tag: "AI",
+                  tagClass: "tag-ai",
+                  title: "Multi-Provedores & Modo Free",
+                  body: "Suporte completo a OpenRouter (com detecção inteligente de modelos vision grátis), LM Studio local, Groq Cloud e Google Gemini nativo.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.2.0",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Tipagem Semântica de Balões",
+                  body: "Classificação precisa de tipos de fala: [RET] Retangular, {FORA} Onomatopeia/Fora, (PEN) Pensamento e //DBL// Balão Duplo.",
+                  stamp: "ENTREGUE"
+                }
+              ]
             },
             {
-              version: "v0.2.0",
-              tag: "UI",
-              tagClass: "tag-ui",
-              title: "Tipagem Semântica de Balões",
-              body: "Classificação precisa de tipos de fala: [RET] Retangular, {FORA} Onomatopeia/Fora, (PEN) Pensamento e //DBL// Balão Duplo.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.1.3",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "Hardening de Segurança & Auto-Updater",
-              body: "Ajuste de dependências Dependabot, documentação MIT e estruturação da esteira de compilação com release.yml.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.1.2",
-              tag: "UI",
-              tagClass: "tag-ui",
-              title: "Zoom/Pan no Canvas & Apoio Ko-fi",
-              body: "Navegação suave sobre a mesa de arte com react-zoom-pan-pinch e links de apoio ao projeto.",
-              stamp: "ENTREGUE"
-            },
-            {
-              version: "v0.1.0",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "MVP Fundação Tauri v2 + React 19",
-              body: "Importação de capítulos, extração de texto assistida por IA, edição em lista e exportação estruturada em TXT.",
-              stamp: "ENTREGUE"
+              version: "v0.1.x",
+              name: "Releases v0.1.0 ~ v0.1.3 (Fundação MVP)",
+              badge: "Abr / 2026",
+              cards: [
+                {
+                  version: "v0.1.3",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Hardening de Segurança & Auto-Updater",
+                  body: "Ajuste de dependências Dependabot, documentação MIT e estruturação da esteira de compilação com release.yml.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.1.2",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Zoom/Pan no Canvas & Apoio Ko-fi",
+                  body: "Navegação suave sobre a mesa de arte com react-zoom-pan-pinch e links de apoio ao projeto.",
+                  stamp: "ENTREGUE"
+                },
+                {
+                  version: "v0.1.0",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "MVP Fundação Tauri v2 + React 19",
+                  body: "Importação de capítulos, extração de texto assistida por IA, edição em lista e exportação estruturada em TXT.",
+                  stamp: "ENTREGUE"
+                }
+              ]
             }
           ]
         },
@@ -961,38 +1061,52 @@
           id: "todos",
           title: "TODOs Imediatos (Em Andamento)",
           hanko: "動",
-          cards: [
+          groups: [
             {
               version: "v0.3.2",
-              tag: "CRITICAL",
-              tagClass: "tag-critical",
-              title: "Melhoria do UpdateModal & Changelog Real",
-              body: "Evoluir a tela 'Nova Versão Pronta' (UpdateModal): buscar e renderizar o changelog real da release no campo 'O que mudou', eliminando a mensagem genérica ('Veja os assets desta release...').",
-              stamp: "PRIORITÁRIO"
+              name: "Ciclo Imediato v0.3.2 (Patches & Ajustes)",
+              badge: "Prioridade Alta",
+              cards: [
+                {
+                  version: "v0.3.2",
+                  tag: "CRITICAL",
+                  tagClass: "tag-critical",
+                  title: "Melhoria do UpdateModal & Changelog Real",
+                  body: "Evoluir a tela 'Nova Versão Pronta' (UpdateModal): buscar e renderizar o changelog real da release no campo 'O que mudou', eliminando a mensagem genérica ('Veja os assets desta release...').",
+                  stamp: "CRÍTICO"
+                },
+                {
+                  version: "v0.3.2",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Injeção Automática de Release Notes na CI",
+                  body: "Configurar o GitHub Actions (release.yml) para extrair os tópicos de novidades reais da versão do changelog ou tag em vez do texto padrão estático.",
+                  stamp: "PENDENTE"
+                },
+                {
+                  version: "v0.3.2",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Hover Interativo Bloco ↔ Balão na Imagem",
+                  body: "Destacar visualmente o balão na página ao passar o cursor sobre o bloco correspondente no painel de tradução lateral.",
+                  stamp: "PLANEJADO"
+                }
+              ]
             },
             {
               version: "v0.4.0",
-              tag: "UI",
-              tagClass: "tag-ui",
-              title: "Design System: Nova UI MangAI Desktop",
-              body: "Transição visual completa da interface desktop adotando a identidade editorial densa (washi, nanquim, vermelhão e halftones) da landing page.",
-              stamp: "EM DESIGN"
-            },
-            {
-              version: "v0.3.2",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "Injeção Automática de Release Notes na CI",
-              body: "Configurar o GitHub Actions (release.yml) para extrair os tópicos de novidades reais da versão do changelog ou tag em vez do texto padrão estático.",
-              stamp: "PENDENTE"
-            },
-            {
-              version: "v0.3.2",
-              tag: "UI",
-              tagClass: "tag-ui",
-              title: "Hover Interativo Bloco ↔ Balão na Imagem",
-              body: "Destacar visualmente o balão na página ao passar o cursor sobre o bloco correspondente no painel de tradução lateral.",
-              stamp: "PLANEJADO"
+              name: "Preparação de Fase v0.4.0 (Design & Arquitetura)",
+              badge: "Fase 4",
+              cards: [
+                {
+                  version: "v0.4.0",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Design System: Nova UI MangAI Desktop",
+                  body: "Transição visual completa da interface desktop adotando a identidade editorial densa (washi, nanquim, vermelhão e halftones) da landing page.",
+                  stamp: "EM DESIGN"
+                }
+              ]
             }
           ]
         },
@@ -1000,46 +1114,53 @@
           id: "backlog",
           title: "Backlog Próximo Ciclo (v0.4.0)",
           hanko: "計",
-          cards: [
+          groups: [
             {
               version: "v0.4.0",
-              tag: "OCR",
-              tagClass: "tag-ocr",
-              title: "Detecção Local de Coordenadas de Balões",
-              body: "Pré-detecção de bounding boxes de texto diretamente no cliente via WebAssembly para seleção e ordenação visual imediata.",
-              stamp: "BACKLOG"
-            },
-            {
-              version: "v0.4.0",
-              tag: "AI",
-              tagClass: "tag-ai",
-              title: "Auto-Free OpenRouter Aprimorado",
-              body: "Rotação inteligente de modelos gratuitos com verificação de quota em tempo real e fallback instantâneo sem interromper o lote.",
-              stamp: "BACKLOG"
-            },
-            {
-              version: "v0.4.0",
-              tag: "AI",
-              tagClass: "tag-ai",
-              title: "Perfis de Tradução por Idioma",
-              body: "Presets configuráveis para japonês, coreano e chinês com prompts direcionados à ortografia, honoríficos e gírias de scanlator.",
-              stamp: "BACKLOG"
-            },
-            {
-              version: "v0.4.0",
-              tag: "AI",
-              tagClass: "tag-ai",
-              title: "Segunda Passada de Naturalidade",
-              body: "Revisão refinada por IA após a tradução literal inicial para deixar os diálogos mais naturais e fluídos em português brasileiro.",
-              stamp: "BACKLOG"
-            },
-            {
-              version: "v0.4.0",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "Exportação Estruturada em JSON para Typesetters",
-              body: "Exportação de arquivo JSON com dados de blocos, tipos e coordenadas para integração com scripts automatizados de Photoshop e InDesign.",
-              stamp: "BACKLOG"
+              name: "Fase v0.4.0 (Avanço de IA, OCR & Tipografia)",
+              badge: "Próximo Ciclo",
+              cards: [
+                {
+                  version: "v0.4.0",
+                  tag: "OCR",
+                  tagClass: "tag-ocr",
+                  title: "Detecção Local de Coordenadas de Balões",
+                  body: "Pré-detecção de bounding boxes de texto diretamente no cliente via WebAssembly para seleção e ordenação visual imediata.",
+                  stamp: "BACKLOG"
+                },
+                {
+                  version: "v0.4.0",
+                  tag: "AI",
+                  tagClass: "tag-ai",
+                  title: "Auto-Free OpenRouter Aprimorado",
+                  body: "Rotação inteligente de modelos gratuitos com verificação de quota em tempo real e fallback instantâneo sem interromper o lote.",
+                  stamp: "BACKLOG"
+                },
+                {
+                  version: "v0.4.0",
+                  tag: "AI",
+                  tagClass: "tag-ai",
+                  title: "Perfis de Tradução por Idioma",
+                  body: "Presets configuráveis para japonês, coreano e chinês com prompts direcionados à ortografia, honoríficos e gírias de scanlator.",
+                  stamp: "BACKLOG"
+                },
+                {
+                  version: "v0.4.0",
+                  tag: "AI",
+                  tagClass: "tag-ai",
+                  title: "Segunda Passada de Naturalidade",
+                  body: "Revisão refinada por IA após a tradução literal inicial para deixar os diálogos mais naturais e fluídos em português brasileiro.",
+                  stamp: "BACKLOG"
+                },
+                {
+                  version: "v0.4.0",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Exportação Estruturada em JSON para Typesetters",
+                  body: "Exportação de arquivo JSON com dados de blocos, tipos e coordenadas para integração com scripts automatizados de Photoshop e InDesign.",
+                  stamp: "BACKLOG"
+                }
+              ]
             }
           ]
         },
@@ -1047,54 +1168,68 @@
           id: "future",
           title: "Pesquisa & Visão (v0.5.0 ~ v1.0.0)",
           hanko: "研",
-          cards: [
+          groups: [
             {
               version: "v0.5.0",
-              tag: "FUTURO",
-              tagClass: "tag-future",
-              title: "Typesetter Helper Visual (Fontes de Mangá)",
-              body: "Renderização prévia do texto traduzido diretamente dentro dos balões na imagem usando tipografias clássicas de quadrinhos (Wild Words, Anime Ace).",
-              stamp: "PESQUISA"
-            },
-            {
-              version: "v0.5.0",
-              tag: "FUTURO",
-              tagClass: "tag-future",
-              title: "Dicionário de Onomatopeias (SFX)",
-              body: "Guia interativo integrado de efeitos sonoros japoneses (擬音語・擬態語) com sugestões de adaptação para os quadrinhos ocidentais.",
-              stamp: "PESQUISA"
-            },
-            {
-              version: "v0.5.0",
-              tag: "FUTURO",
-              tagClass: "tag-future",
-              title: "Pacote de Projeto .mangai Zipado",
-              body: "Exportação e importação de projetos completos contendo imagens, cache, banco SQLite e histórico para fácil compartilhamento entre tradutores.",
-              stamp: "PESQUISA"
+              name: "Fase v0.5.0 (Colaboração & Typesetting Assistido)",
+              badge: "Planejado",
+              cards: [
+                {
+                  version: "v0.5.0",
+                  tag: "FUTURO",
+                  tagClass: "tag-future",
+                  title: "Typesetter Helper Visual (Fontes de Mangá)",
+                  body: "Renderização prévia do texto traduzido diretamente dentro dos balões na imagem usando tipografias clássicas de quadrinhos (Wild Words, Anime Ace).",
+                  stamp: "PESQUISA"
+                },
+                {
+                  version: "v0.5.0",
+                  tag: "FUTURO",
+                  tagClass: "tag-future",
+                  title: "Dicionário de Onomatopeias (SFX)",
+                  body: "Guia interativo integrado de efeitos sonoros japoneses (擬音語・擬態語) com sugestões de adaptação para os quadrinhos ocidentais.",
+                  stamp: "PESQUISA"
+                },
+                {
+                  version: "v0.5.0",
+                  tag: "FUTURO",
+                  tagClass: "tag-future",
+                  title: "Pacote de Projeto .mangai Zipado",
+                  body: "Exportação e importação de projetos completos contendo imagens, cache, banco SQLite e histórico para fácil compartilhamento entre tradutores.",
+                  stamp: "PESQUISA"
+                }
+              ]
             },
             {
               version: "v1.0.0",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "Distribuição Multiplataforma (Linux & macOS)",
-              body: "Pipelines de CI/CD estendidas para empacotar versões nativas em Linux (.deb / AppImage) e macOS (.dmg assinado).",
-              stamp: "MARCO v1"
-            },
-            {
-              version: "v1.0.0",
-              tag: "RELEASE",
-              tagClass: "tag-release",
-              title: "Code Signing de Distribuição no Windows",
-              body: "Aquisição e integração de certificado de assinatura de código para eliminar por completo os avisos do Windows SmartScreen.",
-              stamp: "MARCO v1"
-            },
-            {
-              version: "v1.0.0",
-              tag: "AI",
-              tagClass: "tag-ai",
-              title: "Tradução 100% Offline com Modelo Embarcado",
-              body: "Integração direta com runtime local (Ollama ou WebLLM) permitindo traduzir mangás sem qualquer conexão com a internet.",
-              stamp: "MARCO v1"
+              name: "Marco Maior v1.0.0 (Produção Completa & Multiplataforma)",
+              badge: "Visão v1.0.0",
+              cards: [
+                {
+                  version: "v1.0.0",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Distribuição Multiplataforma (Linux & macOS)",
+                  body: "Pipelines de CI/CD estendidas para empacotar versões nativas em Linux (.deb / AppImage) e macOS (.dmg assinado).",
+                  stamp: "MARCO v1"
+                },
+                {
+                  version: "v1.0.0",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Code Signing de Distribuição no Windows",
+                  body: "Aquisição e integração de certificado de assinatura de código para eliminar por completo os avisos do Windows SmartScreen.",
+                  stamp: "MARCO v1"
+                },
+                {
+                  version: "v1.0.0",
+                  tag: "AI",
+                  tagClass: "tag-ai",
+                  title: "Tradução 100% Offline com Modelo Embarcado",
+                  body: "Integração direta com runtime local (Ollama ou WebLLM) permitindo traduzir mangás sem qualquer conexão com a internet.",
+                  stamp: "MARCO v1"
+                }
+              ]
             }
           ]
         }
@@ -1103,6 +1238,7 @@
 
     let state = load();
     let currentFilter = "all";
+    let currentVersionFilter = "all";
     let searchQuery = "";
     let isTimelineView = false;
 
@@ -1127,8 +1263,10 @@
       let doneCount = 0;
       let pendingCount = 0;
       state.columns.forEach(col => {
-        if (col.id === "done") doneCount += col.cards.length;
-        else pendingCount += col.cards.length;
+        col.groups.forEach(g => {
+          if (col.id === "done") doneCount += g.cards.length;
+          else pendingCount += g.cards.length;
+        });
       });
       const el = document.getElementById("stats-deliveries");
       if (el) {
@@ -1136,7 +1274,7 @@
       }
     }
 
-    function matchesFilter(card) {
+    function matchesCard(card) {
       const q = searchQuery.toLowerCase().trim();
       const matchQuery = !q || 
         card.title.toLowerCase().includes(q) || 
@@ -1145,8 +1283,21 @@
         (card.version && card.version.toLowerCase().includes(q));
 
       if (!matchQuery) return false;
-      if (currentFilter === "all") return true;
-      return card.tag.toUpperCase() === currentFilter.toUpperCase();
+
+      // Filtro de Categoria
+      if (currentFilter !== "all" && card.tag.toUpperCase() !== currentFilter.toUpperCase()) {
+        return false;
+      }
+
+      // Filtro de Versão
+      if (currentVersionFilter !== "all") {
+        if (currentVersionFilter === "v0.1.x") {
+          return card.version && card.version.startsWith("v0.1.");
+        }
+        return card.version === currentVersionFilter;
+      }
+
+      return true;
     }
 
     function renderKanban() {
@@ -1154,7 +1305,13 @@
       board.innerHTML = "";
 
       state.columns.forEach((col, colIdx) => {
-        const visibleCards = col.cards.filter(matchesFilter);
+        let totalCardsInCol = 0;
+        let visibleCardsInCol = 0;
+
+        col.groups.forEach(g => {
+          totalCardsInCol += g.cards.length;
+          visibleCardsInCol += g.cards.filter(matchesCard).length;
+        });
 
         const colEl = document.createElement("section");
         colEl.className = "manga-column";
@@ -1164,34 +1321,60 @@
               <span class="col-hanko">${col.hanko || "巻"}</span>
               <div class="column-title">
                 <span contenteditable="true" data-col-idx="${colIdx}">${col.title}</span>
-                <span class="item-counter">${visibleCards.length}/${col.cards.length}</span>
+                <span class="item-counter">${visibleCardsInCol}/${totalCardsInCol}</span>
               </div>
             </div>
             <button class="btn-add-card" data-add-col="${colIdx}" title="Adicionar Card">+</button>
           </header>
-          <div class="cards-deck" data-container-col="${colIdx}"></div>
+          <div class="column-content" data-col-content="${colIdx}"></div>
         `;
 
-        const deck = colEl.querySelector("[data-container-col]");
+        const contentContainer = colEl.querySelector("[data-col-content]");
 
-        col.cards.forEach((card, cardIdx) => {
-          if (!matchesFilter(card)) return;
+        col.groups.forEach((group, grpIdx) => {
+          const matchingCards = group.cards.filter(matchesCard);
 
-          const cardEl = document.createElement("article");
-          cardEl.className = "manga-card";
-          cardEl.innerHTML = `
-            <div class="card-top">
-              <div class="tag-cluster">
-                <span class="card-tag ${card.tagClass || 'tag-ai'}" contenteditable="true" data-card-tag="${colIdx}:${cardIdx}">${card.tag}</span>
-                <span class="card-version" contenteditable="true" data-card-version="${colIdx}:${cardIdx}">${card.version || 'v0.3.1'}</span>
+          // Se nenhuma carta bate com o filtro nesta versão, não desenha o banner vazio
+          if (matchingCards.length === 0 && (searchQuery || currentFilter !== "all" || currentVersionFilter !== "all")) {
+            return;
+          }
+
+          const groupEl = document.createElement("div");
+          groupEl.className = "release-section";
+          groupEl.innerHTML = `
+            <div class="release-header">
+              <div class="release-title-badge">
+                <span class="version-tag-pill">${group.version}</span>
+                <span class="release-name" contenteditable="true" data-grp-name="${colIdx}:${grpIdx}">${group.name}</span>
               </div>
-              <button class="card-btn-del" data-del-card="${colIdx}:${cardIdx}" title="Excluir Item">&times;</button>
+              <span class="release-meta-badge" contenteditable="true" data-grp-badge="${colIdx}:${grpIdx}">${group.badge}</span>
             </div>
-            <h3 class="card-title" contenteditable="true" data-card-title="${colIdx}:${cardIdx}">${card.title}</h3>
-            <div class="card-body" contenteditable="true" data-card-body="${colIdx}:${cardIdx}">${card.body}</div>
-            ${card.stamp ? `<div class="stamp-overlay">${card.stamp}</div>` : ''}
+            <div class="release-cards-deck" data-deck="${colIdx}:${grpIdx}"></div>
           `;
-          deck.appendChild(cardEl);
+
+          const deck = groupEl.querySelector("[data-deck]");
+
+          group.cards.forEach((card, cardIdx) => {
+            if (!matchesCard(card)) return;
+
+            const cardEl = document.createElement("article");
+            cardEl.className = "manga-card";
+            cardEl.innerHTML = `
+              <div class="card-top">
+                <div class="tag-cluster">
+                  <span class="card-tag ${card.tagClass || 'tag-ai'}" contenteditable="true" data-card-tag="${colIdx}:${grpIdx}:${cardIdx}">${card.tag}</span>
+                  <span style="font-family: var(--font-pixel); font-size: 0.72rem; font-weight: 700; color: var(--ink-faint);">${card.version}</span>
+                </div>
+                <button class="card-btn-del" data-del-card="${colIdx}:${grpIdx}:${cardIdx}" title="Excluir Item">&times;</button>
+              </div>
+              <h3 class="card-title" contenteditable="true" data-card-title="${colIdx}:${grpIdx}:${cardIdx}">${card.title}</h3>
+              <div class="card-body" contenteditable="true" data-card-body="${colIdx}:${grpIdx}:${cardIdx}">${card.body}</div>
+              ${card.stamp ? `<div class="stamp-overlay">${card.stamp}</div>` : ''}
+            `;
+            deck.appendChild(cardEl);
+          });
+
+          contentContainer.appendChild(groupEl);
         });
 
         board.appendChild(colEl);
@@ -1202,7 +1385,6 @@
       const track = document.getElementById("timeline-track");
       track.innerHTML = "";
 
-      // Agrupamento por versão
       const versions = [
         { ver: "v0.1.0", title: "Fundação MVP & Prova de Conceito", status: "Concluído", class: "done", desc: "Estrutura desktop base com Tauri v2, React 19, importação de imagens e primeira IA de extração de balões." },
         { ver: "v0.1.2 ~ v0.1.3", title: "Estabilização, Zoom/Pan & Segurança", status: "Concluído", class: "done", desc: "Navegação por toque/zoom no canvas, hardening de dependências, setup do auto-updater e documentação MIT." },
@@ -1246,7 +1428,7 @@
       updateStats();
     }
 
-    // Eventos de Input e ContentEditable
+    // Edição inline via contenteditable
     document.addEventListener("input", (e) => {
       const t = e.target;
       if (!t.isContentEditable) return;
@@ -1255,29 +1437,40 @@
         state.subtitle = t.textContent.trim();
       } else if (t.dataset.colIdx !== undefined) {
         state.columns[t.dataset.colIdx].title = t.textContent.trim();
+      } else if (t.dataset.grpName) {
+        const [c, g] = t.dataset.grpName.split(":").map(Number);
+        state.columns[c].groups[g].name = t.textContent.trim();
+      } else if (t.dataset.grpBadge) {
+        const [c, g] = t.dataset.grpBadge.split(":").map(Number);
+        state.columns[c].groups[g].badge = t.textContent.trim();
       } else if (t.dataset.cardTag) {
-        const [c, i] = t.dataset.cardTag.split(":").map(Number);
-        state.columns[c].cards[i].tag = t.textContent.trim();
-      } else if (t.dataset.cardVersion) {
-        const [c, i] = t.dataset.cardVersion.split(":").map(Number);
-        state.columns[c].cards[i].version = t.textContent.trim();
+        const [c, g, i] = t.dataset.cardTag.split(":").map(Number);
+        state.columns[c].groups[g].cards[i].tag = t.textContent.trim();
       } else if (t.dataset.cardTitle) {
-        const [c, i] = t.dataset.cardTitle.split(":").map(Number);
-        state.columns[c].cards[i].title = t.textContent.trim();
+        const [c, g, i] = t.dataset.cardTitle.split(":").map(Number);
+        state.columns[c].groups[g].cards[i].title = t.textContent.trim();
       } else if (t.dataset.cardBody) {
-        const [c, i] = t.dataset.cardBody.split(":").map(Number);
-        state.columns[c].cards[i].body = t.textContent.trim();
+        const [c, g, i] = t.dataset.cardBody.split(":").map(Number);
+        state.columns[c].groups[g].cards[i].body = t.textContent.trim();
       }
       save("Alteração registrada");
     });
 
-    // Eventos de Clique
+    // Cliques em botões e filtros
     document.addEventListener("click", (e) => {
       const addBtn = e.target.closest("[data-add-col]");
       if (addBtn) {
         const colIdx = Number(addBtn.dataset.addCol);
-        state.columns[colIdx].cards.unshift({
-          version: "v0.3.2",
+        if (!state.columns[colIdx].groups.length) {
+          state.columns[colIdx].groups.push({
+            version: "v0.3.2",
+            name: "Novo Grupo de Itens",
+            badge: "Ativo",
+            cards: []
+          });
+        }
+        state.columns[colIdx].groups[0].cards.unshift({
+          version: state.columns[colIdx].groups[0].version || "v0.3.2",
           tag: "NOVO",
           tagClass: "tag-ai",
           title: "Novo Item de Roadmap",
@@ -1291,18 +1484,29 @@
 
       const delBtn = e.target.closest("[data-del-card]");
       if (delBtn) {
-        const [c, i] = delBtn.dataset.delCard.split(":").map(Number);
-        state.columns[c].cards.splice(i, 1);
+        const [c, g, i] = delBtn.dataset.delCard.split(":").map(Number);
+        state.columns[c].groups[g].cards.splice(i, 1);
         render();
         save("Card removido");
         return;
       }
 
-      const filterChip = e.target.closest(".filter-chip");
-      if (filterChip) {
-        document.querySelectorAll(".filter-chip").forEach(el => el.classList.remove("active"));
-        filterChip.classList.add("active");
-        currentFilter = filterChip.dataset.filter;
+      // Filtro de Categoria
+      const catChip = e.target.closest("#category-filter-container .filter-chip");
+      if (catChip) {
+        document.querySelectorAll("#category-filter-container .filter-chip").forEach(el => el.classList.remove("active"));
+        catChip.classList.add("active");
+        currentFilter = catChip.dataset.filter;
+        render();
+        return;
+      }
+
+      // Filtro de Versão
+      const verChip = e.target.closest("#version-filter-container .filter-chip");
+      if (verChip) {
+        document.querySelectorAll("#version-filter-container .filter-chip").forEach(el => el.classList.remove("active"));
+        verChip.classList.add("active");
+        currentVersionFilter = verChip.dataset.verFilter;
         render();
         return;
       }
@@ -1322,7 +1526,7 @@
       render();
     });
 
-    // Atalho Salvar Ctrl+S
+    // Salvar manual
     document.getElementById("save-btn").addEventListener("click", () => save("Salvo manualmente"));
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
@@ -1361,14 +1565,13 @@
 
     // Restaurar Padrão
     document.getElementById("reset-btn").addEventListener("click", () => {
-      if (confirm("Restaurar o roadmap para a estrutura oficial Nanquim & Pena G (v0.3.1)?")) {
+      if (confirm("Restaurar o roadmap para a estrutura oficial Nanquim & Pena G (v0.3.1) com separação por versão?")) {
         state = structuredClone(defaultState);
         render();
         save("Roadmap restaurado");
       }
     });
 
-    // Inicialização
     render();
   </script>
 </body>
