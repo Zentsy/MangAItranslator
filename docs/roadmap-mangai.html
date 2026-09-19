@@ -598,6 +598,57 @@
       user-select: none;
     }
 
+    .manga-card.card-author-user {
+      border-left: 5px solid var(--verm);
+    }
+
+    .manga-card.card-author-agent {
+      border-left: 5px solid var(--ink);
+    }
+
+    .author-badge {
+      font-family: var(--font-pixel);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      border: 1.5px solid;
+      user-select: none;
+      line-height: 1.2;
+    }
+
+    .author-badge.author-user {
+      background: var(--verm-bg);
+      color: var(--verm-dark);
+      border-color: var(--verm);
+    }
+
+    .author-badge.author-user:hover {
+      background: var(--verm);
+      color: #fff;
+      border-color: var(--ink);
+      transform: translateY(-1px);
+    }
+
+    .author-badge.author-agent {
+      background: var(--parch);
+      color: var(--ink);
+      border-color: var(--ink-soft);
+    }
+
+    .author-badge.author-agent:hover {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+      transform: translateY(-1px);
+    }
+
     .manga-card:active {
       cursor: grabbing;
     }
@@ -912,6 +963,12 @@
         <div class="stat-value" id="stats-deliveries">13 ENTREGUES &bull; 15 PLANEJADAS</div>
         <div class="stat-desc">Batch, Glossário, Memória, Keyring e Landing Page no ar</div>
       </div>
+
+      <div class="stat-box">
+        <div class="stat-label">ORIGEM DAS DEFINIÇÕES</div>
+        <div class="stat-value" id="stats-authors">0 USUÁRIO &bull; 28 AGENTE</div>
+        <div class="stat-desc">Diferenciação clara: itens do Usuário vs Agente IA</div>
+      </div>
     </section>
 
     <!-- Barra de Ferramentas, Busca e Filtros Duplos -->
@@ -950,6 +1007,16 @@
           <button class="filter-chip version-chip" data-ver-filter="v1.0.0">v1.0.0 (Marco Maior)</button>
         </div>
       </div>
+
+      <!-- Filtro Dedicado por Autor (Usuário vs Agente) -->
+      <div class="filter-row">
+        <span class="filter-row-label">✍️ FILTRAR POR AUTOR:</span>
+        <div class="filter-chips" id="author-filter-container">
+          <button class="filter-chip author-chip active" data-auth-filter="all">TODOS OS AUTORES</button>
+          <button class="filter-chip author-chip" data-auth-filter="user">👤 USUÁRIO</button>
+          <button class="filter-chip author-chip" data-auth-filter="agent">🤖 AGENTE (IA)</button>
+        </div>
+      </div>
     </div>
 
     <!-- Visão Kanban Principal -->
@@ -979,6 +1046,7 @@
               cards: [
                 {
                   version: "v0.3.1",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Correção de Exportação Word (.docx)",
@@ -994,6 +1062,7 @@
               cards: [
                 {
                   version: "v0.3.0",
+                  author: "agent",
                   tag: "BATCH",
                   tagClass: "tag-batch",
                   title: "Tradução em Lote Sequencial (Batch)",
@@ -1002,6 +1071,7 @@
                 },
                 {
                   version: "v0.3.0",
+                  author: "agent",
                   tag: "GLOSSARY",
                   tagClass: "tag-vault",
                   title: "Glossário por Projeto com SQLite",
@@ -1010,6 +1080,7 @@
                 },
                 {
                   version: "v0.3.0",
+                  author: "agent",
                   tag: "AI",
                   tagClass: "tag-ai",
                   title: "Memória de Curto Prazo entre Páginas",
@@ -1018,6 +1089,7 @@
                 },
                 {
                   version: "v0.3.0",
+                  author: "agent",
                   tag: "UI",
                   tagClass: "tag-ui",
                   title: "Atalhos de Teclado Power-User",
@@ -1026,6 +1098,7 @@
                 },
                 {
                   version: "v0.3.0",
+                  author: "agent",
                   tag: "VAULT",
                   tagClass: "tag-vault",
                   title: "Cofre Seguro no Keyring do SO",
@@ -1034,6 +1107,7 @@
                 },
                 {
                   version: "v0.3.0",
+                  author: "agent",
                   tag: "UI",
                   tagClass: "tag-ui",
                   title: "Identidade Nanquim & Pena G",
@@ -1042,6 +1116,7 @@
                 },
                 {
                   version: "v0.3.0",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Landing Page Oficial no GitHub Pages",
@@ -1057,6 +1132,7 @@
               cards: [
                 {
                   version: "v0.2.0",
+                  author: "agent",
                   tag: "AI",
                   tagClass: "tag-ai",
                   title: "Multi-Provedores & Modo Free",
@@ -1065,6 +1141,7 @@
                 },
                 {
                   version: "v0.2.0",
+                  author: "agent",
                   tag: "UI",
                   tagClass: "tag-ui",
                   title: "Tipagem Semântica de Balões",
@@ -1080,6 +1157,7 @@
               cards: [
                 {
                   version: "v0.1.3",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Hardening de Segurança & Auto-Updater",
@@ -1088,6 +1166,7 @@
                 },
                 {
                   version: "v0.1.2",
+                  author: "agent",
                   tag: "UI",
                   tagClass: "tag-ui",
                   title: "Zoom/Pan no Canvas & Apoio Ko-fi",
@@ -1096,6 +1175,7 @@
                 },
                 {
                   version: "v0.1.0",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "MVP Fundação Tauri v2 + React 19",
@@ -1118,6 +1198,7 @@
               cards: [
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "UI",
                   tagClass: "tag-ui",
                   title: "Design System: Nova UI MangAI Desktop",
@@ -1126,6 +1207,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "CRITICAL",
                   tagClass: "tag-critical",
                   title: "Melhoria do UpdateModal & Changelog Real",
@@ -1134,6 +1216,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Injeção Automática de Release Notes na CI",
@@ -1149,6 +1232,7 @@
               cards: [
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "OCR",
                   tagClass: "tag-ocr",
                   title: "Detecção Local de Coordenadas de Balões (WASM)",
@@ -1157,6 +1241,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "AI",
                   tagClass: "tag-ai",
                   title: "Auto-Free OpenRouter Aprimorado",
@@ -1165,6 +1250,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "AI",
                   tagClass: "tag-ai",
                   title: "Perfis de Tradução por Idioma",
@@ -1173,6 +1259,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "AI",
                   tagClass: "tag-ai",
                   title: "Segunda Passada de Naturalidade",
@@ -1181,6 +1268,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Exportação Estruturada em JSON para Typesetters",
@@ -1203,6 +1291,7 @@
               cards: [
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "AI",
                   tagClass: "tag-ai",
                   title: "Hover Interativo Bloco ↔ Balão na Imagem (Pesquisa)",
@@ -1211,6 +1300,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "UI",
                   tagClass: "tag-ui",
                   title: "Painel de Personalização de Fontes no Editor",
@@ -1219,6 +1309,7 @@
                 },
                 {
                   version: "v0.4.0",
+                  author: "agent",
                   tag: "GLOSSARY",
                   tagClass: "tag-vault",
                   title: "Importação e Exportação de Glossários em CSV/JSON",
@@ -1241,6 +1332,7 @@
               cards: [
                 {
                   version: "v0.5.0",
+                  author: "agent",
                   tag: "FUTURO",
                   tagClass: "tag-future",
                   title: "Typesetter Helper Visual (Fontes de Mangá)",
@@ -1249,6 +1341,7 @@
                 },
                 {
                   version: "v0.5.0",
+                  author: "agent",
                   tag: "FUTURO",
                   tagClass: "tag-future",
                   title: "Dicionário de Onomatopeias (SFX)",
@@ -1257,6 +1350,7 @@
                 },
                 {
                   version: "v0.5.0",
+                  author: "agent",
                   tag: "FUTURO",
                   tagClass: "tag-future",
                   title: "Pacote de Projeto .mangai Zipado",
@@ -1272,6 +1366,7 @@
               cards: [
                 {
                   version: "v1.0.0",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Distribuição Multiplataforma (Linux & macOS)",
@@ -1280,6 +1375,7 @@
                 },
                 {
                   version: "v1.0.0",
+                  author: "agent",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Code Signing de Distribuição no Windows",
@@ -1288,6 +1384,7 @@
                 },
                 {
                   version: "v1.0.0",
+                  author: "agent",
                   tag: "AI",
                   tagClass: "tag-ai",
                   title: "Tradução 100% Offline com Modelo Embarcado",
@@ -1304,13 +1401,24 @@
     let state = load();
     let currentFilter = "all";
     let currentVersionFilter = "all";
+    let currentAuthorFilter = "all";
     let searchQuery = "";
     let isTimelineView = false;
 
     function load() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : structuredClone(defaultState);
+        if (!raw) return structuredClone(defaultState);
+        const parsed = JSON.parse(raw);
+        // Retrocompatibilidade: garante author: "agent" caso não exista
+        parsed.columns?.forEach(col => {
+          col.groups?.forEach(g => {
+            g.cards?.forEach(c => {
+              if (!c.author) c.author = "agent";
+            });
+          });
+        });
+        return parsed;
       } catch (e) {
         return structuredClone(defaultState);
       }
@@ -1327,15 +1435,25 @@
     function updateStats() {
       let doneCount = 0;
       let pendingCount = 0;
+      let userCount = 0;
+      let agentCount = 0;
       state.columns.forEach(col => {
         col.groups.forEach(g => {
-          if (col.id === "done") doneCount += g.cards.length;
-          else pendingCount += g.cards.length;
+          g.cards.forEach(c => {
+            if (col.id === "done") doneCount++;
+            else pendingCount++;
+            if (c.author === "user") userCount++;
+            else agentCount++;
+          });
         });
       });
       const el = document.getElementById("stats-deliveries");
       if (el) {
         el.textContent = `${doneCount} ENTREGUES • ${pendingCount} PLANEJADAS`;
+      }
+      const authEl = document.getElementById("stats-authors");
+      if (authEl) {
+        authEl.textContent = `${userCount} USUÁRIO • ${agentCount} AGENTE`;
       }
     }
 
@@ -1345,7 +1463,8 @@
         card.title.toLowerCase().includes(q) || 
         card.body.toLowerCase().includes(q) || 
         card.tag.toLowerCase().includes(q) || 
-        (card.version && card.version.toLowerCase().includes(q));
+        (card.version && card.version.toLowerCase().includes(q)) ||
+        (card.author && card.author.toLowerCase().includes(q));
 
       if (!matchQuery) return false;
 
@@ -1360,6 +1479,14 @@
           return card.version && card.version.startsWith("v0.1.");
         }
         return card.version === currentVersionFilter;
+      }
+
+      // Filtro de Autor
+      if (currentAuthorFilter !== "all") {
+        const cardAuthor = card.author || "agent";
+        if (cardAuthor !== currentAuthorFilter) {
+          return false;
+        }
       }
 
       return true;
@@ -1422,7 +1549,7 @@
         col.groups.forEach((group, grpIdx) => {
           const matchingCards = group.cards.filter(matchesCard);
 
-          if (matchingCards.length === 0 && (searchQuery || currentFilter !== "all" || currentVersionFilter !== "all")) {
+          if (matchingCards.length === 0 && (searchQuery || currentFilter !== "all" || currentVersionFilter !== "all" || currentAuthorFilter !== "all")) {
             return;
           }
 
@@ -1473,9 +1600,12 @@
           group.cards.forEach((card, cardIdx) => {
             if (!matchesCard(card)) return;
 
+            const author = card.author || "agent";
+            const isUser = author === "user";
             const cardEl = document.createElement("article");
-            cardEl.className = "manga-card";
+            cardEl.className = `manga-card card-author-${author}`;
             cardEl.setAttribute("draggable", "true");
+            cardEl.dataset.author = author;
 
             cardEl.addEventListener("dragstart", (e) => {
               cardEl.classList.add("dragging");
@@ -1491,6 +1621,7 @@
                 <div class="tag-cluster">
                   <span class="card-tag ${card.tagClass || 'tag-ai'}" contenteditable="true" data-card-tag="${colIdx}:${grpIdx}:${cardIdx}">${card.tag}</span>
                   <span style="font-family: var(--font-pixel); font-size: 0.72rem; font-weight: 700; color: var(--ink-faint);">${card.version}</span>
+                  <button class="author-badge author-${author}" data-toggle-author="${colIdx}:${grpIdx}:${cardIdx}" title="Autor: ${isUser ? 'Usuário (Humano)' : 'Agente IA'}. Clique para alternar">${isUser ? '👤 USUÁRIO' : '🤖 AGENTE'}</button>
                 </div>
                 <div class="card-actions-top">
                   ${colIdx > 0 ? `<button class="card-btn-nav" data-nav-left="${colIdx}:${grpIdx}:${cardIdx}" title="Mover para a esquerda (coluna anterior)">◀</button>` : ''}
@@ -1577,17 +1708,38 @@
       } else if (t.dataset.cardTag) {
         const [c, g, i] = t.dataset.cardTag.split(":").map(Number);
         state.columns[c].groups[g].cards[i].tag = t.textContent.trim();
+        state.columns[c].groups[g].cards[i].author = "user";
+        markCardAsUser(t);
       } else if (t.dataset.cardTitle) {
         const [c, g, i] = t.dataset.cardTitle.split(":").map(Number);
         state.columns[c].groups[g].cards[i].title = t.textContent.trim();
+        state.columns[c].groups[g].cards[i].author = "user";
+        markCardAsUser(t);
       } else if (t.dataset.cardBody) {
         const [c, g, i] = t.dataset.cardBody.split(":").map(Number);
         state.columns[c].groups[g].cards[i].body = t.textContent.trim();
+        state.columns[c].groups[g].cards[i].author = "user";
+        markCardAsUser(t);
       }
       save("Alteração registrada");
     });
 
-    // Cliques em botões, navegação rápida e filtros
+    // Atualiza visualmente o card para autoria do usuário em tempo real
+    function markCardAsUser(elem) {
+      const cardEl = elem.closest(".manga-card");
+      if (!cardEl) return;
+      cardEl.dataset.author = "user";
+      cardEl.classList.remove("card-author-agent");
+      cardEl.classList.add("card-author-user");
+      const badge = cardEl.querySelector(".author-badge");
+      if (badge) {
+        badge.className = "author-badge author-user";
+        badge.textContent = "👤 USUÁRIO";
+        badge.title = "Autor: Usuário (Humano). Clique para alternar";
+      }
+    }
+
+    // Cliques em botões, navegação rápida, filtros e alternância de autor
     document.addEventListener("click", (e) => {
       const addBtn = e.target.closest("[data-add-col]");
       if (addBtn) {
@@ -1602,14 +1754,29 @@
         }
         state.columns[colIdx].groups[0].cards.unshift({
           version: state.columns[colIdx].groups[0].version || "v0.4.0",
+          author: "user",
           tag: "NOVO",
           tagClass: "tag-ai",
           title: "Novo Item de Roadmap",
           body: "Clique para descrever este item, objetivo ou requisito técnico.",
-          stamp: "PROPOSTA"
+          stamp: "USUÁRIO"
         });
         render();
-        save("Card adicionado");
+        save("Card adicionado pelo usuário");
+        return;
+      }
+
+      // Alternar Autor (Usuário <-> Agente) com 1 clique
+      const toggleAuthBtn = e.target.closest("[data-toggle-author]");
+      if (toggleAuthBtn) {
+        const [c, g, i] = toggleAuthBtn.dataset.toggleAuthor.split(":").map(Number);
+        const card = state.columns[c].groups[g].cards[i];
+        card.author = (card.author === "user") ? "agent" : "user";
+        if (card.author === "user" && (!card.stamp || card.stamp === "PROPOSTA")) {
+          card.stamp = "USUÁRIO";
+        }
+        render();
+        save(`Autor alterado para ${card.author === 'user' ? 'Usuário' : 'Agente'}`);
         return;
       }
 
@@ -1654,6 +1821,16 @@
         document.querySelectorAll("#version-filter-container .filter-chip").forEach(el => el.classList.remove("active"));
         verChip.classList.add("active");
         currentVersionFilter = verChip.dataset.verFilter;
+        render();
+        return;
+      }
+
+      // Filtro de Autor
+      const authChip = e.target.closest("#author-filter-container .filter-chip");
+      if (authChip) {
+        document.querySelectorAll("#author-filter-container .filter-chip").forEach(el => el.classList.remove("active"));
+        authChip.classList.add("active");
+        currentAuthorFilter = authChip.dataset.authFilter;
         render();
         return;
       }
