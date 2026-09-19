@@ -67,7 +67,7 @@
     }
 
     .container {
-      max-width: 1600px;
+      max-width: 1640px;
       margin: 0 auto;
       position: relative;
       z-index: 1;
@@ -419,7 +419,7 @@
     /* Visão Kanban Principal */
     .board-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(370px, 1fr));
       gap: 24px;
       align-items: start;
     }
@@ -517,10 +517,11 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      background: rgba(233, 226, 207, 0.4);
+      background: rgba(233, 226, 207, 0.45);
       border: 1.5px solid var(--ink);
       border-radius: 6px;
       padding: 12px 10px 10px;
+      transition: background 0.2s ease, border-color 0.2s ease;
     }
 
     .release-header {
@@ -573,6 +574,16 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      min-height: 48px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background 0.15s ease, outline 0.15s ease;
+    }
+
+    /* Estilo de Drop Zone quando arrastando card sobre a área */
+    .release-cards-deck.drag-over {
+      background: rgba(232, 56, 43, 0.12);
+      outline: 2px dashed var(--verm);
     }
 
     /* Cartão de Item de Roadmap */
@@ -581,8 +592,21 @@
       border: var(--border-ink-thin);
       box-shadow: var(--shadow-brutal-sm);
       padding: 14px;
-      transition: all 0.18s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
       position: relative;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .manga-card:active {
+      cursor: grabbing;
+    }
+
+    .manga-card.dragging {
+      opacity: 0.4;
+      transform: scale(0.97);
+      border-style: dashed;
+      box-shadow: none;
     }
 
     .manga-card:hover {
@@ -627,6 +651,30 @@
     .card-tag.tag-ocr { background: #ffedd5; color: #c2410c; }
     .card-tag.tag-future { background: #ede9fe; color: #5b21b6; }
 
+    .card-actions-top {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-btn-nav {
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 2px;
+      line-height: 1.2;
+      transition: all 0.15s ease;
+    }
+
+    .card-btn-nav:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
     .card-btn-del {
       background: none;
       border: none;
@@ -634,7 +682,7 @@
       cursor: pointer;
       font-size: 1.15rem;
       line-height: 1;
-      padding: 2px 5px;
+      padding: 1px 5px;
       border-radius: 2px;
       transition: all 0.15s ease;
     }
@@ -651,6 +699,7 @@
       color: var(--ink);
       line-height: 1.25;
       margin-bottom: 6px;
+      cursor: text;
     }
 
     .card-body {
@@ -658,6 +707,7 @@
       color: var(--ink-soft);
       line-height: 1.45;
       font-weight: 500;
+      cursor: text;
     }
 
     .stamp-overlay {
@@ -829,7 +879,7 @@
 
       <div class="subtitle-bar">
         <p class="subtitle-text" contenteditable="true" data-edit="subtitle">
-          Painel dinâmico do projeto: histórico de versões entregues, tarefas ativas (TODOs) e planejamento dos próximos ciclos sob a identidade autêntica Nanquim & Pena G.
+          Painel dinâmico do projeto: histórico de versões entregues, tarefas ativas (TODOs) e planejamento dos próximos ciclos sob a identidade autêntica Nanquim & Pena G. Arraste ou use as setas para mover blocos.
         </p>
         <div style="font-family: var(--font-pixel); font-size: 0.8rem; font-weight: 700; color: var(--verm);">
           SEMVER: 0.x.0 = FASE / x.0.0 = MARCO
@@ -846,9 +896,9 @@
       </div>
 
       <div class="stat-box">
-        <div class="stat-label">DUAL REMOTE DEPLOY</div>
-        <div class="stat-value">ORIGIN &bull; PUBLIC</div>
-        <div class="stat-desc">origin (DEV privado) &bull; public (Releases e GitHub Pages)</div>
+        <div class="stat-label">CICLO ATIVO EM DESENVOLVIMENTO</div>
+        <div class="stat-value">v0.4.0 (2 FASES)</div>
+        <div class="stat-desc">Fase 4.1 (Design & UI/UX) &bull; Fase 4.2 (Backend, IA & WASM)</div>
       </div>
 
       <div class="stat-box">
@@ -891,12 +941,11 @@
         <span class="filter-row-label">🔖 FILTRAR POR VERSÃO:</span>
         <div class="filter-chips" id="version-filter-container">
           <button class="filter-chip version-chip active" data-ver-filter="all">TODAS AS VERSÕES</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.4.0">v0.4.0 (Ciclo Ativo)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.3.1">v0.3.1 (Patch Atual)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.3.0">v0.3.0 (Fase Nanquim)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.2.0">v0.2.0 (Multi-Modelos)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.1.x">v0.1.x (Fundação MVP)</button>
-          <button class="filter-chip version-chip" data-ver-filter="v0.3.2">v0.3.2 (Imediato)</button>
-          <button class="filter-chip version-chip" data-ver-filter="v0.4.0">v0.4.0 (Próxima Fase)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.5.0">v0.5.0 (Colaboração)</button>
           <button class="filter-chip version-chip" data-ver-filter="v1.0.0">v1.0.0 (Marco Maior)</button>
         </div>
@@ -913,10 +962,10 @@
   </div>
 
   <script>
-    const STORAGE_KEY = "mangai-interactive-roadmap-nanquim-v3-grouped";
+    const STORAGE_KEY = "mangai-interactive-roadmap-nanquim-v4-phases";
 
     const defaultState = {
-      subtitle: "Painel dinâmico do projeto: histórico de versões entregues, tarefas ativas (TODOs) e planejamento dos próximos ciclos sob a identidade autêntica Nanquim & Pena G.",
+      subtitle: "Painel dinâmico do projeto: histórico de versões entregues, tarefas ativas (TODOs) e planejamento dos próximos ciclos sob a identidade autêntica Nanquim & Pena G. Arraste ou use as setas para mover blocos.",
       columns: [
         {
           id: "done",
@@ -1059,16 +1108,24 @@
         },
         {
           id: "todos",
-          title: "TODOs Imediatos (Em Andamento)",
+          title: "Ciclo Ativo v0.4.0 (Em Andamento)",
           hanko: "動",
           groups: [
             {
-              version: "v0.3.2",
-              name: "Ciclo Imediato v0.3.2 (Patches & Ajustes)",
-              badge: "Prioridade Alta",
+              version: "v0.4.0",
+              name: "Fase 4.1: Design System & UX / UI (Foco Atual)",
+              badge: "Fase Ativa",
               cards: [
                 {
-                  version: "v0.3.2",
+                  version: "v0.4.0",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Design System: Nova UI MangAI Desktop",
+                  body: "Transição visual completa da interface desktop adotando a identidade editorial densa (washi, nanquim, vermelhão e halftones) da landing page dentro do app Tauri.",
+                  stamp: "EM DESIGN"
+                },
+                {
+                  version: "v0.4.0",
                   tag: "CRITICAL",
                   tagClass: "tag-critical",
                   title: "Melhoria do UpdateModal & Changelog Real",
@@ -1076,57 +1133,27 @@
                   stamp: "CRÍTICO"
                 },
                 {
-                  version: "v0.3.2",
+                  version: "v0.4.0",
                   tag: "RELEASE",
                   tagClass: "tag-release",
                   title: "Injeção Automática de Release Notes na CI",
                   body: "Configurar o GitHub Actions (release.yml) para extrair os tópicos de novidades reais da versão do changelog ou tag em vez do texto padrão estático.",
                   stamp: "PENDENTE"
-                },
-                {
-                  version: "v0.3.2",
-                  tag: "UI",
-                  tagClass: "tag-ui",
-                  title: "Hover Interativo Bloco ↔ Balão na Imagem",
-                  body: "Destacar visualmente o balão na página ao passar o cursor sobre o bloco correspondente no painel de tradução lateral.",
-                  stamp: "PLANEJADO"
                 }
               ]
             },
             {
               version: "v0.4.0",
-              name: "Preparação de Fase v0.4.0 (Design & Arquitetura)",
-              badge: "Fase 4",
-              cards: [
-                {
-                  version: "v0.4.0",
-                  tag: "UI",
-                  tagClass: "tag-ui",
-                  title: "Design System: Nova UI MangAI Desktop",
-                  body: "Transição visual completa da interface desktop adotando a identidade editorial densa (washi, nanquim, vermelhão e halftones) da landing page.",
-                  stamp: "EM DESIGN"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          id: "backlog",
-          title: "Backlog Próximo Ciclo (v0.4.0)",
-          hanko: "計",
-          groups: [
-            {
-              version: "v0.4.0",
-              name: "Fase v0.4.0 (Avanço de IA, OCR & Tipografia)",
-              badge: "Próximo Ciclo",
+              name: "Fase 4.2: Backend, IA & WebAssembly (Próxima Etapa)",
+              badge: "Fase 4.2",
               cards: [
                 {
                   version: "v0.4.0",
                   tag: "OCR",
                   tagClass: "tag-ocr",
-                  title: "Detecção Local de Coordenadas de Balões",
-                  body: "Pré-detecção de bounding boxes de texto diretamente no cliente via WebAssembly para seleção e ordenação visual imediata.",
-                  stamp: "BACKLOG"
+                  title: "Detecção Local de Coordenadas de Balões (WASM)",
+                  body: "Pré-detecção de bounding boxes de texto diretamente no cliente via WebAssembly para seleção e ordenação visual imediata sem onerar a IA.",
+                  stamp: "PLANEJADO"
                 },
                 {
                   version: "v0.4.0",
@@ -1134,7 +1161,7 @@
                   tagClass: "tag-ai",
                   title: "Auto-Free OpenRouter Aprimorado",
                   body: "Rotação inteligente de modelos gratuitos com verificação de quota em tempo real e fallback instantâneo sem interromper o lote.",
-                  stamp: "BACKLOG"
+                  stamp: "PLANEJADO"
                 },
                 {
                   version: "v0.4.0",
@@ -1142,7 +1169,7 @@
                   tagClass: "tag-ai",
                   title: "Perfis de Tradução por Idioma",
                   body: "Presets configuráveis para japonês, coreano e chinês com prompts direcionados à ortografia, honoríficos e gírias de scanlator.",
-                  stamp: "BACKLOG"
+                  stamp: "PLANEJADO"
                 },
                 {
                   version: "v0.4.0",
@@ -1150,7 +1177,7 @@
                   tagClass: "tag-ai",
                   title: "Segunda Passada de Naturalidade",
                   body: "Revisão refinada por IA após a tradução literal inicial para deixar os diálogos mais naturais e fluídos em português brasileiro.",
-                  stamp: "BACKLOG"
+                  stamp: "PLANEJADO"
                 },
                 {
                   version: "v0.4.0",
@@ -1158,6 +1185,44 @@
                   tagClass: "tag-release",
                   title: "Exportação Estruturada em JSON para Typesetters",
                   body: "Exportação de arquivo JSON com dados de blocos, tipos e coordenadas para integração com scripts automatizados de Photoshop e InDesign.",
+                  stamp: "PLANEJADO"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: "backlog",
+          title: "Backlog v0.4.0 (Pesquisa & Ajustes)",
+          hanko: "計",
+          groups: [
+            {
+              version: "v0.4.0",
+              name: "Backlog Experimental v0.4.0",
+              badge: "Backlog",
+              cards: [
+                {
+                  version: "v0.4.0",
+                  tag: "AI",
+                  tagClass: "tag-ai",
+                  title: "Hover Interativo Bloco ↔ Balão na Imagem (Pesquisa)",
+                  body: "Destacar visualmente o balão na página ao passar o cursor sobre o bloco correspondente. Colocado em backlog devido à dificuldade das IAs em mapear coordenadas com precisão milimétrica.",
+                  stamp: "PESQUISA IA"
+                },
+                {
+                  version: "v0.4.0",
+                  tag: "UI",
+                  tagClass: "tag-ui",
+                  title: "Painel de Personalização de Fontes no Editor",
+                  body: "Opções para ajustar o tamanho da fonte, contraste e entrelinha dos blocos de tradução na mesa de edição.",
+                  stamp: "BACKLOG"
+                },
+                {
+                  version: "v0.4.0",
+                  tag: "GLOSSARY",
+                  tagClass: "tag-vault",
+                  title: "Importação e Exportação de Glossários em CSV/JSON",
+                  body: "Permitir exportar termos do projeto atual para reutilizar em outros capítulos ou compartilhar com outros tradutores.",
                   stamp: "BACKLOG"
                 }
               ]
@@ -1300,6 +1365,29 @@
       return true;
     }
 
+    function moveCardToColumn(sCol, sGrp, sCard, direction) {
+      const targetCol = sCol + direction;
+      if (targetCol < 0 || targetCol >= state.columns.length) return;
+
+      const targetColObj = state.columns[targetCol];
+      if (!targetColObj.groups.length) {
+        targetColObj.groups.push({
+          version: "v0.4.0",
+          name: "Novo Grupo",
+          badge: "Ativo",
+          cards: []
+        });
+      }
+
+      const targetGrp = 0;
+      const [card] = state.columns[sCol].groups[sGrp].cards.splice(sCard, 1);
+      card.version = targetColObj.groups[targetGrp].version || card.version;
+      targetColObj.groups[targetGrp].cards.unshift(card);
+
+      render();
+      save(`Card movido para ${targetColObj.title}`);
+    }
+
     function renderKanban() {
       const board = document.getElementById("board-columns");
       board.innerHTML = "";
@@ -1334,7 +1422,6 @@
         col.groups.forEach((group, grpIdx) => {
           const matchingCards = group.cards.filter(matchesCard);
 
-          // Se nenhuma carta bate com o filtro nesta versão, não desenha o banner vazio
           if (matchingCards.length === 0 && (searchQuery || currentFilter !== "all" || currentVersionFilter !== "all")) {
             return;
           }
@@ -1354,18 +1441,62 @@
 
           const deck = groupEl.querySelector("[data-deck]");
 
+          // Drag and drop event listeners no deck
+          deck.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            deck.classList.add("drag-over");
+          });
+
+          deck.addEventListener("dragleave", () => {
+            deck.classList.remove("drag-over");
+          });
+
+          deck.addEventListener("drop", (e) => {
+            e.preventDefault();
+            deck.classList.remove("drag-over");
+            const raw = e.dataTransfer.getData("application/json");
+            if (!raw) return;
+            try {
+              const { col: sCol, grp: sGrp, card: sCard } = JSON.parse(raw);
+              if (sCol === colIdx && sGrp === grpIdx) return; // Mesmo deck
+
+              const [card] = state.columns[sCol].groups[sGrp].cards.splice(sCard, 1);
+              card.version = group.version || card.version;
+              group.cards.push(card);
+              render();
+              save(`Card movido para ${group.name}`);
+            } catch (err) {
+              console.error("Erro ao mover card:", err);
+            }
+          });
+
           group.cards.forEach((card, cardIdx) => {
             if (!matchesCard(card)) return;
 
             const cardEl = document.createElement("article");
             cardEl.className = "manga-card";
+            cardEl.setAttribute("draggable", "true");
+
+            cardEl.addEventListener("dragstart", (e) => {
+              cardEl.classList.add("dragging");
+              e.dataTransfer.setData("application/json", JSON.stringify({ col: colIdx, grp: grpIdx, card: cardIdx }));
+            });
+
+            cardEl.addEventListener("dragend", () => {
+              cardEl.classList.remove("dragging");
+            });
+
             cardEl.innerHTML = `
               <div class="card-top">
                 <div class="tag-cluster">
                   <span class="card-tag ${card.tagClass || 'tag-ai'}" contenteditable="true" data-card-tag="${colIdx}:${grpIdx}:${cardIdx}">${card.tag}</span>
                   <span style="font-family: var(--font-pixel); font-size: 0.72rem; font-weight: 700; color: var(--ink-faint);">${card.version}</span>
                 </div>
-                <button class="card-btn-del" data-del-card="${colIdx}:${grpIdx}:${cardIdx}" title="Excluir Item">&times;</button>
+                <div class="card-actions-top">
+                  ${colIdx > 0 ? `<button class="card-btn-nav" data-nav-left="${colIdx}:${grpIdx}:${cardIdx}" title="Mover para a esquerda (coluna anterior)">◀</button>` : ''}
+                  ${colIdx < state.columns.length - 1 ? `<button class="card-btn-nav" data-nav-right="${colIdx}:${grpIdx}:${cardIdx}" title="Mover para a direita (próxima coluna)">▶</button>` : ''}
+                  <button class="card-btn-del" data-del-card="${colIdx}:${grpIdx}:${cardIdx}" title="Excluir Item">&times;</button>
+                </div>
               </div>
               <h3 class="card-title" contenteditable="true" data-card-title="${colIdx}:${grpIdx}:${cardIdx}">${card.title}</h3>
               <div class="card-body" contenteditable="true" data-card-body="${colIdx}:${grpIdx}:${cardIdx}">${card.body}</div>
@@ -1391,8 +1522,8 @@
         { ver: "v0.2.0", title: "Multi-Modelos, Modo Free & Tipos de Balão", status: "Concluído", class: "done", desc: "Integração com OpenRouter, LM Studio e Groq, além de classificação semântica de balões (retangular, pensamento, duplo)." },
         { ver: "v0.3.0", title: "Identidade Nanquim, Tradução em Lote & Memória", status: "Concluído", class: "done", desc: "Salto de produtividade: batch sequencial assíncrono, glossário SQLite, cofre de chaves no keyring e landing page no ar." },
         { ver: "v0.3.1", title: "Patch de Exportação Word (.docx)", status: "Concluído", class: "done", desc: "Correção crítica do erro de nodebuffer no WebView2 com ArrayBuffer binário nativo e diagnóstico real de erros." },
-        { ver: "v0.3.2 (Imediato)", title: "Polimento do UpdateModal & Changelog Real", status: "Em Andamento", class: "active", desc: "Exibição de notas detalhadas no modal de nova versão e início da transição visual editorial no app." },
-        { ver: "v0.4.0", title: "OCR Integrado, Detecção de Balões & Perfis", status: "Planejado", class: "planned", desc: "Bounding boxes automáticas no cliente, rotação com verificação de quota de IA e exportação estruturada para typesetters." },
+        { ver: "v0.4.0 (Fase 4.1)", title: "Design System Nanquim & UpdateModal Real", status: "Em Andamento", class: "active", desc: "Nova UI completa no app Tauri, exibição de changelog real no modal e automação de release notes na CI." },
+        { ver: "v0.4.0 (Fase 4.2)", title: "Backend, IA & WebAssembly", status: "Planejado", class: "planned", desc: "Bounding boxes automáticas no cliente (WASM), rotação de quotas inteligentes, perfis por idioma e exportação JSON." },
         { ver: "v0.5.0 ~ v1.0.0", title: "Typesetting Visual, Multiplataforma & Local Offline", status: "Visão Futura", class: "planned", desc: "Renderização prévia de fontes de mangá, binários Linux/macOS, code signing e tradução 100% offline." }
       ];
 
@@ -1456,21 +1587,21 @@
       save("Alteração registrada");
     });
 
-    // Cliques em botões e filtros
+    // Cliques em botões, navegação rápida e filtros
     document.addEventListener("click", (e) => {
       const addBtn = e.target.closest("[data-add-col]");
       if (addBtn) {
         const colIdx = Number(addBtn.dataset.addCol);
         if (!state.columns[colIdx].groups.length) {
           state.columns[colIdx].groups.push({
-            version: "v0.3.2",
-            name: "Novo Grupo de Itens",
+            version: "v0.4.0",
+            name: "Novo Grupo",
             badge: "Ativo",
             cards: []
           });
         }
         state.columns[colIdx].groups[0].cards.unshift({
-          version: state.columns[colIdx].groups[0].version || "v0.3.2",
+          version: state.columns[colIdx].groups[0].version || "v0.4.0",
           tag: "NOVO",
           tagClass: "tag-ai",
           title: "Novo Item de Roadmap",
@@ -1488,6 +1619,22 @@
         state.columns[c].groups[g].cards.splice(i, 1);
         render();
         save("Card removido");
+        return;
+      }
+
+      // Mover card para esquerda (◀)
+      const navLeftBtn = e.target.closest("[data-nav-left]");
+      if (navLeftBtn) {
+        const [c, g, i] = navLeftBtn.dataset.navLeft.split(":").map(Number);
+        moveCardToColumn(c, g, i, -1);
+        return;
+      }
+
+      // Mover card para direita (▶)
+      const navRightBtn = e.target.closest("[data-nav-right]");
+      if (navRightBtn) {
+        const [c, g, i] = navRightBtn.dataset.navRight.split(":").map(Number);
+        moveCardToColumn(c, g, i, 1);
         return;
       }
 
@@ -1565,7 +1712,7 @@
 
     // Restaurar Padrão
     document.getElementById("reset-btn").addEventListener("click", () => {
-      if (confirm("Restaurar o roadmap para a estrutura oficial Nanquim & Pena G (v0.3.1) com separação por versão?")) {
+      if (confirm("Restaurar o roadmap para a estrutura oficial Nanquim & Pena G (v0.4.0) com as 2 fases?")) {
         state = structuredClone(defaultState);
         render();
         save("Roadmap restaurado");
