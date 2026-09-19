@@ -3,76 +3,177 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MangAI Translator — Interactive Roadmap</title>
+  <title>MangAI Translator — Roadmap Editorial & Quadro de Entregas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:ital,wght@0,400..900;1,400..900&family=DotGothic16&family=Yuji+Syuku&display=swap" rel="stylesheet">
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #0d0f14;
-      --bg-panel: rgba(23, 26, 35, 0.85);
-      --bg-card: rgba(30, 34, 48, 0.7);
-      --border: rgba(24, 211, 173, 0.2);
-      --border-strong: rgba(59, 255, 211, 0.5);
-      --text: #f3f4f6;
-      --muted: #9ca3af;
-      --faint: #6b7280;
-      --teal: #18d3ad;
-      --cyan: #3bffd3;
-      --violet: #ad8cff;
-      --yellow: #f0c66a;
-      --rose: #ff7a90;
-      --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-      --radius: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      --paper: #f3efe3;
+      --paper-warm: #faf7f0;
+      --parch: #e9e2cf;
+      --ink: #1b181d;
+      --ink-soft: #2d2931;
+      --ink-muted: #5e5764;
+      --ink-faint: #8f8697;
+      --verm: #e8382b;
+      --verm-dark: #b5271d;
+      --verm-bg: rgba(232, 56, 43, 0.12);
+      --teal: #00a884;
+      --teal-bg: rgba(0, 168, 132, 0.12);
+      --gold: #d97706;
+      --gold-bg: rgba(217, 119, 6, 0.12);
+      --violet: #7c3aed;
+      --violet-bg: rgba(124, 58, 237, 0.12);
+      --kofi: #ff5e5b;
+      --border-ink: 2.5px solid var(--ink);
+      --border-ink-thin: 1.5px solid var(--ink);
+      --shadow-brutal: 4px 4px 0 var(--ink);
+      --shadow-brutal-lg: 7px 7px 0 var(--ink);
+      --shadow-brutal-sm: 2px 2px 0 var(--ink);
+      --shadow-brutal-hover: 6px 6px 0 var(--verm);
+      --font-display: "Anton", "Archivo", sans-serif;
+      --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+      --font-brush: "Yuji Syuku", serif;
+      --font-pixel: "DotGothic16", monospace;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       min-height: 100vh;
-      background:
-        radial-gradient(circle at 10% 15%, rgba(24, 211, 173, 0.12), transparent 30rem),
-        radial-gradient(circle at 90% 10%, rgba(173, 140, 255, 0.12), transparent 30rem),
-        linear-gradient(145deg, #0b0d12 0%, #11141c 50%, #090b0f 100%);
-      color: var(--text);
-      padding: 30px 24px 60px;
+      background-color: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-body);
+      padding: 24px 20px 80px;
+      line-height: 1.5;
+      position: relative;
+      background-image: 
+        radial-gradient(circle, rgba(27, 24, 29, 0.18) 1.1px, transparent 1.5px);
+      background-size: 11px 11px;
+    }
+
+    /* Textura de ruído / papel vintage */
+    .noise-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0.04;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
     .container {
-      max-width: 1480px;
+      max-width: 1540px;
       margin: 0 auto;
+      position: relative;
+      z-index: 1;
     }
 
-    header.app-header {
+    /* Faixa de perigo / hazard editorial no topo */
+    .hazard-top {
+      height: 10px;
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--verm) 0 14px,
+        var(--ink) 14px 28px
+      );
+      border: var(--border-ink);
+      border-bottom: none;
+      box-shadow: var(--shadow-brutal-sm);
+    }
+
+    /* Cabeçalho Editorial Mangá */
+    header.editorial-header {
+      background: var(--paper-warm);
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal-lg);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header.editorial-header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 280px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        115deg,
+        transparent 0 24px,
+        rgba(232, 56, 43, 0.05) 24px 26px
+      );
+      pointer-events: none;
+    }
+
+    .header-top-row {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+      border-bottom: var(--border-ink-thin);
+      padding-bottom: 16px;
+    }
+
+    .brand-cluster {
+      display: flex;
       align-items: center;
-      gap: 20px;
-      padding: 24px 32px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      margin-bottom: 24px;
-      backdrop-filter: blur(12px);
+      gap: 16px;
     }
 
-    .header-title h1 {
-      font-size: 2rem;
+    .kanji-stamp {
+      display: inline-grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      background: var(--verm);
+      color: var(--paper);
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal-sm);
+      font-family: var(--font-brush);
+      font-size: 1.8rem;
       font-weight: 900;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #3bffd3, #18d3ad 40%, #ad8cff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      transform: rotate(-3deg);
     }
 
-    .header-title p {
-      color: var(--muted);
-      margin-top: 6px;
-      font-size: 0.95rem;
+    .brand-meta {
+      display: flex;
+      flex-direction: column;
     }
 
-    .header-actions {
+    .brand-kicker {
+      font-family: var(--font-pixel);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--verm);
+      font-weight: 700;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3.8vw, 3.2rem);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .brand-tagline {
+      font-family: var(--font-brush);
+      font-size: 1.15rem;
+      color: var(--verm);
+      margin-left: 6px;
+    }
+
+    .header-controls {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -80,389 +181,920 @@
     }
 
     .btn {
-      padding: 9px 18px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text);
+      font-family: var(--font-body);
       font-size: 0.85rem;
-      font-weight: 700;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 8px 16px;
+      background: var(--paper);
+      color: var(--ink);
+      border: var(--border-ink-thin);
+      box-shadow: var(--shadow-brutal-sm);
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
 
     .btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: var(--border-strong);
-      transform: translateY(-1px);
+      background: var(--ink);
+      color: var(--paper);
+      transform: translate(-2px, -2px);
+      box-shadow: var(--shadow-brutal);
+    }
+
+    .btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: none;
     }
 
     .btn.primary {
-      background: linear-gradient(135deg, #18d3ad, #0ea5e9);
-      border-color: #3bffd3;
-      color: #06090e;
-      box-shadow: 0 4px 20px rgba(24, 211, 173, 0.3);
+      background: var(--verm);
+      color: #fff;
+      border-color: var(--ink);
     }
 
     .btn.primary:hover {
-      box-shadow: 0 6px 25px rgba(24, 211, 173, 0.45);
+      background: var(--ink);
+      color: var(--verm);
+      border-color: var(--verm);
     }
 
-    .status-bar {
+    .btn.toggle-view {
+      background: var(--parch);
+      border-color: var(--ink);
+    }
+
+    .save-indicator {
+      font-family: var(--font-pixel);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--teal);
+      background: var(--teal-bg);
+      border: 1px dashed var(--teal);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .subtitle-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+    }
+
+    .subtitle-text {
+      max-width: 900px;
+      font-weight: 500;
+    }
+
+    /* Painel de Estatísticas / Cartões de Status */
+    .status-strip {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
 
-    .stat-card {
+    .stat-box {
+      background: var(--paper-warm);
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal);
       padding: 16px 20px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      backdrop-filter: blur(8px);
+      position: relative;
+      overflow: hidden;
     }
 
-    .stat-card strong {
-      display: block;
-      font-size: 0.85rem;
+    .stat-box::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 40px;
+      height: 40px;
+      background: repeating-linear-gradient(
+        -45deg,
+        rgba(27, 24, 29, 0.08) 0 4px,
+        transparent 4px 8px
+      );
+    }
+
+    .stat-box .stat-label {
+      font-family: var(--font-pixel);
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--teal);
+      letter-spacing: 0.12em;
+      color: var(--verm);
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .stat-card span {
-      display: block;
-      margin-top: 6px;
-      font-size: 0.88rem;
-      color: var(--muted);
-      line-height: 1.4;
+    .stat-box .stat-value {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      color: var(--ink);
+      line-height: 1.1;
+      letter-spacing: 0.02em;
     }
 
-    .board {
+    .stat-box .stat-desc {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* Barra de Ações, Filtros e Busca */
+    .toolbar-panel {
+      background: var(--paper-warm);
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal);
+      padding: 14px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--paper);
+      border: var(--border-ink-thin);
+      padding: 6px 14px;
+      min-width: 280px;
+      flex: 1;
+      max-width: 440px;
+      box-shadow: inset 1px 1px 0 rgba(0,0,0,0.1);
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--ink);
+      width: 100%;
+      font-weight: 600;
+    }
+
+    .search-box input::placeholder {
+      color: var(--ink-faint);
+    }
+
+    .filter-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-chip {
+      font-family: var(--font-pixel);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      background: var(--paper);
+      border: var(--border-ink-thin);
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .filter-chip:hover, .filter-chip.active {
+      background: var(--ink);
+      color: var(--paper);
+      transform: translateY(-1px);
+    }
+
+    .filter-chip.active {
+      background: var(--verm);
+      border-color: var(--ink);
+      color: #fff;
+    }
+
+    /* Visão Kanban (Manga Panels) */
+    .board-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
       align-items: start;
     }
 
-    .column {
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: var(--shadow);
+    .manga-column {
+      background: var(--paper-warm);
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal-lg);
+      padding: 20px 18px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      backdrop-filter: blur(10px);
+      position: relative;
     }
 
-    .column header {
+    .column-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: var(--border-ink);
       padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .column-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .col-hanko {
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--verm);
+      color: var(--verm);
+      font-family: var(--font-brush);
+      font-size: 1.2rem;
+      font-weight: 900;
+      display: grid;
+      place-items: center;
+      line-height: 1;
+      border-radius: 4px;
+      transform: rotate(-5deg);
     }
 
     .column-title {
-      font-size: 1.1rem;
-      font-weight: 800;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .badge-count {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 2px 8px;
-      border-radius: 999px;
+    .item-counter {
+      font-family: var(--font-pixel);
       font-size: 0.75rem;
-      color: var(--muted);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 2px 8px;
+      border-radius: 3px;
     }
 
-    .add-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
+    .btn-add-card {
+      width: 32px;
+      height: 32px;
+      border: var(--border-ink-thin);
+      background: var(--paper);
+      color: var(--ink);
       font-size: 1.2rem;
+      font-weight: 900;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
+      display: grid;
+      place-items: center;
+      box-shadow: var(--shadow-brutal-sm);
+      transition: all 0.15s ease;
     }
 
-    .add-btn:hover {
-      background: var(--teal);
-      color: #06090e;
-      border-color: var(--cyan);
+    .btn-add-card:hover {
+      background: var(--verm);
+      color: #fff;
+      transform: translate(-1px, -1px);
     }
 
-    .cards-container {
+    .cards-deck {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
+      min-height: 120px;
     }
 
-    .card {
-      background: var(--bg-card);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
+    /* Cartão de Item de Roadmap */
+    .manga-card {
+      background: #ffffff;
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal);
       padding: 16px;
-      transition: all 0.2s ease;
+      transition: all 0.18s ease;
       position: relative;
     }
 
-    .card:hover {
-      border-color: var(--border-strong);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    .manga-card:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: var(--shadow-brutal-hover);
+      border-color: var(--ink);
     }
 
-    .card-meta {
+    .card-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       margin-bottom: 10px;
+      border-bottom: 1px solid rgba(27, 24, 29, 0.12);
+      padding-bottom: 8px;
     }
 
-    .tag {
+    .tag-cluster {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .card-tag {
+      font-family: var(--font-pixel);
       font-size: 0.7rem;
-      font-weight: 800;
+      font-weight: 700;
       text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 6px;
+      padding: 2px 6px;
+      border: 1px solid var(--ink);
       letter-spacing: 0.04em;
     }
 
-    .tag.green { background: rgba(24, 211, 173, 0.15); color: #3bffd3; border: 1px solid rgba(24, 211, 173, 0.4); }
-    .tag.yellow { background: rgba(240, 198, 106, 0.15); color: #f0c66a; border: 1px solid rgba(240, 198, 106, 0.4); }
-    .tag.violet { background: rgba(173, 140, 255, 0.15); color: #ad8cff; border: 1px solid rgba(173, 140, 255, 0.4); }
-    .tag.rose { background: rgba(255, 122, 144, 0.15); color: #ff7a90; border: 1px solid rgba(255, 122, 144, 0.4); }
-    .tag.cyan { background: rgba(59, 255, 211, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .card-tag.tag-batch { background: #e0f2fe; color: #0369a1; }
+    .card-tag.tag-vault { background: #fef3c7; color: #b45309; }
+    .card-tag.tag-ai { background: #f3e8ff; color: #7e22ce; }
+    .card-tag.tag-ui { background: #fce7f3; color: #be185d; }
+    .card-tag.tag-release { background: #dcfce7; color: #15803d; }
+    .card-tag.tag-critical { background: var(--verm); color: #fff; border-color: var(--ink); }
+    .card-tag.tag-ocr { background: #ffedd5; color: #c2410c; }
+    .card-tag.tag-future { background: #ede9fe; color: #5b21b6; }
 
-    .del-btn {
+    .card-version {
+      font-family: var(--font-pixel);
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: var(--ink);
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 2px;
+    }
+
+    .card-btn-del {
       background: none;
       border: none;
-      color: var(--faint);
+      color: var(--ink-faint);
       cursor: pointer;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       line-height: 1;
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 2px 5px;
+      border-radius: 2px;
+      transition: all 0.15s ease;
     }
 
-    .del-btn:hover {
-      color: var(--rose);
-      background: rgba(255, 122, 144, 0.15);
-    }
-
-    .card h3 {
-      font-size: 0.98rem;
-      font-weight: 750;
-      margin-bottom: 6px;
+    .card-btn-del:hover {
+      background: var(--verm);
       color: #fff;
     }
 
-    .card p {
-      font-size: 0.85rem;
-      color: var(--muted);
+    .card-title {
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.25;
+      margin-bottom: 8px;
+    }
+
+    .card-body {
+      font-size: 0.88rem;
+      color: var(--ink-soft);
       line-height: 1.45;
+      font-weight: 500;
     }
 
-    [contenteditable="true"] {
-      outline: none;
+    .card-body ul {
+      margin-top: 6px;
+      padding-left: 18px;
+    }
+
+    .card-body li {
+      margin-bottom: 4px;
+    }
+
+    .stamp-overlay {
+      position: absolute;
+      bottom: 8px;
+      right: 12px;
+      font-family: var(--font-brush);
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--verm);
+      border: 2px solid var(--verm);
+      padding: 0 6px;
       border-radius: 4px;
-      padding: 1px 4px;
-      transition: background 0.2s;
+      opacity: 0.25;
+      transform: rotate(-12deg);
+      pointer-events: none;
+      user-select: none;
     }
 
-    [contenteditable="true"]:focus {
-      background: rgba(59, 255, 211, 0.1);
-      box-shadow: 0 0 0 1px var(--cyan);
+    .manga-card:hover .stamp-overlay {
+      opacity: 0.8;
+      transform: rotate(-8deg) scale(1.05);
+      transition: all 0.2s ease;
     }
 
-    .save-indicator {
+    /* Visão Linha do Tempo (Timeline / Crônica) */
+    .timeline-view {
+      background: var(--paper-warm);
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal-lg);
+      padding: 36px 32px;
+      position: relative;
+    }
+
+    .timeline-track {
+      position: relative;
+      max-width: 960px;
+      margin: 0 auto;
+      padding-left: 36px;
+      border-left: 3.5px solid var(--ink);
+    }
+
+    .timeline-milestone {
+      position: relative;
+      margin-bottom: 44px;
+    }
+
+    .timeline-milestone:last-child {
+      margin-bottom: 0;
+    }
+
+    .milestone-node {
+      position: absolute;
+      left: -48px;
+      top: 0;
+      width: 22px;
+      height: 22px;
+      background: var(--verm);
+      border: 3px solid var(--ink);
+      box-shadow: var(--shadow-brutal-sm);
+      transform: rotate(45deg);
+    }
+
+    .milestone-node.done {
+      background: var(--teal);
+    }
+
+    .milestone-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .milestone-version {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+    }
+
+    .milestone-status {
+      font-family: var(--font-pixel);
       font-size: 0.8rem;
-      color: var(--teal);
-      display: inline-flex;
+      padding: 2px 8px;
+      font-weight: 700;
+      border: var(--border-ink-thin);
+    }
+
+    .milestone-status.done { background: var(--teal-bg); color: var(--teal); }
+    .milestone-status.active { background: var(--gold-bg); color: var(--gold); }
+    .milestone-status.planned { background: var(--violet-bg); color: var(--violet); }
+
+    .milestone-card-inner {
+      background: #ffffff;
+      border: var(--border-ink);
+      box-shadow: var(--shadow-brutal);
+      padding: 20px;
+    }
+
+    .milestone-card-inner h4 {
+      font-family: var(--font-body);
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .milestone-card-inner p {
+      font-size: 0.92rem;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+
+    .milestone-deliverables {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 8px;
+    }
+
+    .deliverable-chip {
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
       align-items: center;
       gap: 6px;
     }
 
+    /* Contenteditable focus styles */
+    [contenteditable="true"] {
+      outline: none;
+      border-radius: 2px;
+      transition: background 0.15s;
+    }
+
+    [contenteditable="true"]:focus {
+      background: rgba(232, 56, 43, 0.08);
+      box-shadow: 0 0 0 2px var(--verm);
+    }
+
     #import-file { display: none; }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      body { padding: 16px 12px 60px; }
+      header.editorial-header { padding: 16px; }
+      .brand-title { font-size: 2.2rem; }
+      .board-grid { grid-template-columns: 1fr; }
+      .timeline-track { padding-left: 24px; }
+      .milestone-node { left: -36px; }
+    }
   </style>
 </head>
 <body>
+  <div class="noise-layer"></div>
+
   <div class="container">
-    <header class="app-header">
-      <div class="header-title">
-        <h1>MangAI Translator — Roadmap Interativo</h1>
-        <p contenteditable="true" data-edit="subtitle">
-          Painel dinâmico de arquitetura, entregas de ciclo, TODOs e exploração de features.
-        </p>
+    <div class="hazard-top"></div>
+
+    <!-- Cabeçalho Principal -->
+    <header class="editorial-header">
+      <div class="header-top-row">
+        <div class="brand-cluster">
+          <div class="kanji-stamp" title="MangAI Nanquim">墨</div>
+          <div class="brand-meta">
+            <span class="brand-kicker">MANGAI TRANSLATOR &bull; 進捗表 ROADMAP</span>
+            <div style="display: flex; align-items: baseline; flex-wrap: wrap;">
+              <h1 class="brand-title">ROADMAP EDITORIAL</h1>
+              <span class="brand-tagline">翻訳は愛だ &bull; Nanquim & Pena G</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-controls">
+          <span class="save-indicator" id="save-status">✓ SALVO LOCALMENTE</span>
+          <button class="btn primary" type="button" id="save-btn">Salvar (Ctrl+S)</button>
+          <button class="btn toggle-view" type="button" id="toggle-view-btn">Ver Linha do Tempo</button>
+          <button class="btn" type="button" id="export-btn">Exportar JSON</button>
+          <button class="btn" type="button" id="import-btn">Importar JSON</button>
+          <button class="btn" type="button" id="reset-btn">Restaurar Padrão</button>
+          <input type="file" id="import-file" accept=".json,application/json" />
+        </div>
       </div>
-      <div class="header-actions">
-        <span class="save-indicator" id="save-status">✓ Salvo localmente</span>
-        <button class="btn primary" type="button" id="save-btn">Salvar (Ctrl+S)</button>
-        <button class="btn" type="button" id="export-btn">Exportar JSON</button>
-        <button class="btn" type="button" id="import-btn">Importar JSON</button>
-        <button class="btn" type="button" id="reset-btn">Restaurar Padrão</button>
-        <input type="file" id="import-file" accept=".json,application/json" />
+
+      <div class="subtitle-bar">
+        <p class="subtitle-text" contenteditable="true" data-edit="subtitle">
+          Painel dinâmico do projeto: histórico de versões entregues, tarefas ativas (TODOs) e planejamento dos próximos ciclos sob a identidade autêntica Nanquim & Pena G.
+        </p>
+        <div style="font-family: var(--font-pixel); font-size: 0.8rem; font-weight: 700; color: var(--verm);">
+          SEMVER: 0.x.0 = FASE / x.0.0 = MARCO
+        </div>
       </div>
     </header>
 
-    <div class="status-bar">
-      <div class="stat-card">
-        <strong>Dual Remote Ativo</strong>
-        <span>origin (DEV privado) &bull; public (PROD releases)</span>
+    <!-- Barra de Estatísticas do Ciclo -->
+    <section class="status-strip">
+      <div class="stat-box">
+        <div class="stat-label">VERSÃO ATIVA EM PRODUÇÃO</div>
+        <div class="stat-value">v0.3.1</div>
+        <div class="stat-desc">Patch estável: Correção de exportação Word (.docx) no WebView2</div>
       </div>
-      <div class="stat-card">
-        <strong>Ciclo Atual</strong>
-        <span>v0.3.1 &bull; Foco em Batch, Glossário e Memória</span>
+
+      <div class="stat-box">
+        <div class="stat-label">DUAL REMOTE DEPLOY</div>
+        <div class="stat-value">ORIGIN &bull; PUBLIC</div>
+        <div class="stat-desc">origin (DEV privado) &bull; public (Releases e GitHub Pages)</div>
       </div>
-      <div class="stat-card">
-        <strong>UI/UX Identity</strong>
-        <span>Zero minimalismo &bull; Modais customizados &bull; Sem alerts do SO</span>
+
+      <div class="stat-box">
+        <div class="stat-label">TODO CRÍTICO ATUAL</div>
+        <div class="stat-value">UPDATEMODAL</div>
+        <div class="stat-desc">Injeção do changelog real na tela "Nova Versão Pronta"</div>
       </div>
-      <div class="stat-card">
-        <strong>TODO Crítico</strong>
-        <span>Melhoria do UpdateModal &bull; Changelog real da release</span>
+
+      <div class="stat-box">
+        <div class="stat-label">STATUS DAS ENTREGAS</div>
+        <div class="stat-value" id="stats-deliveries">13 ENTREGUES &bull; 15 PLANEJADAS</div>
+        <div class="stat-desc">Batch, Glossário, Memória, Keyring e Landing Page no ar</div>
+      </div>
+    </section>
+
+    <!-- Barra de Ferramentas, Busca e Filtros -->
+    <div class="toolbar-panel">
+      <div class="search-box">
+        <span style="font-size: 1.1rem; color: var(--verm);">✒</span>
+        <input type="text" id="search-input" placeholder="Pesquisar entregas, TODOs, modelos, bugs ou tags..." />
+      </div>
+
+      <div class="filter-tags" id="filter-container">
+        <span style="font-family: var(--font-pixel); font-size: 0.75rem; font-weight: 700; color: var(--ink-faint); margin-right: 4px;">FILTRO:</span>
+        <button class="filter-chip active" data-filter="all">TODOS</button>
+        <button class="filter-chip" data-filter="BATCH">BATCH</button>
+        <button class="filter-chip" data-filter="AI">IA / MODELOS</button>
+        <button class="filter-chip" data-filter="UI">UI / UX</button>
+        <button class="filter-chip" data-filter="GLOSSARY">GLOSSÁRIO</button>
+        <button class="filter-chip" data-filter="VAULT">KEYRING</button>
+        <button class="filter-chip" data-filter="RELEASE">RELEASE</button>
+        <button class="filter-chip" data-filter="OCR">OCR</button>
+        <button class="filter-chip" data-filter="FUTURO">FUTURO</button>
       </div>
     </div>
 
-    <main class="board" id="board-columns"></main>
+    <!-- Visão Kanban Principal -->
+    <main class="board-grid" id="board-columns"></main>
+
+    <!-- Visão Alternativa: Linha do Tempo (Timeline) -->
+    <section class="timeline-view" id="timeline-container" style="display: none;">
+      <div class="timeline-track" id="timeline-track"></div>
+    </section>
   </div>
 
   <script>
-    const STORAGE_KEY = "mangai-interactive-roadmap-v2";
+    const STORAGE_KEY = "mangai-interactive-roadmap-nanquim-v3";
 
     const defaultState = {
-      subtitle: "Painel dinâmico de arquitetura, entregas de ciclo, TODOs e exploração de features.",
+      subtitle: "Painel dinâmico do projeto: histórico de versões entregues, tarefas ativas (TODOs) e planejamento dos próximos ciclos sob a identidade autêntica Nanquim & Pena G.",
       columns: [
         {
-          id: "atual",
-          title: "Fase v0.3.0 (Lançada & Concluída)",
-          tagColor: "green",
+          id: "done",
+          title: "Entregue & Concluído",
+          hanko: "済",
           cards: [
             {
-              tag: "BATCH",
-              title: "Tradução em Lote Sequencial",
-              body: "Fila de processamento assíncrono gerenciada no store com monitor de progresso em tempo real no EditorView."
-            },
-            {
-              tag: "GLOSSARY",
-              title: "Glossário por Projeto",
-              body: "Modal de termos persistidos via SQLite no dbService. Injeção direta de regras nos prompts de tradução."
-            },
-            {
-              tag: "CONTEXT",
-              title: "Memória de Curto Prazo",
-              body: "Injeção automática do texto da página anterior para manter consistência de diálogos, pronomes e nomes."
-            },
-            {
-              tag: "SHORTCUTS",
-              title: "Atalhos de Teclado Power-User",
-              body: "Teclas de merge de balões (M), troca de ordem (S) e rolagem suave para acelerar a revisão do capítulo."
-            },
-            {
-              tag: "VAULT",
-              title: "Cofre de Chaves Independentes",
-              body: "Chaves de API separadas por provedor salvas no keyring do sistema operacional via Tauri Rust bridge."
-            },
-            {
-              tag: "BRANDING",
-              title: "Identidade Nanquim & Pena G",
-              body: "Logo oficial vetorizada, ícones do app multi-resolução e novo pacote de screenshots v0.3.0."
-            },
-            {
+              version: "v0.3.1",
               tag: "RELEASE",
-              title: "Build & Release Oficial v0.3.0",
-              body: "Sincronia SemVer completa, instalador NSIS compilado e release publicada nos remotes origin e public."
+              tagClass: "tag-release",
+              title: "Correção de Exportação Word (.docx)",
+              body: "Substituição do Packer.toBuffer por Packer.toArrayBuffer + Uint8Array compatível com WebView2/browser, eliminando o erro 'nodebuffer is not supported'. Diagnóstico transparente no modal.",
+              stamp: "RESOLVIDO"
             },
             {
-              tag: "LANDING",
-              title: "Landing Page Oficial (No Ar)",
-              body: "Publicada no GitHub Pages em https://zentsy.github.io/MangAItranslator/ com logo Nanquim & Pena G e download v0.3.0."
+              version: "v0.3.0",
+              tag: "BATCH",
+              tagClass: "tag-batch",
+              title: "Tradução em Lote Sequencial (Batch)",
+              body: "Fila de processamento assíncrono entre páginas com monitor de progresso em tempo real, cancelamento seguro e processamento em background no EditorView.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.3.0",
+              tag: "GLOSSARY",
+              tagClass: "tag-vault",
+              title: "Glossário por Projeto com SQLite",
+              body: "Tabela local 'glossary' persistida no SQLite do app. Gerenciamento de termos com injeção automática de regras léxicas nos prompts de tradução.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.3.0",
+              tag: "AI",
+              tagClass: "tag-ai",
+              title: "Memória de Curto Prazo entre Páginas",
+              body: "Injeção automática do texto e contexto da página imediatamente anterior para preservar coerência narrativa, honoríficos e pronomes.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.3.0",
+              tag: "UI",
+              tagClass: "tag-ui",
+              title: "Atalhos de Teclado Power-User",
+              body: "Teclas de merge rápido de balões adjacentes (M), troca de ordem (S) e navegação ágil para acelerar a revisão das páginas.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.3.0",
+              tag: "VAULT",
+              tagClass: "tag-vault",
+              title: "Cofre Seguro no Keyring do SO",
+              body: "Armazenamento seguro de chaves de API individuais por provedor diretamente no Windows Credential Manager via plugin Rust customizado.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.3.0",
+              tag: "UI",
+              tagClass: "tag-ui",
+              title: "Identidade Nanquim & Pena G",
+              body: "Nova identidade visual autêntica: logo oficial vetorizada, ícones multi-resolução para Windows/macOS/Linux e novo pacote de screenshots.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.3.0",
+              tag: "RELEASE",
+              tagClass: "tag-release",
+              title: "Landing Page Oficial no GitHub Pages",
+              body: "Publicada em https://zentsy.github.io/MangAItranslator/ com resolução dinâmica do instalador mais recente via API do GitHub.",
+              stamp: "NO AR"
+            },
+            {
+              version: "v0.2.0",
+              tag: "AI",
+              tagClass: "tag-ai",
+              title: "Multi-Provedores & Modo Free",
+              body: "Suporte completo a OpenRouter (com detecção inteligente de modelos vision grátis), LM Studio local, Groq Cloud e Google Gemini nativo.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.2.0",
+              tag: "UI",
+              tagClass: "tag-ui",
+              title: "Tipagem Semântica de Balões",
+              body: "Classificação precisa de tipos de fala: [RET] Retangular, {FORA} Onomatopeia/Fora, (PEN) Pensamento e //DBL// Balão Duplo.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.1.3",
+              tag: "RELEASE",
+              tagClass: "tag-release",
+              title: "Hardening de Segurança & Auto-Updater",
+              body: "Ajuste de dependências Dependabot, documentação MIT e estruturação da esteira de compilação com release.yml.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.1.2",
+              tag: "UI",
+              tagClass: "tag-ui",
+              title: "Zoom/Pan no Canvas & Apoio Ko-fi",
+              body: "Navegação suave sobre a mesa de arte com react-zoom-pan-pinch e links de apoio ao projeto.",
+              stamp: "ENTREGUE"
+            },
+            {
+              version: "v0.1.0",
+              tag: "RELEASE",
+              tagClass: "tag-release",
+              title: "MVP Fundação Tauri v2 + React 19",
+              body: "Importação de capítulos, extração de texto assistida por IA, edição em lista e exportação estruturada em TXT.",
+              stamp: "ENTREGUE"
             }
           ]
         },
         {
           id: "todos",
-          title: "TODOs Imediatos",
-          tagColor: "yellow",
+          title: "TODOs Imediatos (Em Andamento)",
+          hanko: "動",
           cards: [
             {
-              tag: "UPDATER-UI",
-              title: "Melhoria da Tela de Atualização & Changelog Real",
-              body: "Evoluir a tela 'Nova Versão Pronta' (UpdateModal): exibir o changelog real da versão no campo 'O que mudou' (em vez do texto genérico padrão 'Veja os assets desta release...'), além de aprimorar a identidade visual do modal."
+              version: "v0.3.2",
+              tag: "CRITICAL",
+              tagClass: "tag-critical",
+              title: "Melhoria do UpdateModal & Changelog Real",
+              body: "Evoluir a tela 'Nova Versão Pronta' (UpdateModal): buscar e renderizar o changelog real da release no campo 'O que mudou', eliminando a mensagem genérica ('Veja os assets desta release...').",
+              stamp: "PRIORITÁRIO"
             },
             {
-              tag: "UI-IDENTITY",
-              title: "Design System: Nova UI MangAI",
-              body: "Planejar a transição visual da interface desktop adotando a identidade editorial, densa e estilizada da landing page."
+              version: "v0.4.0",
+              tag: "UI",
+              tagClass: "tag-ui",
+              title: "Design System: Nova UI MangAI Desktop",
+              body: "Transição visual completa da interface desktop adotando a identidade editorial densa (washi, nanquim, vermelhão e halftones) da landing page.",
+              stamp: "EM DESIGN"
+            },
+            {
+              version: "v0.3.2",
+              tag: "RELEASE",
+              tagClass: "tag-release",
+              title: "Injeção Automática de Release Notes na CI",
+              body: "Configurar o GitHub Actions (release.yml) para extrair os tópicos de novidades reais da versão do changelog ou tag em vez do texto padrão estático.",
+              stamp: "PENDENTE"
+            },
+            {
+              version: "v0.3.2",
+              tag: "UI",
+              tagClass: "tag-ui",
+              title: "Hover Interativo Bloco ↔ Balão na Imagem",
+              body: "Destacar visualmente o balão na página ao passar o cursor sobre o bloco correspondente no painel de tradução lateral.",
+              stamp: "PLANEJADO"
             }
           ]
         },
         {
           id: "backlog",
-          title: "Backlog (v0.4.0)",
-          tagColor: "cyan",
+          title: "Backlog Próximo Ciclo (v0.4.0)",
+          hanko: "計",
           cards: [
             {
-              tag: "UI-OVERHAUL",
-              title: "Redesign da Interface Desktop",
-              body: "Aplicação dos componentes, tipografia e microinterações editoriais inspiradas na nova landing page dentro do app Tauri."
+              version: "v0.4.0",
+              tag: "OCR",
+              tagClass: "tag-ocr",
+              title: "Detecção Local de Coordenadas de Balões",
+              body: "Pré-detecção de bounding boxes de texto diretamente no cliente via WebAssembly para seleção e ordenação visual imediata.",
+              stamp: "BACKLOG"
             },
             {
+              version: "v0.4.0",
               tag: "AI",
+              tagClass: "tag-ai",
               title: "Auto-Free OpenRouter Aprimorado",
-              body: "Detecção e rotação mais inteligente de modelos vision gratuitos sem risco de acionar modelos pagos."
+              body: "Rotação inteligente de modelos gratuitos com verificação de quota em tempo real e fallback instantâneo sem interromper o lote.",
+              stamp: "BACKLOG"
             },
             {
-              tag: "PROFILES",
+              version: "v0.4.0",
+              tag: "AI",
+              tagClass: "tag-ai",
               title: "Perfis de Tradução por Idioma",
-              body: "Presets configuráveis para japonês, coreano e chinês com prompts direcionados à ortografia e honoríficos."
+              body: "Presets configuráveis para japonês, coreano e chinês com prompts direcionados à ortografia, honoríficos e gírias de scanlator.",
+              stamp: "BACKLOG"
             },
             {
-              tag: "REVIEW",
+              version: "v0.4.0",
+              tag: "AI",
+              tagClass: "tag-ai",
               title: "Segunda Passada de Naturalidade",
-              body: "Revisão assistida por IA após o primeiro rascunho para tornar diálogos mais fluidos em português."
+              body: "Revisão refinada por IA após a tradução literal inicial para deixar os diálogos mais naturais e fluídos em português brasileiro.",
+              stamp: "BACKLOG"
+            },
+            {
+              version: "v0.4.0",
+              tag: "RELEASE",
+              tagClass: "tag-release",
+              title: "Exportação Estruturada em JSON para Typesetters",
+              body: "Exportação de arquivo JSON com dados de blocos, tipos e coordenadas para integração com scripts automatizados de Photoshop e InDesign.",
+              stamp: "BACKLOG"
             }
           ]
         },
         {
-          id: "research",
-          title: "Pesquisa & Futuro",
-          tagColor: "violet",
+          id: "future",
+          title: "Pesquisa & Visão (v0.5.0 ~ v1.0.0)",
+          hanko: "研",
           cards: [
             {
-              tag: "EXTENSIONS",
-              title: "Extensões Estilo Mihon",
-              body: "Pesquisa sobre arquitetura de extensões independentes para importação direta de capítulos sem acoplar scraping pesado no core."
+              version: "v0.5.0",
+              tag: "FUTURO",
+              tagClass: "tag-future",
+              title: "Typesetter Helper Visual (Fontes de Mangá)",
+              body: "Renderização prévia do texto traduzido diretamente dentro dos balões na imagem usando tipografias clássicas de quadrinhos (Wild Words, Anime Ace).",
+              stamp: "PESQUISA"
             },
             {
-              tag: "OVERLAY",
-              title: "Exportação com Tradução Visual",
-              body: "Renderização do texto traduzido diretamente por cima da imagem da página com preenchimento limpo."
+              version: "v0.5.0",
+              tag: "FUTURO",
+              tagClass: "tag-future",
+              title: "Dicionário de Onomatopeias (SFX)",
+              body: "Guia interativo integrado de efeitos sonoros japoneses (擬音語・擬態語) com sugestões de adaptação para os quadrinhos ocidentais.",
+              stamp: "PESQUISA"
             },
             {
-              tag: "INPAINTING",
-              title: "Tipografia e Redraw Assistido",
-              body: "Pesquisa de modelos leves de inpainting para remoção automática de texto dentro dos balões."
+              version: "v0.5.0",
+              tag: "FUTURO",
+              tagClass: "tag-future",
+              title: "Pacote de Projeto .mangai Zipado",
+              body: "Exportação e importação de projetos completos contendo imagens, cache, banco SQLite e histórico para fácil compartilhamento entre tradutores.",
+              stamp: "PESQUISA"
             },
             {
-              tag: "SIGNING",
-              title: "Code Signing no Windows",
-              body: "Avaliação de certificado de desenvolvedor para eliminar alertas do Windows SmartScreen no instalador."
+              version: "v1.0.0",
+              tag: "RELEASE",
+              tagClass: "tag-release",
+              title: "Distribuição Multiplataforma (Linux & macOS)",
+              body: "Pipelines de CI/CD estendidas para empacotar versões nativas em Linux (.deb / AppImage) e macOS (.dmg assinado).",
+              stamp: "MARCO v1"
+            },
+            {
+              version: "v1.0.0",
+              tag: "RELEASE",
+              tagClass: "tag-release",
+              title: "Code Signing de Distribuição no Windows",
+              body: "Aquisição e integração de certificado de assinatura de código para eliminar por completo os avisos do Windows SmartScreen.",
+              stamp: "MARCO v1"
+            },
+            {
+              version: "v1.0.0",
+              tag: "AI",
+              tagClass: "tag-ai",
+              title: "Tradução 100% Offline com Modelo Embarcado",
+              body: "Integração direta com runtime local (Ollama ou WebLLM) permitindo traduzir mangás sem qualquer conexão com a internet.",
+              stamp: "MARCO v1"
             }
           ]
         }
@@ -470,6 +1102,9 @@
     };
 
     let state = load();
+    let currentFilter = "all";
+    let searchQuery = "";
+    let isTimelineView = false;
 
     function load() {
       try {
@@ -483,48 +1118,135 @@
     function save(msg = "Salvo localmente") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       const ind = document.getElementById("save-status");
-      ind.textContent = `✓ ${msg}`;
-      setTimeout(() => { ind.textContent = "✓ Salvo localmente"; }, 2500);
+      ind.textContent = `✓ ${msg.toUpperCase()}`;
+      setTimeout(() => { ind.textContent = "✓ SALVO LOCALMENTE"; }, 2500);
+      updateStats();
     }
 
-    function render() {
-      document.querySelector("[data-edit='subtitle']").textContent = state.subtitle || defaultState.subtitle;
+    function updateStats() {
+      let doneCount = 0;
+      let pendingCount = 0;
+      state.columns.forEach(col => {
+        if (col.id === "done") doneCount += col.cards.length;
+        else pendingCount += col.cards.length;
+      });
+      const el = document.getElementById("stats-deliveries");
+      if (el) {
+        el.textContent = `${doneCount} ENTREGUES • ${pendingCount} PLANEJADAS`;
+      }
+    }
+
+    function matchesFilter(card) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchQuery = !q || 
+        card.title.toLowerCase().includes(q) || 
+        card.body.toLowerCase().includes(q) || 
+        card.tag.toLowerCase().includes(q) || 
+        (card.version && card.version.toLowerCase().includes(q));
+
+      if (!matchQuery) return false;
+      if (currentFilter === "all") return true;
+      return card.tag.toUpperCase() === currentFilter.toUpperCase();
+    }
+
+    function renderKanban() {
       const board = document.getElementById("board-columns");
       board.innerHTML = "";
 
       state.columns.forEach((col, colIdx) => {
+        const visibleCards = col.cards.filter(matchesFilter);
+
         const colEl = document.createElement("section");
-        colEl.className = "column";
+        colEl.className = "manga-column";
         colEl.innerHTML = `
-          <header>
-            <div class="column-title">
-              <span contenteditable="true" data-col-idx="${colIdx}">${col.title}</span>
-              <span class="badge-count">${col.cards.length}</span>
+          <header class="column-header">
+            <div class="column-title-group">
+              <span class="col-hanko">${col.hanko || "巻"}</span>
+              <div class="column-title">
+                <span contenteditable="true" data-col-idx="${colIdx}">${col.title}</span>
+                <span class="item-counter">${visibleCards.length}/${col.cards.length}</span>
+              </div>
             </div>
-            <button class="add-btn" data-add-col="${colIdx}" title="Adicionar Card">+</button>
+            <button class="btn-add-card" data-add-col="${colIdx}" title="Adicionar Card">+</button>
           </header>
-          <div class="cards-container" data-container-col="${colIdx}"></div>
+          <div class="cards-deck" data-container-col="${colIdx}"></div>
         `;
 
-        const container = colEl.querySelector("[data-container-col]");
+        const deck = colEl.querySelector("[data-container-col]");
+
         col.cards.forEach((card, cardIdx) => {
+          if (!matchesFilter(card)) return;
+
           const cardEl = document.createElement("article");
-          cardEl.className = "card";
+          cardEl.className = "manga-card";
           cardEl.innerHTML = `
-            <div class="card-meta">
-              <span class="tag ${col.tagColor || 'green'}" contenteditable="true" data-card-tag="${colIdx}:${cardIdx}">${card.tag}</span>
-              <button class="del-btn" data-del-card="${colIdx}:${cardIdx}" title="Excluir">&times;</button>
+            <div class="card-top">
+              <div class="tag-cluster">
+                <span class="card-tag ${card.tagClass || 'tag-ai'}" contenteditable="true" data-card-tag="${colIdx}:${cardIdx}">${card.tag}</span>
+                <span class="card-version" contenteditable="true" data-card-version="${colIdx}:${cardIdx}">${card.version || 'v0.3.1'}</span>
+              </div>
+              <button class="card-btn-del" data-del-card="${colIdx}:${cardIdx}" title="Excluir Item">&times;</button>
             </div>
-            <h3 contenteditable="true" data-card-title="${colIdx}:${cardIdx}">${card.title}</h3>
-            <p contenteditable="true" data-card-body="${colIdx}:${cardIdx}">${card.body}</p>
+            <h3 class="card-title" contenteditable="true" data-card-title="${colIdx}:${cardIdx}">${card.title}</h3>
+            <div class="card-body" contenteditable="true" data-card-body="${colIdx}:${cardIdx}">${card.body}</div>
+            ${card.stamp ? `<div class="stamp-overlay">${card.stamp}</div>` : ''}
           `;
-          container.appendChild(cardEl);
+          deck.appendChild(cardEl);
         });
 
         board.appendChild(colEl);
       });
     }
 
+    function renderTimeline() {
+      const track = document.getElementById("timeline-track");
+      track.innerHTML = "";
+
+      // Agrupamento por versão
+      const versions = [
+        { ver: "v0.1.0", title: "Fundação MVP & Prova de Conceito", status: "Concluído", class: "done", desc: "Estrutura desktop base com Tauri v2, React 19, importação de imagens e primeira IA de extração de balões." },
+        { ver: "v0.1.2 ~ v0.1.3", title: "Estabilização, Zoom/Pan & Segurança", status: "Concluído", class: "done", desc: "Navegação por toque/zoom no canvas, hardening de dependências, setup do auto-updater e documentação MIT." },
+        { ver: "v0.2.0", title: "Multi-Modelos, Modo Free & Tipos de Balão", status: "Concluído", class: "done", desc: "Integração com OpenRouter, LM Studio e Groq, além de classificação semântica de balões (retangular, pensamento, duplo)." },
+        { ver: "v0.3.0", title: "Identidade Nanquim, Tradução em Lote & Memória", status: "Concluído", class: "done", desc: "Salto de produtividade: batch sequencial assíncrono, glossário SQLite, cofre de chaves no keyring e landing page no ar." },
+        { ver: "v0.3.1", title: "Patch de Exportação Word (.docx)", status: "Concluído", class: "done", desc: "Correção crítica do erro de nodebuffer no WebView2 com ArrayBuffer binário nativo e diagnóstico real de erros." },
+        { ver: "v0.3.2 (Imediato)", title: "Polimento do UpdateModal & Changelog Real", status: "Em Andamento", class: "active", desc: "Exibição de notas detalhadas no modal de nova versão e início da transição visual editorial no app." },
+        { ver: "v0.4.0", title: "OCR Integrado, Detecção de Balões & Perfis", status: "Planejado", class: "planned", desc: "Bounding boxes automáticas no cliente, rotação com verificação de quota de IA e exportação estruturada para typesetters." },
+        { ver: "v0.5.0 ~ v1.0.0", title: "Typesetting Visual, Multiplataforma & Local Offline", status: "Visão Futura", class: "planned", desc: "Renderização prévia de fontes de mangá, binários Linux/macOS, code signing e tradução 100% offline." }
+      ];
+
+      versions.forEach(item => {
+        const m = document.createElement("div");
+        m.className = "timeline-milestone";
+        m.innerHTML = `
+          <div class="milestone-node ${item.class}"></div>
+          <div class="milestone-header">
+            <span class="milestone-version">${item.ver}</span>
+            <span class="milestone-status ${item.class}">${item.status.toUpperCase()}</span>
+          </div>
+          <div class="milestone-card-inner">
+            <h4>${item.title}</h4>
+            <p>${item.desc}</p>
+          </div>
+        `;
+        track.appendChild(m);
+      });
+    }
+
+    function render() {
+      document.querySelector("[data-edit='subtitle']").textContent = state.subtitle || defaultState.subtitle;
+      if (isTimelineView) {
+        document.getElementById("board-columns").style.display = "none";
+        document.getElementById("timeline-container").style.display = "block";
+        renderTimeline();
+      } else {
+        document.getElementById("board-columns").style.display = "grid";
+        document.getElementById("timeline-container").style.display = "none";
+        renderKanban();
+      }
+      updateStats();
+    }
+
+    // Eventos de Input e ContentEditable
     document.addEventListener("input", (e) => {
       const t = e.target;
       if (!t.isContentEditable) return;
@@ -536,6 +1258,9 @@
       } else if (t.dataset.cardTag) {
         const [c, i] = t.dataset.cardTag.split(":").map(Number);
         state.columns[c].cards[i].tag = t.textContent.trim();
+      } else if (t.dataset.cardVersion) {
+        const [c, i] = t.dataset.cardVersion.split(":").map(Number);
+        state.columns[c].cards[i].version = t.textContent.trim();
       } else if (t.dataset.cardTitle) {
         const [c, i] = t.dataset.cardTitle.split(":").map(Number);
         state.columns[c].cards[i].title = t.textContent.trim();
@@ -543,17 +1268,21 @@
         const [c, i] = t.dataset.cardBody.split(":").map(Number);
         state.columns[c].cards[i].body = t.textContent.trim();
       }
-      save();
+      save("Alteração registrada");
     });
 
+    // Eventos de Clique
     document.addEventListener("click", (e) => {
       const addBtn = e.target.closest("[data-add-col]");
       if (addBtn) {
         const colIdx = Number(addBtn.dataset.addCol);
         state.columns[colIdx].cards.unshift({
+          version: "v0.3.2",
           tag: "NOVO",
+          tagClass: "tag-ai",
           title: "Novo Item de Roadmap",
-          body: "Clique para descrever este item, objetivo ou requisito técnico."
+          body: "Clique para descrever este item, objetivo ou requisito técnico.",
+          stamp: "PROPOSTA"
         });
         render();
         save("Card adicionado");
@@ -568,8 +1297,32 @@
         save("Card removido");
         return;
       }
+
+      const filterChip = e.target.closest(".filter-chip");
+      if (filterChip) {
+        document.querySelectorAll(".filter-chip").forEach(el => el.classList.remove("active"));
+        filterChip.classList.add("active");
+        currentFilter = filterChip.dataset.filter;
+        render();
+        return;
+      }
     });
 
+    // Busca em tempo real
+    document.getElementById("search-input").addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    // Alternar Visualização: Kanban vs Timeline
+    document.getElementById("toggle-view-btn").addEventListener("click", () => {
+      isTimelineView = !isTimelineView;
+      const btn = document.getElementById("toggle-view-btn");
+      btn.textContent = isTimelineView ? "Ver Quadro Kanban" : "Ver Linha do Tempo";
+      render();
+    });
+
+    // Atalho Salvar Ctrl+S
     document.getElementById("save-btn").addEventListener("click", () => save("Salvo manualmente"));
     document.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
@@ -578,16 +1331,18 @@
       }
     });
 
+    // Exportar JSON
     document.getElementById("export-btn").addEventListener("click", () => {
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `mangai-roadmap-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `mangai-roadmap-nanquim-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
     });
 
+    // Importar JSON
     const fileInput = document.getElementById("import-file");
     document.getElementById("import-btn").addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", async () => {
@@ -598,20 +1353,22 @@
         render();
         save("JSON importado com sucesso");
       } catch (err) {
-        alert("Erro ao importar arquivo JSON.");
+        alert("Erro ao importar arquivo JSON de roadmap.");
       } finally {
         fileInput.value = "";
       }
     });
 
+    // Restaurar Padrão
     document.getElementById("reset-btn").addEventListener("click", () => {
-      if (confirm("Restaurar o roadmap para o modelo padrão?")) {
+      if (confirm("Restaurar o roadmap para a estrutura oficial Nanquim & Pena G (v0.3.1)?")) {
         state = structuredClone(defaultState);
         render();
         save("Roadmap restaurado");
       }
     });
 
+    // Inicialização
     render();
   </script>
 </body>
