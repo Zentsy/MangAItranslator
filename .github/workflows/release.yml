@@ -15,6 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: setup node
         uses: actions/setup-node@v4
@@ -33,6 +35,23 @@ jobs:
       - name: install frontend dependencies
         run: npm ci
 
+      - name: Generate Release Notes
+        id: release_notes
+        shell: bash
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            NOTES=$(git log --pretty=format:"- %s" -n 15)
+          else
+            NOTES=$(git log --pretty=format:"- %s" ${PREV_TAG}..HEAD)
+          fi
+          if [ -z "$NOTES" ]; then
+            NOTES="- Melhorias de desempenho e correções de estabilidade."
+          fi
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,6 +60,6 @@ jobs:
         with:
           tagName: v__VERSION__
           releaseName: "MangAI Translator v__VERSION__"
-          releaseBody: "Veja os assets desta release para instalar ou atualizar o app."
+          releaseBody: ${{ steps.release_notes.outputs.notes }}
           releaseDraft: false
           prerelease: false
