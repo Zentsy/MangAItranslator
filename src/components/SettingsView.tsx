@@ -84,8 +84,18 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: s
 
 const CHANGELOG_ITEMS = [
   {
+    version: "v0.4.0",
+    badge: "Atual",
+    title: "Changelog Real no UpdateModal & CI Automatizada",
+    items: [
+      "Injeção do changelog real na tela 'Nova Versão Pronta' (UpdateModal) com suporte a Markdown.",
+      "Identidade visual Nanquim & Washi aplicada ao fluxo de atualização do app.",
+      "Geração automatizada de notas de lançamento na esteira de CI do GitHub Actions.",
+    ],
+  },
+  {
     version: "v0.3.1",
-    badge: "Novo",
+    badge: "Anterior",
     title: "Correção na Exportação Word (.docx)",
     items: [
       "Correção do erro na exportação para Word (.docx) em ambientes WebView2/browser.",
