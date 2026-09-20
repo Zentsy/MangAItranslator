@@ -784,6 +784,160 @@
       transition: all 0.2s ease;
     }
 
+    /* Seção de Notas Editoriais / Comentários no Card */
+    .card-notes-section {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1.5px dashed rgba(27, 24, 29, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-note {
+      background: var(--paper-warm);
+      border: 1.5px dashed var(--ink);
+      border-left: 4px solid var(--verm);
+      padding: 8px 10px;
+      border-radius: 4px;
+      position: relative;
+      box-shadow: 1px 1px 0 rgba(27, 24, 29, 0.08);
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .card-note.note-author-user {
+      border-left: 4px solid var(--verm);
+      background: rgba(232, 56, 43, 0.05);
+      border-color: rgba(232, 56, 43, 0.35);
+    }
+
+    .card-note.note-author-agent {
+      border-left: 4px solid var(--ink);
+      background: rgba(27, 24, 29, 0.04);
+      border-color: rgba(27, 24, 29, 0.3);
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      border-bottom: 1px dashed rgba(27, 24, 29, 0.12);
+      padding-bottom: 4px;
+    }
+
+    .note-author-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--font-pixel);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .note-author-tag.note-user {
+      color: var(--verm-dark);
+    }
+
+    .note-author-tag.note-agent {
+      color: var(--ink-soft);
+    }
+
+    .note-date {
+      font-size: 0.65rem;
+      color: var(--ink-faint);
+      margin-left: 4px;
+      font-weight: 600;
+    }
+
+    .note-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .note-btn-toggle, .note-btn-del {
+      background: var(--paper);
+      border: 1px solid var(--ink-muted);
+      font-size: 0.72rem;
+      line-height: 1;
+      padding: 1px 5px;
+      cursor: pointer;
+      border-radius: 2px;
+      color: var(--ink);
+      transition: all 0.15s ease;
+    }
+
+    .note-btn-toggle:hover {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    .note-btn-del:hover {
+      background: var(--verm);
+      color: #fff;
+      border-color: var(--verm);
+    }
+
+    .note-text {
+      font-size: 0.84rem;
+      line-height: 1.4;
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-weight: 600;
+      outline: none;
+      cursor: text;
+      min-height: 1.2em;
+    }
+
+    .note-text:empty::before {
+      content: "Escreva sua diretriz ou nota aqui...";
+      color: var(--ink-faint);
+      font-style: italic;
+    }
+
+    .card-notes-footer {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 2px;
+    }
+
+    .btn-add-note {
+      font-family: var(--font-pixel);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: var(--paper);
+      color: var(--ink);
+      border: 1.5px solid var(--ink);
+      box-shadow: 1.5px 1.5px 0 var(--ink);
+      padding: 3px 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 2px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-add-note:hover {
+      background: var(--verm);
+      color: #fff;
+      border-color: var(--ink);
+      transform: translate(-1px, -1px);
+      box-shadow: 2.5px 2.5px 0 var(--ink);
+    }
+
     /* Visão Linha do Tempo (Timeline / Crônica) */
     .timeline-view {
       background: var(--paper-warm);
@@ -966,8 +1120,8 @@
 
       <div class="stat-box">
         <div class="stat-label">ORIGEM DAS DEFINIÇÕES</div>
-        <div class="stat-value" id="stats-authors">0 USUÁRIO &bull; 28 AGENTE</div>
-        <div class="stat-desc">Diferenciação clara: itens do Usuário vs Agente IA</div>
+        <div class="stat-value" id="stats-authors">0 USUÁRIO &bull; 28 AGENTE &bull; 0 NOTAS</div>
+        <div class="stat-desc">Diferenciação clara: itens do Usuário, Agente IA e Notas Editoriais</div>
       </div>
     </section>
 
@@ -1410,11 +1564,12 @@
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return structuredClone(defaultState);
         const parsed = JSON.parse(raw);
-        // Retrocompatibilidade: garante author: "agent" caso não exista
+        // Retrocompatibilidade: garante author: "agent" e notes: [] caso não existam
         parsed.columns?.forEach(col => {
           col.groups?.forEach(g => {
             g.cards?.forEach(c => {
               if (!c.author) c.author = "agent";
+              if (!c.notes) c.notes = [];
             });
           });
         });
@@ -1437,6 +1592,7 @@
       let pendingCount = 0;
       let userCount = 0;
       let agentCount = 0;
+      let userNotesCount = 0;
       state.columns.forEach(col => {
         col.groups.forEach(g => {
           g.cards.forEach(c => {
@@ -1444,6 +1600,11 @@
             else pendingCount++;
             if (c.author === "user") userCount++;
             else agentCount++;
+            if (c.notes) {
+              c.notes.forEach(n => {
+                if (n.author === "user") userNotesCount++;
+              });
+            }
           });
         });
       });
@@ -1453,18 +1614,20 @@
       }
       const authEl = document.getElementById("stats-authors");
       if (authEl) {
-        authEl.textContent = `${userCount} USUÁRIO • ${agentCount} AGENTE`;
+        authEl.textContent = `${userCount} USUÁRIO • ${agentCount} AGENTE • ${userNotesCount} NOTAS`;
       }
     }
 
     function matchesCard(card) {
       const q = searchQuery.toLowerCase().trim();
+      const notesMatch = card.notes && card.notes.some(n => n.text && n.text.toLowerCase().includes(q));
       const matchQuery = !q || 
         card.title.toLowerCase().includes(q) || 
         card.body.toLowerCase().includes(q) || 
         card.tag.toLowerCase().includes(q) || 
         (card.version && card.version.toLowerCase().includes(q)) ||
-        (card.author && card.author.toLowerCase().includes(q));
+        (card.author && card.author.toLowerCase().includes(q)) ||
+        notesMatch;
 
       if (!matchQuery) return false;
 
@@ -1621,7 +1784,7 @@
                 <div class="tag-cluster">
                   <span class="card-tag ${card.tagClass || 'tag-ai'}" contenteditable="true" data-card-tag="${colIdx}:${grpIdx}:${cardIdx}">${card.tag}</span>
                   <span style="font-family: var(--font-pixel); font-size: 0.72rem; font-weight: 700; color: var(--ink-faint);">${card.version}</span>
-                  <button class="author-badge author-${author}" data-toggle-author="${colIdx}:${grpIdx}:${cardIdx}" title="Autor: ${isUser ? 'Usuário (Humano)' : 'Agente IA'}. Clique para alternar">${isUser ? '👤 USUÁRIO' : '🤖 AGENTE'}</button>
+                  <button class="author-badge author-${author}" data-toggle-author="${colIdx}:${grpIdx}:${cardIdx}" title="Autor do card: ${isUser ? 'Usuário (Humano)' : 'Agente IA'}. Clique para alternar">${isUser ? '👤 USUÁRIO' : '🤖 AGENTE'}</button>
                 </div>
                 <div class="card-actions-top">
                   ${colIdx > 0 ? `<button class="card-btn-nav" data-nav-left="${colIdx}:${grpIdx}:${cardIdx}" title="Mover para a esquerda (coluna anterior)">◀</button>` : ''}
@@ -1631,6 +1794,36 @@
               </div>
               <h3 class="card-title" contenteditable="true" data-card-title="${colIdx}:${grpIdx}:${cardIdx}">${card.title}</h3>
               <div class="card-body" contenteditable="true" data-card-body="${colIdx}:${grpIdx}:${cardIdx}">${card.body}</div>
+              
+              <!-- Seção de Notas / Anotações do Usuário e Agente -->
+              <div class="card-notes-section" data-card-notes-wrap="${colIdx}:${grpIdx}:${cardIdx}">
+                ${card.notes && card.notes.length > 0 ? `
+                  <div class="card-notes-list">
+                    ${card.notes.map((note, noteIdx) => `
+                      <div class="card-note note-author-${note.author || 'user'}" data-note-item="${colIdx}:${grpIdx}:${cardIdx}:${noteIdx}">
+                        <div class="note-header">
+                          <div class="note-author-tag ${note.author === 'user' ? 'note-user' : 'note-agent'}">
+                            <span>${note.author === 'user' ? '👤' : '🤖'}</span>
+                            <span>${note.author === 'user' ? 'NOTA DO USUÁRIO' : 'NOTA DO AGENTE'}</span>
+                            ${note.date ? `<span class="note-date">${note.date}</span>` : ''}
+                          </div>
+                          <div class="note-actions">
+                            <button class="note-btn-toggle" data-toggle-note-author="${colIdx}:${grpIdx}:${cardIdx}:${noteIdx}" title="Alternar autor da nota (Usuário / Agente)">⇄</button>
+                            <button class="note-btn-del" data-del-note="${colIdx}:${grpIdx}:${cardIdx}:${noteIdx}" title="Excluir nota">&times;</button>
+                          </div>
+                        </div>
+                        <div class="note-text" contenteditable="true" data-note-text="${colIdx}:${grpIdx}:${cardIdx}:${noteIdx}">${note.text}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+                <div class="card-notes-footer">
+                  <button class="btn-add-note" data-add-note="${colIdx}:${grpIdx}:${cardIdx}" title="Adicionar anotação/diretriz do Usuário neste card">
+                    <span>✏️</span> + NOTA DO USUÁRIO
+                  </button>
+                </div>
+              </div>
+
               ${card.stamp ? `<div class="stamp-overlay">${card.stamp}</div>` : ''}
             `;
             deck.appendChild(cardEl);
@@ -1708,38 +1901,20 @@
       } else if (t.dataset.cardTag) {
         const [c, g, i] = t.dataset.cardTag.split(":").map(Number);
         state.columns[c].groups[g].cards[i].tag = t.textContent.trim();
-        state.columns[c].groups[g].cards[i].author = "user";
-        markCardAsUser(t);
       } else if (t.dataset.cardTitle) {
         const [c, g, i] = t.dataset.cardTitle.split(":").map(Number);
         state.columns[c].groups[g].cards[i].title = t.textContent.trim();
-        state.columns[c].groups[g].cards[i].author = "user";
-        markCardAsUser(t);
       } else if (t.dataset.cardBody) {
         const [c, g, i] = t.dataset.cardBody.split(":").map(Number);
         state.columns[c].groups[g].cards[i].body = t.textContent.trim();
-        state.columns[c].groups[g].cards[i].author = "user";
-        markCardAsUser(t);
+      } else if (t.dataset.noteText) {
+        const [c, g, i, n] = t.dataset.noteText.split(":").map(Number);
+        state.columns[c].groups[g].cards[i].notes[n].text = t.textContent.trim();
       }
       save("Alteração registrada");
     });
 
-    // Atualiza visualmente o card para autoria do usuário em tempo real
-    function markCardAsUser(elem) {
-      const cardEl = elem.closest(".manga-card");
-      if (!cardEl) return;
-      cardEl.dataset.author = "user";
-      cardEl.classList.remove("card-author-agent");
-      cardEl.classList.add("card-author-user");
-      const badge = cardEl.querySelector(".author-badge");
-      if (badge) {
-        badge.className = "author-badge author-user";
-        badge.textContent = "👤 USUÁRIO";
-        badge.title = "Autor: Usuário (Humano). Clique para alternar";
-      }
-    }
-
-    // Cliques em botões, navegação rápida, filtros e alternância de autor
+    // Cliques em botões, navegação rápida, filtros, notas e alternância de autor
     document.addEventListener("click", (e) => {
       const addBtn = e.target.closest("[data-add-col]");
       if (addBtn) {
@@ -1759,14 +1934,65 @@
           tagClass: "tag-ai",
           title: "Novo Item de Roadmap",
           body: "Clique para descrever este item, objetivo ou requisito técnico.",
-          stamp: "USUÁRIO"
+          stamp: "USUÁRIO",
+          notes: []
         });
         render();
         save("Card adicionado pelo usuário");
         return;
       }
 
-      // Alternar Autor (Usuário <-> Agente) com 1 clique
+      // Adicionar Nota do Usuário ao Card
+      const addNoteBtn = e.target.closest("[data-add-note]");
+      if (addNoteBtn) {
+        const [c, g, i] = addNoteBtn.dataset.addNote.split(":").map(Number);
+        const card = state.columns[c].groups[g].cards[i];
+        if (!card.notes) card.notes = [];
+        const now = new Date();
+        const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+        card.notes.push({
+          author: "user",
+          text: "Nova anotação...",
+          date: dateStr
+        });
+        render();
+        save("Nota do usuário adicionada");
+
+        // Foca automaticamente no texto da nova nota adicionada
+        const newNoteEl = document.querySelector(`[data-note-text="${c}:${g}:${i}:${card.notes.length - 1}"]`);
+        if (newNoteEl) {
+          newNoteEl.focus();
+          const range = document.createRange();
+          range.selectNodeContents(newNoteEl);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        return;
+      }
+
+      // Excluir Nota
+      const delNoteBtn = e.target.closest("[data-del-note]");
+      if (delNoteBtn) {
+        const [c, g, i, n] = delNoteBtn.dataset.delNote.split(":").map(Number);
+        state.columns[c].groups[g].cards[i].notes.splice(n, 1);
+        render();
+        save("Nota removida");
+        return;
+      }
+
+      // Alternar Autor da Nota (Usuário <-> Agente)
+      const toggleNoteAuthBtn = e.target.closest("[data-toggle-note-author]");
+      if (toggleNoteAuthBtn) {
+        const [c, g, i, n] = toggleNoteAuthBtn.dataset.toggleNoteAuthor.split(":").map(Number);
+        const note = state.columns[c].groups[g].cards[i].notes[n];
+        note.author = (note.author === "user") ? "agent" : "user";
+        render();
+        save(`Autor da nota alterado para ${note.author === 'user' ? 'Usuário' : 'Agente'}`);
+        return;
+      }
+
+      // Alternar Autor do Card (Usuário <-> Agente) com 1 clique
       const toggleAuthBtn = e.target.closest("[data-toggle-author]");
       if (toggleAuthBtn) {
         const [c, g, i] = toggleAuthBtn.dataset.toggleAuthor.split(":").map(Number);
@@ -1776,7 +2002,7 @@
           card.stamp = "USUÁRIO";
         }
         render();
-        save(`Autor alterado para ${card.author === 'user' ? 'Usuário' : 'Agente'}`);
+        save(`Autor do card alterado para ${card.author === 'user' ? 'Usuário' : 'Agente'}`);
         return;
       }
 
