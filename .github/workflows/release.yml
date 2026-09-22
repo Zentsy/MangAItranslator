@@ -39,15 +39,21 @@ jobs:
         id: release_notes
         shell: bash
         run: |
+          TAG_MSG=$(git tag -l --format='%(contents)' "$GITHUB_REF_NAME" 2>/dev/null | sed '/^$/d' || echo "")
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -z "$PREV_TAG" ]; then
-            NOTES=$(git log --pretty=format:"- %s" -n 15)
-          else
-            NOTES=$(git log --pretty=format:"- %s" ${PREV_TAG}..HEAD)
+
+          if [ -f "RELEASE_NOTES.md" ]; then
+            NOTES=$(cat RELEASE_NOTES.md)
+          elif [ -n "$TAG_MSG" ]; then
+            NOTES="$TAG_MSG"
+          elif [ -n "$PREV_TAG" ]; then
+            NOTES=$(git log --pretty=format:"%s" ${PREV_TAG}..HEAD 2>/dev/null | grep -E '^(feat|fix)' | sed -E 's/^(feat|fix)(\([^)]+\))?:\s*/- /' || echo "")
           fi
+
           if [ -z "$NOTES" ]; then
             NOTES="- Melhorias de desempenho e correções de estabilidade."
           fi
+
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo "$NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

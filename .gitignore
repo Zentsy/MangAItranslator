@@ -33,7 +33,10 @@ models/
 *.bin
 *.gguf
 
-# Internal planning / workspace docs
+# Internal planning / workspace docs / AI guidelines
+docs/
+GEMINI.md
+AGENTS.md
 conductor/
 .agents/
 .codex/
