@@ -84,7 +84,7 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: s
 
 const CHANGELOG_ITEMS = [
   {
-    version: "v0.4.0",
+    version: "v0.3.5",
     badge: "Atual",
     title: "Changelog Real no UpdateModal & CI Automatizada",
     items: [

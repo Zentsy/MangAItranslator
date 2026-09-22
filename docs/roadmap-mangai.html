@@ -1096,8 +1096,8 @@
     <section class="status-strip">
       <div class="stat-box">
         <div class="stat-label">VERSÃO ATIVA EM PRODUÇÃO</div>
-        <div class="stat-value">v0.3.1</div>
-        <div class="stat-desc">Patch estável: Correção de exportação Word (.docx) no WebView2</div>
+        <div class="stat-value">v0.3.5</div>
+        <div class="stat-desc">UpdateModal com changelog real e notas de lançamento automatizadas</div>
       </div>
 
       <div class="stat-box">
@@ -1114,13 +1114,13 @@
 
       <div class="stat-box">
         <div class="stat-label">STATUS DAS ENTREGAS</div>
-        <div class="stat-value" id="stats-deliveries">13 ENTREGUES &bull; 15 PLANEJADAS</div>
-        <div class="stat-desc">Batch, Glossário, Memória, Keyring e Landing Page no ar</div>
+        <div class="stat-value" id="stats-deliveries">14 ENTREGUES &bull; 15 PLANEJADAS</div>
+        <div class="stat-desc">Batch, Glossário, Memória, Keyring, Landing Page e UpdateModal</div>
       </div>
 
       <div class="stat-box">
         <div class="stat-label">ORIGEM DAS DEFINIÇÕES</div>
-        <div class="stat-value" id="stats-authors">0 USUÁRIO &bull; 28 AGENTE &bull; 0 NOTAS</div>
+        <div class="stat-value" id="stats-authors">0 USUÁRIO &bull; 29 AGENTE &bull; 0 NOTAS</div>
         <div class="stat-desc">Diferenciação clara: itens do Usuário, Agente IA e Notas Editoriais</div>
       </div>
     </section>
@@ -1153,7 +1153,8 @@
         <div class="filter-chips" id="version-filter-container">
           <button class="filter-chip version-chip active" data-ver-filter="all">TODAS AS VERSÕES</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.4.0">v0.4.0 (Ciclo Ativo)</button>
-          <button class="filter-chip version-chip" data-ver-filter="v0.3.1">v0.3.1 (Patch Atual)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.3.5">v0.3.5 (UpdateModal Test)</button>
+          <button class="filter-chip version-chip" data-ver-filter="v0.3.1">v0.3.1 (Patch Anterior)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.3.0">v0.3.0 (Fase Nanquim)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.2.0">v0.2.0 (Multi-Modelos)</button>
           <button class="filter-chip version-chip" data-ver-filter="v0.1.x">v0.1.x (Fundação MVP)</button>
@@ -1194,8 +1195,24 @@
           hanko: "済",
           groups: [
             {
+              version: "v0.3.5",
+              name: "Release v0.3.5 (UpdateModal & CI Release Notes)",
+              badge: "Set / 2026",
+              cards: [
+                {
+                  version: "v0.3.5",
+                  author: "agent",
+                  tag: "RELEASE",
+                  tagClass: "tag-release",
+                  title: "Changelog Real no UpdateModal & CI Automatizada",
+                  body: "Injeção do changelog real na tela 'Nova Versão Pronta' e automação de notas de lançamento na esteira de CI do GitHub Actions.",
+                  stamp: "ENTREGUE"
+                }
+              ]
+            },
+            {
               version: "v0.3.1",
-              name: "Release v0.3.1 (Patch Atual)",
+              name: "Release v0.3.1 (Patch Anterior)",
               badge: "Set / 2026",
               cards: [
                 {
@@ -1358,24 +1375,6 @@
                   title: "Design System: Nova UI MangAI Desktop",
                   body: "Transição visual completa da interface desktop adotando a identidade editorial densa (washi, nanquim, vermelhão e halftones) da landing page dentro do app Tauri.",
                   stamp: "EM DESIGN"
-                },
-                {
-                  version: "v0.4.0",
-                  author: "agent",
-                  tag: "CRITICAL",
-                  tagClass: "tag-critical",
-                  title: "Melhoria do UpdateModal & Changelog Real",
-                  body: "Evoluir a tela 'Nova Versão Pronta' (UpdateModal): buscar e renderizar o changelog real da release no campo 'O que mudou', eliminando a mensagem genérica ('Veja os assets desta release...').",
-                  stamp: "IMPLEMENTADO"
-                },
-                {
-                  version: "v0.4.0",
-                  author: "agent",
-                  tag: "RELEASE",
-                  tagClass: "tag-release",
-                  title: "Injeção Automática de Release Notes na CI",
-                  body: "Configurar o GitHub Actions (release.yml) para extrair os tópicos de novidades reais da versão do changelog ou tag em vez do texto padrão estático.",
-                  stamp: "IMPLEMENTADO"
                 }
               ]
             },
@@ -1846,7 +1845,8 @@
         { ver: "v0.2.0", title: "Multi-Modelos, Modo Free & Tipos de Balão", status: "Concluído", class: "done", desc: "Integração com OpenRouter, LM Studio e Groq, além de classificação semântica de balões (retangular, pensamento, duplo)." },
         { ver: "v0.3.0", title: "Identidade Nanquim, Tradução em Lote & Memória", status: "Concluído", class: "done", desc: "Salto de produtividade: batch sequencial assíncrono, glossário SQLite, cofre de chaves no keyring e landing page no ar." },
         { ver: "v0.3.1", title: "Patch de Exportação Word (.docx)", status: "Concluído", class: "done", desc: "Correção crítica do erro de nodebuffer no WebView2 com ArrayBuffer binário nativo e diagnóstico real de erros." },
-        { ver: "v0.4.0 (Fase 4.1)", title: "Design System Nanquim & UpdateModal Real", status: "Em Andamento", class: "active", desc: "Nova UI completa no app Tauri, exibição de changelog real no modal e automação de release notes na CI." },
+        { ver: "v0.3.5", title: "UpdateModal Real & CI Release Notes", status: "Concluído", class: "done", desc: "Changelog real na tela de atualização e extração automática de notas de lançamento via GitHub Actions." },
+        { ver: "v0.4.0 (Fase 4.1)", title: "Design System Nanquim Desktop", status: "Em Andamento", class: "active", desc: "Nova UI completa no app Tauri adotando a identidade editorial densa (washi, nanquim e halftones)." },
         { ver: "v0.4.0 (Fase 4.2)", title: "Backend, IA & WebAssembly", status: "Planejado", class: "planned", desc: "Bounding boxes automáticas no cliente (WASM), rotação de quotas inteligentes, perfis por idioma e exportação JSON." },
         { ver: "v0.5.0 ~ v1.0.0", title: "Typesetting Visual, Multiplataforma & Local Offline", status: "Visão Futura", class: "planned", desc: "Renderização prévia de fontes de mangá, binários Linux/macOS, code signing e tradução 100% offline." }
       ];
