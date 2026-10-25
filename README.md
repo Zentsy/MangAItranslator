@@ -48,16 +48,19 @@ Se você baixou o app deste repositório oficial e quiser testar mesmo assim, re
 
 ## O que o app faz
 
-- importa pastas completas de capítulos ou páginas avulsas com detecção de vizinhas
-- tradução em lote assíncrona (batch queue) com monitor de progresso em tempo real
-- glossário local por projeto persistido em SQLite para coerência de termos, nomes e golpes
-- memória de contexto de curto prazo entre páginas para consistência narrativa
-- atalhos de alta produtividade (`M` para mesclar balões, `S` para trocar ordem, navegação por teclado)
-- cofre seguro de chaves com isolamento por provedor e proteção nativa do keyring do SO
-- suporte a motores de ponta: Gemini, OpenRouter, Groq, LM Studio e Ollama
-- revisão de blocos no editor com preservação e formatação editorial
-- exportação final em `.txt` e `.docx`
-- checagem e atualização automática pelo próprio app
+- **Design System Nanquim & Washi**: interface rica e densa inspirada na arte tradicional de mangá com suporte a Dark Nanquim e Paper Light artesanal.
+- **Perfis de Tradução & Presets de Idioma**: configurações direcionadas para Mangá (JP), Manhwa (KR), Manhua (CN) e Comics ocidentais, com ajuste de persona e tom de voz.
+- **Preset Especializado Japonês Raw $\rightarrow$ PT-BR**: prompt avançado para contornar kanjis homófonos, leitura vertical (*tategaki*) e sutilezas de furiganas.
+- **Segunda Passada de Naturalidade (PT-BR)**: polimento inteligente de fluidez em diálogos preservando contexto dramático e pontuação de quadrinhos.
+- **Iconografia Autoral Vetorial**: substituição integral de ícones genéricos por ilustrações SVG puras de Pena G, tinteiros e balões de mangá (adeus AI slop).
+- **Tradução em Lote (Batch Queue)**: fila de processamento sequencial de múltiplas páginas com monitor de progresso em tempo real no cabeçalho do editor.
+- **Glossário Local por Projeto**: termos, nomes próprios e golpes persistidos em banco SQLite local e injetados diretamente nos prompts.
+- **Memória de Curto Prazo**: contexto transmitido entre páginas consecutivas para manter consistência narrativa e de pronomes.
+- **Atalhos Rápidos de Produtividade**: tecla `M` para mesclar balões adjacentes, `S` para trocar ordem de leitura e navegação por teclado.
+- **Cofre Seguro de Chaves (Keyring)**: isolamento de chaves de API com proteção criptográfica nativa do sistema operacional.
+- **Multi-Provedores de IA**: suporte nativo a Google Gemini, OpenRouter (Auto-Free inteligente), Groq Cloud e modelos locais via LM Studio e Ollama.
+- **Exportação Estruturada**: saída editorial limpa em formatos `.txt` e `.docx`.
+- **Auto-Updater Embutido**: checagem, download e atualização com validação criptográfica pelo próprio app.
 
 ## Motores de IA
 
@@ -65,7 +68,7 @@ Se você baixou o app deste repositório oficial e quiser testar mesmo assim, re
 
 - `Gemini`: melhor experiência geral para qualidade, OCR e consistência (Gemini 3.8 Flash nativo).
 - `Groq`: modo turbo para páginas leves com velocidade quase instantânea no hardware LPU.
-- `OpenRouter Auto grátis`: seleciona automaticamente modelos vision gratuitos com fallback seguro.
+- `OpenRouter Auto grátis`: seleciona automaticamente modelos vision gratuitos com rotação de chaves e fallback seguro.
 
 ### Local
 
@@ -74,13 +77,44 @@ Se você baixou o app deste repositório oficial e quiser testar mesmo assim, re
 
 ### Importante sobre modelos grátis
 
-No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O app tenta corrigir respostas duplicadas, vazias ou mal formatadas, mas alguns modelos pequenos podem apenas transcrever o texto em vez de traduzir.
+No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O app tenta corrigir respostas duplicadas, vazias ou mal formatadas, filtra automaticamente blocos internos de raciocínio (`<think>`) e tem fallback inteligente, mas alguns modelos pequenos podem apenas transcrever o texto em vez de traduzir.
+
+## ✒️ Novidades da Versão 0.4.0
+
+- **Nova Identidade Visual "Paper Light"**: modo claro reconstruído do zero com papéis Washi cru, contrastes em nanquim e selos Hanko (認, 済, 動, 筆).
+- **Segunda Passada de Naturalidade**: revisão opcional pós-tradução para refinar a fluidez dos diálogos em português brasileiro sem perder o contexto dramático.
+- **Preset Especializado Japonês Raw $\rightarrow$ PT-BR**: engenharia de prompt para desambiguação de kanjis homófonos, furigana e leitura tategaki.
+- **Iconografia Autoral & Adeus AI Slop**: novo conjunto de ícones vetoriais em SVG puro (Penas G, tinteiros, balões de fala, grito e pensamento) e nova Logo Oficial em SVG puro com redução de ~1.8MB no instalador.
+- **Otimização do OpenRouter Auto-Free**: teto estendido de tokens (4096) e supressão de tokens de raciocínio para evitar estouro de limite nos modelos gratuitos.
+
+<details>
+<summary><b>Histórico de Versões Anteriores (v0.3.x e anteriores)</b></summary>
+
+### v0.3.5
+- Injeção do changelog real na tela de atualização (UpdateModal) com suporte a Markdown.
+- Geração automatizada de notas de lançamento na esteira de CI do GitHub Actions.
+
+### v0.3.1
+- Correção de erro na exportação Word (.docx) em ambientes WebView2 via ArrayBuffer binário nativo.
+
+### v0.3.0
+- Nova identidade visual artesanal inspirada em Nanquim & Pena G.
+- Fila de tradução em lote sequencial com monitor de progresso em tempo real.
+- Glossário persistente por projeto com SQLite local.
+- Memória de curto prazo entre páginas consecutivas.
+- Atalhos de alta velocidade no editor (`M` e `S`).
+- Cofre seguro de credenciais com isolamento no keyring do SO.
+
+### v0.2.0
+- Multi-provedores: OpenRouter, LM Studio local, Groq e Google Gemini.
+- Tipagem semântica de balões: [RET], {FORA}, (PEN) e //DBL//.
+</details>
 
 ## Capturas de tela
 
 ### Destaque
 
-O editor é o coração do app, agora com monitor de tradução em lote em tempo real, integração direta de glossário e atalhos rápidos de revisão (`M`, `S`).
+O editor é o coração do app, agora com monitor de tradução em lote em tempo real, integração direta de glossário, perfis de tradução e atalhos rápidos de revisão (`M`, `S`).
 
 ![Editor com revisão de blocos e monitor de lote](screenshots/editor.png)
 
@@ -98,57 +132,43 @@ O editor é o coração do app, agora com monitor de tradução em lote em tempo
 
 ### Configurações e tema
 
-| Modelos e Motores (v0.3.0) | Tema Claro |
+| Modelos e Motores | Tema Paper Light |
 | --- | --- |
 | ![Seleção de modelos e motores](screenshots/configs_v3.png) | ![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png) |
-| Gemini 3.8 Flash, Claude Sonnet 5, GPT-6 Astra, Groq LPU e modelos locais. | Interface editorial de alto contraste adaptada para revisão diurna. |
+| Gemini 3.8 Flash, Claude Sonnet 5, GPT-6 Astra, Groq LPU e modelos locais. | Interface editorial inspirada em papel Washi cru e Nanquim tradicional. |
 
 ## Fluxo rápido
 
-1. Escolha um motor de IA.
-2. Importe um capítulo.
+1. Escolha o motor de IA e o perfil de tradução desejado.
+2. Importe um capítulo ou conjunto de páginas.
 3. Gere o `AI Draft` (individual ou em lote).
 4. Revise os blocos no editor com atalhos (`M`, `S`).
-5. Exporte em `.txt` ou `.docx`.
-
-## Novidades da v0.3.0
-
-- **Identidade Visual Nanquim & Pena G**: Nova arte autêntica com estética densa de mangá editorial.
-- **Tradução em Lote (Batch Queue)**: Processamento sequencial de múltiplas páginas com monitor de progresso no cabeçalho do editor.
-- **Glossário Persistente por Projeto**: Termos, pronomes e golpes salvos em SQLite local e injetados nos prompts.
-- **Memória de Curto Prazo**: Contexto entre páginas consecutivas para manter consistência de pronomes e falas contínuas.
-- **Atalhos Rápidos de Edição**: Teclas `M` para mesclar balões adjacentes e `S` para inverter ordem de leitura.
-- **Cofre de Chaves Seguro (Keyring)**: Isolamento das API keys de cada provedor no gerenciador de credenciais seguro do SO.
-- **Modelos de Última Geração**: Gemini 3.8 Flash, Claude Sonnet 5, Claude Fable 5.1, GPT-6 Astra e Qwen 3.8 27B via Groq.
+5. (Opcional) Aplique a `Segunda Passada` para polimento de linguagem natural.
+6. Exporte em `.txt` ou `.docx`.
 
 ## Roadmap
 
-### Próximas melhorias
+### Próximo Ciclo: Fase v0.5.0 (Colaboração & Typesetting Assistido)
 
-- perfis de tradução por idioma de origem e destino
-- revisão de naturalidade para melhorar o texto final depois do rascunho inicial
-- exportação visual com tradução aplicada diretamente sobre a imagem
-- ferramentas de limpeza de balões, redraw e typesetting assistido
+- **Typesetter Helper Visual**: renderização prévia do texto traduzido diretamente dentro dos balões na imagem com tipografias clássicas de mangá.
+- **Dicionário de Onomatopeias (SFX)**: catálogo integrado de efeitos sonoros japoneses (擬音語・擬態語) com sugestões de adaptação para quadrinhos.
+- **Pacote de Projeto .mangai**: compartilhamento fácil de projetos completos (imagens, cache, SQLite e histórico) entre equipes de scanlation.
+- **Detecção Local de Coordenadas de Balões (WASM)**: pré-detecção de bounding boxes de balões no cliente via WebAssembly para ordenação visual imediata.
 
-### Futuro
+### Futuro (v1.0.0)
 
-- code signing no Windows para reduzir o atrito com o SmartScreen
-- leitura de mangás direto da fonte por extensões independentes, em um modelo inspirado no ecossistema do Mihon
-- suporte a inglês como idioma de saída, com prompts para traduzir direto de japonês, coreano ou mandarim
-
-### Em pesquisa
-
-- exportação visual com a tradução aplicada sobre a imagem
-- ferramentas futuras de limpeza de balões, redraw e typesetting assistido
-- experiência mobile ou modo leitor para acompanhar traduções em dispositivos móveis
+- Code signing de distribuição no Windows para eliminar por completo os avisos do SmartScreen.
+- Leitura de mangás direto da fonte via extensões independentes (estilo Mihon).
+- Suporte a múltiplos idiomas de saída (JP, KO, ZH direto para EN e ES).
+- Distribuição multiplataforma oficial (Linux e macOS).
 
 ## Desenvolvimento
 
 ### Requisitos
 
-- `Node.js`
-- `Rust`
-- dependências do Tauri instaladas no sistema
+- `Node.js` (LTS)
+- `Rust` (Stable)
+- Dependências de compilação do Tauri instaladas no sistema
 
 ### Rodando em desenvolvimento
 
@@ -163,7 +183,7 @@ npm run tauri -- dev
 npm run lint
 ```
 
-### Build rápido
+### Build do App Desktop
 
 ```bash
 npm run build
@@ -183,11 +203,9 @@ npm run dev
 
 O deploy para produção gera um bundle standalone unificado (`site/index.html`) publicado no GitHub Pages via branch `gh-pages`.
 
-Pull requests passam pela CI (`.github/workflows/ci.yml`), que roda lint, typecheck/build do frontend e `cargo check` do backend.
-
 ## Status do projeto
 
-O app já está funcional para uso real em Windows, mas continua em fase beta. O foco atual é polir a experiência, validar o updater e corrigir bugs de uso real conforme a comunidade testar.
+O app está funcional e pronto para uso real no Windows. Com a entrega da **v0.4.0**, a interface atinge sua maturidade visual Nanquim & Washi e ganha recursos profissionais de controle editorial e refinamento de linguagem.
 
 ## Uso responsável
 
