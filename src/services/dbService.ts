@@ -57,6 +57,10 @@ interface BlockRow {
   text: string;
   type: MangaPage["blocks"][number]["type"];
   order_index: number;
+  bbox_x?: number | null;
+  bbox_y?: number | null;
+  bbox_w?: number | null;
+  bbox_h?: number | null;
 }
 
 export const dbService = {
@@ -112,7 +116,23 @@ export const dbService = {
         name: page.name,
         translation: "",
         status: page.status,
-        blocks: blocks.map((block) => ({ id: block.id, text: block.text, type: block.type })),
+        blocks: blocks.map((block) => ({
+          id: block.id,
+          text: block.text,
+          type: block.type,
+          bbox:
+            block.bbox_x != null &&
+            block.bbox_y != null &&
+            block.bbox_w != null &&
+            block.bbox_h != null
+              ? {
+                  x: block.bbox_x,
+                  y: block.bbox_y,
+                  width: block.bbox_w,
+                  height: block.bbox_h,
+                }
+              : undefined,
+        })),
       });
     }
 
@@ -128,7 +148,15 @@ export const dbService = {
         path: page.path,
         name: page.name,
         status: page.status,
-        blocks: page.blocks ?? [],
+        blocks: (page.blocks ?? []).map((b) => ({
+          id: b.id,
+          text: b.text,
+          type: b.type,
+          bbox_x: b.bbox?.x ?? null,
+          bbox_y: b.bbox?.y ?? null,
+          bbox_w: b.bbox?.width ?? null,
+          bbox_h: b.bbox?.height ?? null,
+        })),
       },
     });
   },

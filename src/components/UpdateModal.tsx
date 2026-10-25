@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Download, RefreshCw } from "lucide-react";
 import type { AvailableUpdateInfo } from "@/hooks/useAppUpdater";
 
@@ -101,120 +100,141 @@ const UpdateModal: React.FC<UpdateModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !isInstalling && !open && onClose()}>
-      <DialogContent className="border-app-border bg-app-surface/95 text-app-text-primary backdrop-blur-2xl sm:max-w-xl rounded-3xl shadow-2xl">
-        <DialogHeader className="space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-500 font-black text-xl shadow-inner font-mono">
-              新
+      <DialogContent className="border-2 border-app-border bg-app-card text-app-text-primary shadow-ink-lg sm:max-w-xl p-6 relative overflow-hidden">
+        {/* Cantoneiras Tonbo de Corte Editorial */}
+        <div className="absolute top-2 left-2 font-pixel text-xs text-app-border select-none pointer-events-none">┌</div>
+        <div className="absolute top-2 right-2 font-pixel text-xs text-app-border select-none pointer-events-none">┐</div>
+        <div className="absolute bottom-2 left-2 font-pixel text-xs text-app-border select-none pointer-events-none">└</div>
+        <div className="absolute bottom-2 right-2 font-pixel text-xs text-app-border select-none pointer-events-none">┘</div>
+
+        {/* Retícula sutil */}
+        <div className="halftone absolute inset-0 opacity-[0.03] pointer-events-none" />
+
+        <div className="z-10 relative">
+          <DialogHeader className="pt-2 space-y-4">
+            <div className="flex items-center gap-3">
+              {/* Selo Hanko Editorial [新] */}
+              <div className="inline-grid h-12 w-12 shrink-0 place-items-center border-2 border-app-text-primary bg-amber-500 text-black shadow-ink-sm -rotate-2 select-none">
+                <span className="font-brush text-2xl font-black leading-none">新</span>
+              </div>
+
+              <div>
+                <span className="font-pixel text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/70">
+                  DISTRIBUIÇÃO OFICIAL // NEW VERSION AVAILABLE
+                </span>
+                <DialogTitle className="font-display text-2xl uppercase tracking-wider text-app-text-primary leading-tight mt-0.5">
+                  Nova Versão Pronta
+                </DialogTitle>
+              </div>
             </div>
-            <div className="min-w-0">
-              <DialogTitle className="text-2xl font-black uppercase tracking-tight leading-none text-app-text-primary">
-                Nova versão pronta
-              </DialogTitle>
-              <DialogDescription className="mt-2 text-sm leading-relaxed text-app-text-secondary">
-                A versão <span className="font-bold text-amber-500">{update.version}</span> já está
-                disponível. Seu app atual está em{" "}
-                <span className="font-bold text-app-text-primary">{update.currentVersion}</span>.
+
+            <div className="border border-dashed border-app-border bg-app-surface/60 p-3 shadow-inner">
+              <DialogDescription className="font-mono text-xs text-app-text-secondary leading-relaxed">
+                A versão <span className="font-bold text-amber-500 font-mono">{update.version}</span> já está pronta para instalação. O tomo atual em execução é <span className="font-bold text-app-text-primary font-mono">{update.currentVersion}</span>.
               </DialogDescription>
             </div>
-          </div>
 
-          <div className="grid gap-3 rounded-2xl border border-app-border bg-app-bg/50 p-4 sm:grid-cols-2">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                Versão atual
+            {/* Grid de Versões */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-2 border-app-border bg-app-surface p-3.5 shadow-ink-sm">
+              <div>
+                <span className="block font-pixel text-[9px] font-bold uppercase tracking-wider text-app-text-secondary/70">
+                  Versão Atual
+                </span>
+                <span className="mt-1 block font-mono text-sm font-bold text-app-text-primary">
+                  {update.currentVersion}
+                </span>
               </div>
-              <div className="mt-1 text-sm font-semibold text-app-text-primary">
-                {update.currentVersion}
+              <div>
+                <span className="block font-pixel text-[9px] font-bold uppercase tracking-wider text-app-text-secondary/70">
+                  Nova Versão
+                </span>
+                <span className="mt-1 block font-mono text-sm font-bold text-amber-500">
+                  {update.version}
+                </span>
               </div>
-            </div>
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                Nova versão
-              </div>
-              <div className="mt-1 text-sm font-semibold text-amber-500">
-                {update.version}
-              </div>
-            </div>
-            {updateDate && (
-              <div className="sm:col-span-2">
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                  Publicada em
+              {updateDate && (
+                <div className="col-span-2 sm:col-span-1">
+                  <span className="block font-pixel text-[9px] font-bold uppercase tracking-wider text-app-text-secondary/70">
+                    Publicada em
+                  </span>
+                  <span className="mt-1 block font-mono text-xs font-semibold text-app-text-primary">
+                    {updateDate}
+                  </span>
                 </div>
-                <div className="mt-1 text-sm font-semibold text-app-text-primary">
-                  {updateDate}
-                </div>
+              )}
+            </div>
+
+            {/* Painel de Changelog */}
+            <div className="border-2 border-app-border bg-app-surface/80 p-3.5 shadow-ink-sm">
+              <div className="mb-2.5 flex items-center justify-between border-b border-app-border pb-2">
+                <span className="font-pixel text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/70">
+                  Notas de Lançamento
+                </span>
+                <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-amber-500">
+                  CHANGELOG
+                </span>
               </div>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-app-border bg-app-bg/40 p-4">
-            <div className="mb-2.5 flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/60">
-                O que mudou
-              </span>
-              <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-amber-500/80">
-                CHANGELOG
-              </span>
-            </div>
-            <div className="max-h-48 overflow-y-auto">
-              {renderChangelogContent(update.body)}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-app-border bg-app-bg/30 p-4">
-            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-app-text-secondary/70">
-              {statusMessage || "Pronto para baixar a atualização"}
-            </div>
-
-            {isInstalling && (
-              <div className="mt-4">
-                <div className="mb-2 flex items-center justify-between text-[11px] text-app-text-secondary/70">
-                  <span>Progresso do download</span>
-                  <span>{progressPercent ?? 0}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-app-surface border border-app-border">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-500 to-rose-500 transition-all duration-300"
-                    style={{ width: `${progressPercent ?? 0}%` }}
-                  />
-                </div>
+              <div className="max-h-40 overflow-y-auto no-scrollbar pr-1">
+                {renderChangelogContent(update.body)}
               </div>
-            )}
+            </div>
 
-            <p className="mt-3 text-xs leading-relaxed text-app-text-secondary/60">
-              No Windows, o app fechará momentaneamente para aplicar o instalador da nova versão.
-            </p>
-          </div>
-        </DialogHeader>
+            {/* Estado de Instalação e Progresso */}
+            <div className="border border-dashed border-app-border bg-app-surface/40 p-3">
+              <div className="font-pixel text-[10px] font-bold uppercase tracking-wider text-app-text-secondary/80">
+                {statusMessage || "Pronto para baixar e atualizar o aplicativo"}
+              </div>
 
-        <DialogFooter className="mt-2 flex-col gap-3 sm:flex-row">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isInstalling}
-            className="w-full rounded-2xl border-app-border bg-transparent py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary sm:w-auto"
-          >
-            Agora não
-          </Button>
-          <Button
-            onClick={() => void onInstall()}
-            disabled={isInstalling}
-            className="w-full rounded-2xl bg-amber-500 hover:bg-amber-600 text-black py-6 text-[10px] font-black uppercase tracking-[0.18em] transition-all shadow-md sm:w-auto"
-          >
-            {isInstalling ? (
-              <>
-                <RefreshCw className="animate-spin" />
-                Instalando...
-              </>
-            ) : (
-              <>
-                <Download />
-                Baixar e instalar
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+              {isInstalling && (
+                <div className="mt-3">
+                  <div className="mb-1.5 flex items-center justify-between font-mono text-[11px] text-app-text-secondary">
+                    <span>PROGRESSO DO DOWNLOAD</span>
+                    <span className="font-bold text-amber-500">{progressPercent ?? 0}%</span>
+                  </div>
+                  <div className="h-3 overflow-hidden border-2 border-app-border bg-app-card">
+                    <div
+                      className="bar-stripes h-full bg-gradient-to-r from-amber-500 to-app-accent transition-all duration-300"
+                      style={{ width: `${progressPercent ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <p className="mt-2 font-mono text-[10px] text-app-text-secondary/50 leading-relaxed">
+                * O aplicativo será reiniciado automaticamente para consolidar o instalador da nova versão.
+              </p>
+            </div>
+          </DialogHeader>
+
+          <DialogFooter className="mt-6 flex flex-row items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isInstalling}
+              className="btn border-2 border-app-border bg-app-surface px-5 py-2.5 font-bold text-xs uppercase tracking-wider text-app-text-secondary hover:border-app-accent hover:text-app-text-primary shadow-ink-sm transition-all disabled:opacity-50"
+            >
+              Agora Não
+            </button>
+            <button
+              type="button"
+              onClick={() => void onInstall()}
+              disabled={isInstalling}
+              className="btn primary border-2 border-app-text-primary bg-amber-500 px-6 py-2.5 font-black text-xs uppercase tracking-wider text-black shadow-ink transition-all hover:bg-amber-400 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-ink-hover flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isInstalling ? (
+                <>
+                  <RefreshCw className="animate-spin" size={15} />
+                  <span>Instalando...</span>
+                </>
+              ) : (
+                <>
+                  <Download size={15} />
+                  <span>Baixar e Instalar</span>
+                </>
+              )}
+            </button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

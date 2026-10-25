@@ -1,4 +1,6 @@
 import { GlossaryTerm } from "./dbService";
+import { buildEditorialSystemPrompt, buildEditorialUserPrompt } from "./promptBuilderService";
+import type { TranslationProfile } from "@/store/useMangaStore";
 
 const VALID_BLOCK_TYPES = new Set(["rect", "outside", "thought", "double", "none"]);
 const OLLAMA_REQUEST_TIMEOUT_MS = 8 * 60 * 1000;
@@ -218,23 +220,12 @@ export const translateImage = async (
   glossary: GlossaryTerm[] = [],
   previousContext: string | null = null,
   onChunk?: (chunk: string) => void,
-  onStatusChange?: (update: OllamaStatusUpdate) => void
+  onStatusChange?: (update: OllamaStatusUpdate) => void,
+  profile?: TranslationProfile
 ) => {
   const requestLabel = `[ollama] ${model} #${Date.now()}`;
   let timerRunning = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  const glossaryInstruction =
-    glossary.length > 0
-      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
-${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
-      : "";
-
-  const contextInstruction =
-    previousContext
-      ? `\nCONTEXTO DA PAGINA ANTERIOR (Use para manter continuidade):
-${previousContext}`
-      : "";
 
   const endTimer = () => {
     if (!timerRunning) {
@@ -273,11 +264,17 @@ ${previousContext}`
         messages: [
           {
             role: "system",
-            content: `${OLLAMA_SYSTEM_PROMPT}${getThinkingInstruction(thinkingEnabled)}${glossaryInstruction}${contextInstruction}`,
+            content: buildEditorialSystemPrompt({
+              profile,
+              thinkingEnabled,
+              inferBlockTypes,
+              glossary,
+              previousContext,
+            }),
           },
           {
             role: "user",
-            content: getOllamaUserPrompt(inferBlockTypes),
+            content: buildEditorialUserPrompt(inferBlockTypes),
             images: [base64Image],
           },
         ],

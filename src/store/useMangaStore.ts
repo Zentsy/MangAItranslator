@@ -33,10 +33,45 @@ export type BlockType = "rect" | "outside" | "thought" | "double" | "none";
 export type TranslationEngine = "gemini" | "ollama" | "openaiCompatible";
 export type AppTheme = "dark-organic" | "paper-light";
 
+export type TargetMedium = "manga" | "manhwa" | "manhua" | "comic";
+export type TranslationTone = "natural" | "informal" | "formal" | "raw";
+export type HonorificsStyle = "preserve" | "localize";
+export type ProfanityLevel = "uncensored" | "soft";
+export type SourceLanguage = "ja" | "en" | "ko" | "zh" | "auto";
+export type TargetLanguage = "pt-BR" | "en" | "es";
+
+export interface TranslationProfile {
+  targetMedium: TargetMedium;
+  sourceLanguage: SourceLanguage;
+  targetLanguage: TargetLanguage;
+  tone: TranslationTone;
+  honorifics: HonorificsStyle;
+  profanity: ProfanityLevel;
+  customDirectives: string;
+}
+
+export const DEFAULT_TRANSLATION_PROFILE: TranslationProfile = {
+  targetMedium: "manga",
+  sourceLanguage: "ja",
+  targetLanguage: "pt-BR",
+  tone: "natural",
+  honorifics: "preserve",
+  profanity: "uncensored",
+  customDirectives: "",
+};
+
+export interface BoundingBox {
+  x: number;      // 0-100% da largura da página
+  y: number;      // 0-100% da altura da página
+  width: number;  // 0-100% da largura
+  height: number; // 0-100% da altura
+}
+
 export interface TranslationBlock {
   id: string;
   text: string;
   type: BlockType;
+  bbox?: BoundingBox;
 }
 
 export interface MangaPage {
@@ -66,10 +101,12 @@ interface MangaStore {
   openRouterModelMode: OpenRouterModelMode;
   aiThinkingEnabled: boolean;
   aiInferBlockTypesEnabled: boolean;
+  aiSecondPassEnabled: boolean;
   hasFinishedOnboarding: boolean;
   theme: AppTheme;
   glossary: GlossaryTerm[];
   processingQueue: string[];
+  translationProfile: TranslationProfile;
 
   setApiKey: (key: string) => void;
   setOpenRouterApiKey: (key: string) => void;
@@ -87,9 +124,12 @@ interface MangaStore {
   setOpenRouterModelMode: (mode: OpenRouterModelMode) => void;
   setAiThinkingEnabled: (enabled: boolean) => void;
   setAiInferBlockTypesEnabled: (enabled: boolean) => void;
+  setAiSecondPassEnabled: (enabled: boolean) => void;
   setHasFinishedOnboarding: (value: boolean) => void;
   setTheme: (theme: AppTheme) => void;
   setGlossary: (terms: GlossaryTerm[]) => void;
+  setTranslationProfile: (updates: Partial<TranslationProfile>) => void;
+  resetTranslationProfile: () => void;
   addToProcessingQueue: (pageId: string) => void;
   removeFromProcessingQueue: (pageId: string) => void;
   addGlossaryTerm: (term: string, translation: string) => Promise<void>;
@@ -130,10 +170,12 @@ export const useMangaStore = create<MangaStore>()(
       openRouterModelMode: "auto-free",
       aiThinkingEnabled: false,
       aiInferBlockTypesEnabled: false,
+      aiSecondPassEnabled: false,
       hasFinishedOnboarding: false,
       theme: "dark-organic",
       glossary: [],
       processingQueue: [],
+      translationProfile: DEFAULT_TRANSLATION_PROFILE,
 
       setApiKey: (apiKey) => {
         set({ apiKey });
@@ -171,9 +213,19 @@ export const useMangaStore = create<MangaStore>()(
       setAiThinkingEnabled: (aiThinkingEnabled) => set({ aiThinkingEnabled }),
       setAiInferBlockTypesEnabled: (aiInferBlockTypesEnabled) =>
         set({ aiInferBlockTypesEnabled }),
+      setAiSecondPassEnabled: (aiSecondPassEnabled) => set({ aiSecondPassEnabled }),
       setHasFinishedOnboarding: (hasFinishedOnboarding) => set({ hasFinishedOnboarding }),
       setTheme: (theme) => set({ theme }),
       setGlossary: (glossary) => set({ glossary }),
+      setTranslationProfile: (updates) =>
+        set((state) => ({
+          translationProfile: {
+            ...state.translationProfile,
+            ...updates,
+          },
+        })),
+      resetTranslationProfile: () =>
+        set({ translationProfile: DEFAULT_TRANSLATION_PROFILE }),
       addToProcessingQueue: (pageId) =>
         set((state) => ({ processingQueue: [...state.processingQueue, pageId] })),
       removeFromProcessingQueue: (pageId) =>
@@ -344,9 +396,11 @@ export const useMangaStore = create<MangaStore>()(
           openRouterModelMode: "auto-free",
           aiThinkingEnabled: false,
           aiInferBlockTypesEnabled: false,
+          aiSecondPassEnabled: false,
           hasFinishedOnboarding: false,
           theme: "dark-organic",
           glossary: [],
+          translationProfile: DEFAULT_TRANSLATION_PROFILE,
         });
       },
     }),
@@ -363,8 +417,10 @@ export const useMangaStore = create<MangaStore>()(
         openRouterModelMode: state.openRouterModelMode,
         aiThinkingEnabled: state.aiThinkingEnabled,
         aiInferBlockTypesEnabled: state.aiInferBlockTypesEnabled,
+        aiSecondPassEnabled: state.aiSecondPassEnabled,
         hasFinishedOnboarding: state.hasFinishedOnboarding,
         theme: state.theme,
+        translationProfile: state.translationProfile,
       }),
     }
   )

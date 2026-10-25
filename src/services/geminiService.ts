@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI, SchemaType, type ResponseSchema } from "@google/generative-ai";
 import { GlossaryTerm } from "./dbService";
+import { buildEditorialSystemPrompt } from "./promptBuilderService";
+import type { TranslationProfile } from "@/store/useMangaStore";
 
 const MAX_RETRIES = 2;
 const NON_RETRYABLE_GEMINI_CODES = new Set([
@@ -194,35 +196,21 @@ export const translateWithGemini = async (
   glossary: GlossaryTerm[],
   previousContext: string | null,
   onResult: (blocks: { text: string; type?: "rect" | "outside" | "thought" | "double" | "none" }[]) => void,
-  retryCount = 0
+  retryCount = 0,
+  profile?: TranslationProfile
 ): Promise<void> => {
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
     model: geminiModel,
   });
 
-  const glossaryInstruction =
-    glossary.length > 0
-      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
-${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
-      : "";
-
-  const contextInstruction =
-    previousContext
-      ? `\nCONTEXTO DA PAGINA ANTERIOR (Use para manter continuidade):
-${previousContext}`
-      : "";
-
-  const systemPrompt = `Voce e um tradutor especializado em mangas.
-Sua unica tarefa e ler o texto da imagem e devolver a traducao final em portugues brasileiro.
-REGRAS:
-- ORDEM: Siga rigorosamente a ordem de leitura (Direita para Esquerda, Cima para Baixo).
-- IDIOMA: Cada item em "translations.text" deve estar em PT-BR natural e legivel.
-- NAO COPIE O INGLES: Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.${glossaryInstruction}${contextInstruction}
-- OCR: Se um balao estiver vazio, ilegivel ou sem texto relevante, nao invente conteudo.
-- ${getThinkingInstruction(aiThinkingEnabled)}
-- ${getTypeInstruction(aiInferBlockTypesEnabled)}
-- FORMATO: Responda somente em JSON valido seguindo o schema.`;
+  const systemPrompt = buildEditorialSystemPrompt({
+    profile,
+    thinkingEnabled: aiThinkingEnabled,
+    inferBlockTypes: aiInferBlockTypesEnabled,
+    glossary,
+    previousContext,
+  });
   const thinkingConfig = getGeminiThinkingConfig(geminiModel, aiThinkingEnabled);
   const generationConfig: Record<string, unknown> = {
     temperature: 0.2,

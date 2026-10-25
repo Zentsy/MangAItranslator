@@ -5,14 +5,22 @@ import {
 } from "@/config/openAiCompatibleProviders";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { GlossaryTerm } from "./dbService";
+import {
+  buildEditorialSystemPrompt,
+  buildEditorialUserPrompt,
+  buildEditorialRepairPrompt,
+} from "./promptBuilderService";
+import type { TranslationProfile } from "@/store/useMangaStore";
 
 const OPENAI_COMPATIBLE_REQUEST_TIMEOUT_MS: Record<OpenAiCompatibleProviderId, number> = {
-  openrouter: 5 * 60 * 1000,
-  groq: 5 * 60 * 1000,
+  openrouter: 90 * 1000,
+  groq: 60 * 1000,
   lmstudio: 12 * 60 * 1000,
 };
+const OPENROUTER_FREE_MODEL_TIMEOUT_MS = 25_000;
+const OPENROUTER_MAX_FALLBACK_ATTEMPTS = 3;
 const LMSTUDIO_AUTO_MODEL_ID = "local-model";
-const OPENROUTER_FREE_MODELS_CACHE_KEY = "mangai-openrouter-free-vision-models-v1";
+const OPENROUTER_FREE_MODELS_CACHE_KEY = "mangai-openrouter-free-vision-models-v3";
 const OPENROUTER_FREE_MODELS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const GROQ_BASE64_IMAGE_LIMIT_BYTES = 4 * 1024 * 1024;
 const VALID_BLOCK_TYPES = new Set(["rect", "outside", "thought", "double", "none"]);
@@ -153,23 +161,45 @@ export class OpenAiCompatibleRequestError extends Error {
 }
 
 const cleanJson = (text: string) => {
-  const trimmed = text.trim();
+  let cleaned = text.trim();
 
-  if (!trimmed) {
-    return trimmed;
+  if (!cleaned) {
+    return cleaned;
   }
 
-  const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  // 1. Remover blocos fechados de reasoning (<think>...</think>)
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+
+  // 2. Se houver uma tag <think> não fechada no início, descartar até o início do JSON
+  if (cleaned.includes("<think>")) {
+    const jsonStart = cleaned.search(/[{\[]/);
+    if (jsonStart !== -1) {
+      cleaned = cleaned.slice(jsonStart).trim();
+    } else {
+      cleaned = cleaned.replace(/<think>[\s\S]*/gi, "").trim();
+    }
+  }
+
+  // 3. Fenced block markdown (```json ... ```)
+  const fencedMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fencedMatch?.[1]) {
     return fencedMatch[1].trim();
   }
 
-  const objectMatch = trimmed.match(/\{[\s\S]*\}/);
-  if (objectMatch) {
-    return objectMatch[0];
+  // 4. Extração balanceada do objeto ou array JSON principal
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    return cleaned.slice(firstBrace, lastBrace + 1);
   }
 
-  return trimmed;
+  const firstBracket = cleaned.indexOf("[");
+  const lastBracket = cleaned.lastIndexOf("]");
+  if (firstBracket !== -1 && lastBracket > firstBracket) {
+    return cleaned.slice(firstBracket, lastBracket + 1);
+  }
+
+  return cleaned;
 };
 
 const normalizeBlock = (value: unknown): OpenAiCompatibleTranslationBlock | null => {
@@ -320,11 +350,13 @@ const parseTranslationResponse = (rawText: string): OpenAiCompatibleTranslationB
   }
 };
 
-const extractResponseText = (payload: unknown) => {
+const extractResponseText = (payload: unknown): string => {
   const maybePayload = payload as {
     choices?: Array<{
       message?: {
         content?: string | Array<{ type?: string; text?: string }>;
+        reasoning?: string;
+        reasoning_content?: string;
       };
       text?: string;
     }>;
@@ -333,27 +365,51 @@ const extractResponseText = (payload: unknown) => {
   };
 
   const firstChoice = maybePayload.choices?.[0];
-  const content = firstChoice?.message?.content;
+  const message = firstChoice?.message;
+  const content = message?.content;
 
-  if (typeof content === "string") {
+  if (typeof content === "string" && content.trim().length > 0) {
     return content;
   }
 
   if (Array.isArray(content)) {
-    return content
+    const textParts = content
       .map((part) => (typeof part.text === "string" ? part.text : ""))
       .filter(Boolean)
       .join("\n");
+    if (textParts.trim().length > 0) {
+      return textParts;
+    }
+  }
+
+  // Modelos de raciocínio (reasoning/think) podem ter enviado a saída em reasoning ou reasoning_content
+  if (typeof message?.reasoning === "string" && message.reasoning.trim().length > 0) {
+    return message.reasoning;
+  }
+
+  if (typeof message?.reasoning_content === "string" && message.reasoning_content.trim().length > 0) {
+    return message.reasoning_content;
+  }
+
+  if (typeof firstChoice?.text === "string" && firstChoice.text.trim().length > 0) {
+    return firstChoice.text;
+  }
+
+  if (typeof maybePayload.output_text === "string" && maybePayload.output_text.trim().length > 0) {
+    return maybePayload.output_text;
   }
 
   if (Array.isArray(maybePayload.output)) {
-    return maybePayload.output
+    const outputParts = maybePayload.output
       .filter((item) => item.type === "message" && typeof item.content === "string")
       .map((item) => item.content)
       .join("\n");
+    if (outputParts.trim().length > 0) {
+      return outputParts;
+    }
   }
 
-  return firstChoice?.text ?? maybePayload.output_text ?? "";
+  return "";
 };
 
 const looksLikeEnglishTranscription = (blocks: OpenAiCompatibleTranslationBlock[]) => {
@@ -502,14 +558,22 @@ const buildReasoningOptions = (
   providerId: OpenAiCompatibleProviderId,
   thinkingEnabled: boolean
 ) => {
-  if (!thinkingEnabled || providerId !== "openrouter") {
+  if (providerId !== "openrouter") {
     return {};
+  }
+
+  if (!thinkingEnabled) {
+    return {
+      reasoning: {
+        effort: "low",
+        exclude: true,
+      },
+    };
   }
 
   return {
     reasoning: {
-      effort: "low",
-      exclude: true,
+      effort: "medium",
     },
   };
 };
@@ -534,7 +598,7 @@ const buildChatRequestBody = (
   model,
   stream: false,
   temperature: 0.2,
-  max_tokens: 2048,
+  max_tokens: 4096,
   ...buildReasoningOptions(providerId, thinkingEnabled),
   ...(includeResponseFormat
     ? { response_format: buildResponseFormat(providerId, includeResponseFormat) }
@@ -549,28 +613,35 @@ const buildOpenRouterAutoFreeVisionRequestBody = (
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
-  previousContext: string | null
+  previousContext: string | null,
+  profile?: TranslationProfile
 ) => ({
   models: modelIds,
   stream: false,
   temperature: 0.2,
-  max_tokens: 2048,
+  max_tokens: 4096,
   provider: buildOpenRouterFreeProviderOptions(includeResponseFormat),
-  // Keep native reasoning out of the auto-free router so unsupported free models stay eligible.
+  ...buildReasoningOptions("openrouter", thinkingEnabled),
   ...(includeResponseFormat
     ? { response_format: buildResponseFormat("openrouter", includeResponseFormat) }
     : {}),
   messages: [
     {
       role: "system",
-      content: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary, previousContext),
+      content: buildEditorialSystemPrompt({
+        profile,
+        thinkingEnabled,
+        inferBlockTypes,
+        glossary,
+        previousContext,
+      }),
     },
     {
       role: "user",
       content: [
         {
           type: "text",
-          text: buildUserPrompt(inferBlockTypes),
+          text: buildEditorialUserPrompt(inferBlockTypes),
         },
         {
           type: "image_url",
@@ -591,18 +662,25 @@ const buildVisionRequestBody = (
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
-  previousContext: string | null
+  previousContext: string | null,
+  profile?: TranslationProfile
 ) => buildChatRequestBody(providerId, model, [
   {
     role: "system",
-    content: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary, previousContext),
+    content: buildEditorialSystemPrompt({
+      profile,
+      thinkingEnabled,
+      inferBlockTypes,
+      glossary,
+      previousContext,
+    }),
   },
   {
     role: "user",
     content: [
       {
         type: "text",
-        text: buildUserPrompt(inferBlockTypes),
+        text: buildEditorialUserPrompt(inferBlockTypes),
       },
       {
         type: "image_url",
@@ -622,11 +700,18 @@ const buildRepairRequestBody = (
   thinkingEnabled: boolean,
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
-  previousContext: string | null
+  previousContext: string | null,
+  profile?: TranslationProfile
 ) => buildChatRequestBody(providerId, model, [
   {
     role: "system",
-    content: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes, glossary, previousContext),
+    content: buildEditorialRepairPrompt({
+      profile,
+      thinkingEnabled,
+      inferBlockTypes,
+      glossary,
+      previousContext,
+    }),
   },
   {
     role: "user",
@@ -697,38 +782,45 @@ const writeOpenRouterFreeModelsCache = (models: OpenRouterDiscoveredModel[]) => 
 };
 
 const rankOpenRouterFreeModel = (model: OpenRouterDiscoveredModel) => {
-  if (model.id === "openrouter/free") {
-    return 10_000;
-  }
-
   const id = model.id.toLowerCase();
   const name = model.name.toLowerCase();
 
+  // 1. Roteador oficial gratuito do OpenRouter (recomendado pela documentação oficial da OpenRouter)
+  if (id === "openrouter/free") {
+    return 1;
+  }
+
+  // 2. Qwen Vision (excepcional para mangá e OCR visual)
+  if (id.includes("qwen")) {
+    return 5;
+  }
+
+  // 3. Google Gemma 4 Vision oficial do Google
   if (id.includes("gemma-4") || name.includes("gemma 4")) {
     return 10;
   }
 
-  if (id.includes("nemotron") && (id.includes("vl") || id.includes("omni"))) {
+  // 4. Nex-AGI Pro Vision
+  if (id.includes("nex-n2.5-pro") || id.includes("nex")) {
+    return 15;
+  }
+
+  // 5. Família Llama & Gemini Vision
+  if (id.includes("llama") || id.includes("gemini")) {
     return 20;
   }
 
-  if (id.includes("qianfan") || name.includes("ocr")) {
+  // 6. Pixtral & outros modelos de OCR
+  if (id.includes("pixtral") || id.includes("ocr")) {
     return 30;
   }
 
-  if (id.includes("gemma-3-27b")) {
-    return 40;
+  // 7. Nemotron / Modelos de raciocínio pesado (depriorizados por demorarem demais)
+  if (id.includes("nemotron") || id.includes("reasoning")) {
+    return 80;
   }
 
-  if (id.includes("gemma-3-12b")) {
-    return 50;
-  }
-
-  if (id.includes("gemma-3-4b")) {
-    return 60;
-  }
-
-  return 100;
+  return 50;
 };
 
 export const clearOpenRouterFreeModelsCache = () => {
@@ -818,20 +910,27 @@ const buildLmStudioNativeVisionRequestBody = (
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
   previousContext: string | null = null,
-  includeReasoning = true
+  includeReasoning = true,
+  profile?: TranslationProfile
 ) => ({
   model,
   input: [
     {
       type: "text",
-      content: buildUserPrompt(inferBlockTypes),
+      content: buildEditorialUserPrompt(inferBlockTypes),
     },
     {
       type: "image",
       data_url: `data:image/jpeg;base64,${base64Image}`,
     },
   ],
-  system_prompt: buildSystemPrompt(thinkingEnabled, inferBlockTypes, glossary, previousContext),
+  system_prompt: buildEditorialSystemPrompt({
+    profile,
+    thinkingEnabled,
+    inferBlockTypes,
+    glossary,
+    previousContext,
+  }),
   stream: false,
   temperature: 0.2,
   max_output_tokens: 2048,
@@ -847,7 +946,8 @@ const buildLmStudioNativeRepairRequestBody = (
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
   previousContext: string | null = null,
-  includeReasoning = true
+  includeReasoning = true,
+  profile?: TranslationProfile
 ) => ({
   model,
   input: `Traduza estes blocos para PT-BR.${
@@ -857,7 +957,13 @@ const buildLmStudioNativeRepairRequestBody = (
   }
 
 ${JSON.stringify({ translations: blocks }, null, 2)}`,
-  system_prompt: buildRepairSystemPrompt(thinkingEnabled, inferBlockTypes, glossary, previousContext),
+  system_prompt: buildEditorialRepairPrompt({
+    profile,
+    thinkingEnabled,
+    inferBlockTypes,
+    glossary,
+    previousContext,
+  }),
   stream: false,
   temperature: 0.2,
   max_output_tokens: 2048,
@@ -875,7 +981,8 @@ export const translateWithOpenAiCompatible = async (
   inferBlockTypes: boolean,
   glossary: GlossaryTerm[],
   previousContext: string | null,
-  onStatusChange?: (update: OpenAiCompatibleStatusUpdate) => void
+  onStatusChange?: (update: OpenAiCompatibleStatusUpdate) => void,
+  profile?: TranslationProfile
 ) => {
   const provider = getOpenAiCompatibleProvider(providerId);
 
@@ -900,13 +1007,18 @@ export const translateWithOpenAiCompatible = async (
   const requestTimeoutMs =
     OPENAI_COMPATIBLE_REQUEST_TIMEOUT_MS[provider.id] ?? 5 * 60 * 1000;
 
-  const sendRequest = async (body: unknown, requestEndpoint = openAiCompatibleEndpoint) => {
+  const sendRequest = async (
+    body: unknown,
+    requestEndpoint = openAiCompatibleEndpoint,
+    timeoutOverrideMs?: number
+  ) => {
     const controller = new AbortController();
     let didTimeout = false;
+    const effectiveTimeoutMs = timeoutOverrideMs ?? requestTimeoutMs;
     const timeoutId = setTimeout(() => {
       didTimeout = true;
       controller.abort();
-    }, requestTimeoutMs);
+    }, effectiveTimeoutMs);
 
     try {
       const response = await tauriFetch(requestEndpoint, {
@@ -1007,7 +1119,8 @@ export const translateWithOpenAiCompatible = async (
   const sendOpenAiCompatibleVisionRequest = async (
     attemptModel: string,
     includeResponseFormat: boolean,
-    attemptThinkingEnabled: boolean
+    attemptThinkingEnabled: boolean,
+    timeoutOverrideMs?: number
   ) => {
     try {
       return await sendRequest(
@@ -1019,8 +1132,11 @@ export const translateWithOpenAiCompatible = async (
           attemptThinkingEnabled,
           inferBlockTypes,
           glossary,
-          previousContext
-        )
+          previousContext,
+          profile
+        ),
+        openAiCompatibleEndpoint,
+        timeoutOverrideMs
       );
     } catch (error) {
       const maybeError = error as OpenAiCompatibleRequestError;
@@ -1038,15 +1154,19 @@ export const translateWithOpenAiCompatible = async (
           attemptThinkingEnabled,
           inferBlockTypes,
           glossary,
-          previousContext
-        )
+          previousContext,
+          profile
+        ),
+        openAiCompatibleEndpoint,
+        timeoutOverrideMs
       );
     }
   };
 
   const sendOpenRouterAutoFreeRouterRequest = async (
     modelIds: string[],
-    includeResponseFormat: boolean
+    includeResponseFormat: boolean,
+    timeoutOverrideMs?: number
   ) => {
     try {
       return await sendRequest(
@@ -1057,8 +1177,11 @@ export const translateWithOpenAiCompatible = async (
           thinkingEnabled,
           inferBlockTypes,
           glossary,
-          previousContext
-        )
+          previousContext,
+          profile
+        ),
+        openAiCompatibleEndpoint,
+        timeoutOverrideMs
       );
     } catch (error) {
       const maybeError = error as OpenAiCompatibleRequestError;
@@ -1075,8 +1198,11 @@ export const translateWithOpenAiCompatible = async (
           thinkingEnabled,
           inferBlockTypes,
           glossary,
-          previousContext
-        )
+          previousContext,
+          profile
+        ),
+        openAiCompatibleEndpoint,
+        timeoutOverrideMs
       );
     }
   };
@@ -1106,36 +1232,39 @@ export const translateWithOpenAiCompatible = async (
         );
       }
 
-      const schemaFriendlyModels = freeModels.filter((freeModel) => freeModel.supportsResponseFormat);
-      const routerModels = (schemaFriendlyModels.length > 0 ? schemaFriendlyModels : freeModels).map(
-        (freeModel) => freeModel.id
-      );
+      const candidateList = freeModels.filter((m) => m.id !== "openrouter/free").slice(0, 3);
+      const routerModels = Array.from(new Set(["openrouter/free", ...candidateList.map((m) => m.id)]));
+      const schemaFriendlyModels = routerModels.filter((id) => {
+        const found = freeModels.find((m) => m.id === id);
+        return found ? found.supportsResponseFormat : true;
+      });
       let lastFallbackError: unknown = null;
 
       onStatusChange?.({
         stage: "connecting",
         provider: provider.id,
         model: routerModels[0],
-        message: `OpenRouter vai rotear entre ${routerModels.length} modelo(s) gratis...`,
+        message: `OpenRouter vai rotear entre ${routerModels.length} modelo(s) grátis...`,
       });
 
       try {
         payload = await sendOpenRouterAutoFreeRouterRequest(
           routerModels,
-          schemaFriendlyModels.length > 0
+          schemaFriendlyModels.length > 0,
+          OPENROUTER_FREE_MODEL_TIMEOUT_MS
         );
-        const routerBlocks = parseTranslationResponse(extractResponseText(payload));
+        const rawText = extractResponseText(payload);
+        console.info(`${requestLabel} resposta do roteador (${rawText.length} caracteres):`, rawText.slice(0, 400));
+        const routerBlocks = parseTranslationResponse(rawText);
 
-        if (routerBlocks.length > 0 && !looksLikeEnglishTranscription(routerBlocks)) {
+        if (routerBlocks.length > 0) {
           parsedBlocks = routerBlocks;
         } else {
           lastFallbackError = new OpenAiCompatibleRequestError(
             "OPENAI_COMPATIBLE_BAD_REQUEST",
-            routerBlocks.length > 0
-              ? "OpenRouter respondeu em ingles em vez de traduzir."
-              : "OpenRouter respondeu sem blocos utilizaveis."
+            "OpenRouter respondeu sem blocos utilizaveis."
           );
-          console.warn(`${requestLabel} roteador OpenRouter respondeu sem traducao util; tentando fallback local.`);
+          console.warn(`${requestLabel} roteador OpenRouter respondeu sem blocos utilizaveis; tentando fallback direto.`);
         }
       } catch (error) {
         lastFallbackError = error;
@@ -1147,8 +1276,19 @@ export const translateWithOpenAiCompatible = async (
         console.warn(`${requestLabel} roteador OpenRouter falhou; tentando fallback local.`, error);
       }
 
-      for (const [index, freeModel] of freeModels.entries()) {
+      let consecutiveRateLimits = 0;
+      const directCandidates = freeModels
+        .filter((m) => m.id !== "openrouter/free")
+        .slice(0, OPENROUTER_MAX_FALLBACK_ATTEMPTS);
+
+      for (const [index, freeModel] of directCandidates.entries()) {
         if (parsedBlocks) {
+          break;
+        }
+
+        // Circuit breaker: 2 limites de cota (429) consecutivos indicam fila pública temporariamente saturada
+        if (consecutiveRateLimits >= 2) {
+          console.warn(`${requestLabel} Circuito interrompido: múltiplos limites de cota (429) no OpenRouter.`);
           break;
         }
 
@@ -1158,33 +1298,43 @@ export const translateWithOpenAiCompatible = async (
           model: freeModel.id,
           message:
             index === 0
-              ? `Resposta vazia. Tentando ${freeModel.name} diretamente...`
-              : `Cota ou indisponibilidade detectada. Tentando ${freeModel.name}...`,
+              ? `Tentando ${freeModel.name} diretamente...`
+              : `Tentando alternativa gratuita ${index + 1}/${directCandidates.length} (${freeModel.name})...`,
         });
 
         try {
           payload = await sendOpenAiCompatibleVisionRequest(
             freeModel.id,
             freeModel.supportsResponseFormat,
-            thinkingEnabled && freeModel.supportsReasoning
+            thinkingEnabled && freeModel.supportsReasoning,
+            OPENROUTER_FREE_MODEL_TIMEOUT_MS
           );
-          const fallbackBlocks = parseTranslationResponse(extractResponseText(payload));
+          const rawFallbackText = extractResponseText(payload);
+          console.info(`${requestLabel} resposta de ${freeModel.id} (${rawFallbackText.length} caracteres):`, rawFallbackText.slice(0, 400));
+          const fallbackBlocks = parseTranslationResponse(rawFallbackText);
 
-          if (fallbackBlocks.length > 0 && !looksLikeEnglishTranscription(fallbackBlocks)) {
+          if (fallbackBlocks.length > 0) {
             parsedBlocks = fallbackBlocks;
             break;
           }
 
           lastFallbackError = new OpenAiCompatibleRequestError(
             "OPENAI_COMPATIBLE_BAD_REQUEST",
-            fallbackBlocks.length > 0
-              ? `${freeModel.name} transcreveu em ingles em vez de traduzir.`
-              : `${freeModel.name} respondeu sem blocos utilizaveis.`
+            `${freeModel.name} respondeu sem blocos utilizaveis.`
           );
-          console.warn(`${requestLabel} modelo gratis ${freeModel.id} respondeu sem traducao util; tentando proximo.`);
+          console.warn(`${requestLabel} modelo gratis ${freeModel.id} respondeu sem blocos utilizaveis; tentando proximo.`);
           continue;
         } catch (error) {
           lastFallbackError = error;
+
+          const maybeError = error as OpenAiCompatibleRequestError;
+          if (
+            maybeError.code === "OPENAI_COMPATIBLE_RATE_LIMIT" ||
+            maybeError.status === 429 ||
+            (error instanceof Error && error.message.toLowerCase().includes("rate"))
+          ) {
+            consecutiveRateLimits += 1;
+          }
 
           if (!isTransientOrFallbackableError(error)) {
             throw error;
@@ -1198,9 +1348,16 @@ export const translateWithOpenAiCompatible = async (
       }
 
       if (!parsedBlocks) {
+        const isRateLimit =
+          consecutiveRateLimits > 0 ||
+          (lastFallbackError as OpenAiCompatibleRequestError | null)?.code === "OPENAI_COMPATIBLE_RATE_LIMIT" ||
+          (lastFallbackError as OpenAiCompatibleRequestError | null)?.status === 429;
+
         throw new OpenAiCompatibleRequestError(
-          "OPENAI_COMPATIBLE_RATE_LIMIT",
-          "Nenhum modelo gratis disponivel agora. Tente novamente mais tarde ou escolha um modelo pago/manual.",
+          isRateLimit ? "OPENAI_COMPATIBLE_RATE_LIMIT" : "OPENAI_COMPATIBLE_BAD_REQUEST",
+          isRateLimit
+            ? "A cota gratuita dos modelos do OpenRouter está temporariamente esgotada no momento. Aguarde alguns minutos ou utilize o Gemini (ou selecione um modelo pago/manual nas Configurações)."
+            : "Nenhum modelo gratuito do OpenRouter conseguiu traduzir a página no momento. Tente novamente em instantes ou utilize o Gemini.",
           (lastFallbackError as OpenAiCompatibleRequestError | null)?.status
         );
       }
@@ -1215,7 +1372,9 @@ export const translateWithOpenAiCompatible = async (
             thinkingEnabled,
             inferBlockTypes,
             glossary,
-            previousContext
+            previousContext,
+            true,
+            profile
           )
         );
       } catch (error) {
@@ -1226,7 +1385,7 @@ export const translateWithOpenAiCompatible = async (
 
         console.warn(`${requestLabel} endpoint nativo falhou; tentando endpoint OpenAI-compatible.`);
         payload = await sendRequest(
-          buildVisionRequestBody(provider.id, model, base64Image, true, thinkingEnabled, inferBlockTypes, glossary, previousContext)
+          buildVisionRequestBody(provider.id, model, base64Image, true, thinkingEnabled, inferBlockTypes, glossary, previousContext, profile)
         );
       }
     } else {
@@ -1248,43 +1407,69 @@ export const translateWithOpenAiCompatible = async (
       parsedBlocks = parseTranslationResponse(rawText);
     }
 
-    if (provider.id === "lmstudio" && looksLikeEnglishTranscription(parsedBlocks)) {
+    if (parsedBlocks && looksLikeEnglishTranscription(parsedBlocks)) {
       onStatusChange?.({
         stage: "repairing",
-        message: "LM Studio transcreveu em ingles. Fazendo uma segunda passada para PT-BR...",
+        message: `${provider.label} transcreveu os balões. Refinando a tradução para PT-BR...`,
       });
 
-      let repairPayload: unknown;
-      const lmStudioModel = await resolveLmStudioNativeModel();
-
       try {
-        repairPayload = await sendLmStudioNativeRequest(
-          buildLmStudioNativeRepairRequestBody(
-            lmStudioModel,
-            parsedBlocks,
-            thinkingEnabled,
-            inferBlockTypes,
-            glossary,
-            previousContext
-          )
-        );
-      } catch (error) {
-        const maybeError = error as OpenAiCompatibleRequestError;
-        if (maybeError.code !== "OPENAI_COMPATIBLE_BAD_REQUEST" && maybeError.status !== 404) {
-          throw error;
+        let repairPayload: unknown;
+        if (provider.id === "lmstudio") {
+          const lmStudioModel = await resolveLmStudioNativeModel();
+
+          try {
+            repairPayload = await sendLmStudioNativeRequest(
+              buildLmStudioNativeRepairRequestBody(
+                lmStudioModel,
+                parsedBlocks,
+                thinkingEnabled,
+                inferBlockTypes,
+                glossary,
+                previousContext,
+                true,
+                profile
+              )
+            );
+          } catch (error) {
+            const maybeError = error as OpenAiCompatibleRequestError;
+            if (maybeError.code !== "OPENAI_COMPATIBLE_BAD_REQUEST" && maybeError.status !== 404) {
+              throw error;
+            }
+
+            console.warn(`${requestLabel} reparo nativo falhou; tentando reparo OpenAI-compatible.`);
+            repairPayload = await sendRequest(
+              buildRepairRequestBody(provider.id, model, parsedBlocks, true, thinkingEnabled, inferBlockTypes, glossary, previousContext, profile)
+            );
+          }
+        } else {
+          // OpenRouter / Groq: tradução somente-texto leve e instantânea
+          const repairModel = provider.id === "openrouter" ? "openrouter/free" : model;
+          repairPayload = await sendRequest(
+            buildRepairRequestBody(
+              provider.id,
+              repairModel,
+              parsedBlocks,
+              true,
+              false,
+              inferBlockTypes,
+              glossary,
+              previousContext,
+              profile
+            ),
+            openAiCompatibleEndpoint,
+            20_000
+          );
         }
 
-        console.warn(`${requestLabel} reparo nativo falhou; tentando reparo OpenAI-compatible.`);
-        repairPayload = await sendRequest(
-          buildRepairRequestBody(provider.id, model, parsedBlocks, true, thinkingEnabled, inferBlockTypes, glossary, previousContext)
-        );
-      }
+        const repairedText = extractResponseText(repairPayload);
+        const repairedBlocks = parseTranslationResponse(repairedText);
 
-      const repairedText = extractResponseText(repairPayload);
-      const repairedBlocks = parseTranslationResponse(repairedText);
-
-      if (repairedBlocks.length > 0) {
-        return repairedBlocks;
+        if (repairedBlocks.length > 0) {
+          return repairedBlocks;
+        }
+      } catch (repairErr) {
+        console.warn(`${requestLabel} falha no reparo pós-transcrição; mantendo blocos originais extraídos.`, repairErr);
       }
     }
 

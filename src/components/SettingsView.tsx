@@ -18,6 +18,17 @@ import {
   OPENAI_COMPATIBLE_PROVIDERS,
   type OpenAiCompatibleProviderId,
 } from "@/config/openAiCompatibleProviders";
+import {
+  GeminiLogo,
+  OllamaLogo,
+  OpenRouterLogo,
+  GroqLogo,
+  LMStudioLogo,
+  getProviderLogo,
+} from "@/components/icons/EngineLogos";
+
+import { InkWellIcon, GPenIcon, DialoguePolishIcon } from "@/components/icons/MangaIcons";
+
 import { useMangaStore } from "@/store/useMangaStore";
 import { useTheme } from "@/contexts/ThemeContext";
 import { dbService } from "@/services/dbService";
@@ -25,7 +36,6 @@ import {
   clearOpenRouterFreeModelsCache,
   getOpenRouterFreeVisionModels,
 } from "@/services/openAiCompatibleService";
-import { Button } from "@/components/ui/button";
 import type { AvailableUpdateInfo, UpdateCheckResult } from "@/hooks/useAppUpdater";
 import {
   Brain,
@@ -44,15 +54,16 @@ import {
   RotateCcw,
   Settings,
   ShieldCheck,
-  Sparkles,
+
   Tags,
   Trash2,
-  Wand2,
+
   Zap,
   type LucideIcon,
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import StatusModal, { StatusType } from "@/components/StatusModal";
+import TranslationProfilePanel from "@/components/TranslationProfilePanel";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -73,19 +84,32 @@ type SettingsSectionId = "ai" | "editor" | "appearance" | "data" | "updates" | "
 const SUPPORT_URL = "https://ko-fi.com/zentsy";
 const GITHUB_URL = "https://github.com/Zentsy/MangAItranslator";
 
-const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: string; icon: LucideIcon }> = [
-  { id: "ai", label: "IA", kicker: "motores", icon: Sparkles },
-  { id: "editor", label: "Editor", kicker: "draft", icon: Wand2 },
-  { id: "appearance", label: "Aparência", kicker: "tema", icon: Palette },
-  { id: "data", label: "Dados", kicker: "local", icon: Database },
-  { id: "updates", label: "Atualizações", kicker: "release", icon: RefreshCw },
-  { id: "about", label: "Sobre", kicker: "projeto", icon: Info },
+const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: string; icon: React.ComponentType<{ size?: number; className?: string }>; hanko: string }> = [
+  { id: "ai", label: "Motores IA", kicker: "modelos", icon: InkWellIcon, hanko: "知" },
+  { id: "editor", label: "Mesa Editorial", kicker: "draft", icon: GPenIcon, hanko: "筆" },
+  { id: "appearance", label: "Aparência", kicker: "estilo", icon: Palette, hanko: "色" },
+  { id: "data", label: "Cofre & Dados", kicker: "local", icon: Database, hanko: "庫" },
+  { id: "updates", label: "Atualizações", kicker: "versão", icon: RefreshCw, hanko: "新" },
+  { id: "about", label: "Sobre o Tomo", kicker: "projeto", icon: Info, hanko: "誌" },
 ];
 
 const CHANGELOG_ITEMS = [
   {
-    version: "v0.3.5",
+    version: "v0.4.0",
     badge: "Atual",
+    title: "Nova Identidade Nanquim, Segunda Passada & Iconografia Autoral",
+    items: [
+      "Nova Identidade Visual 'Paper Light' inspirada em Papel Washi cru, Nanquim e Pena G tradicional.",
+      "Segunda Passada de Naturalidade (PT-BR): polimento opcional de fluidez com preservação contextual estrita.",
+      "Preset Especializado Japonês Raw -> PT-BR com desambiguação de kanjis homófonos, furigana e tategaki.",
+      "Aposentadoria de AI Slop: iconografia tátil e artesanal com penas G, balões e tinteiros em SVG puro.",
+      "Logo Oficial autoral vetorial em SVG puro, eliminando assets pesados e aumentando a nitidez em qualquer tela.",
+      "Otimização do roteador OpenRouter Auto-Free com suporte ampliado a modelos de visão e limpeza de raciocínio.",
+    ],
+  },
+  {
+    version: "v0.3.5",
+    badge: "Anterior",
     title: "Changelog Real no UpdateModal & CI Automatizada",
     items: [
       "Injeção do changelog real na tela 'Nova Versão Pronta' (UpdateModal) com suporte a Markdown.",
@@ -173,28 +197,28 @@ const formatLastCheck = (value: string | null) => {
 };
 
 const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
-const panelClass = "rounded-[2rem] border border-app-border bg-app-surface/25 p-5 shadow-black/10";
-const cardClass = "rounded-3xl border border-app-border bg-app-bg/25 p-5";
-const labelClass = "text-[10px] font-black uppercase tracking-[0.22em] text-app-text-secondary/50";
-const inputClass = "w-full rounded-2xl border border-app-border bg-app-surface/50 px-4 py-3 text-xs font-mono text-app-text-primary outline-none placeholder:text-app-text-secondary/30 focus:border-app-accent/40";
+const panelClass = "border-2 border-app-border bg-app-surface p-5 shadow-ink-sm relative";
+const cardClass = "border-2 border-app-border bg-app-card p-4 shadow-ink-sm";
+const labelClass = "font-pixel text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/70";
+const inputClass = "w-full border-2 border-app-border bg-app-card px-4 py-2.5 font-mono text-xs text-app-text-primary outline-none transition-all placeholder:text-app-text-secondary/30 focus:border-app-accent focus:shadow-ink-sm";
 
-const SectionTitle = ({ icon: Icon, label, title, description }: { icon: LucideIcon; label: string; title: string; description: string }) => (
+const SectionTitle = ({ icon: Icon, label, title, description }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string; title: string; description: string }) => (
   <div className="mb-6 flex items-start gap-4">
-    <div className="rounded-2xl border border-app-border bg-app-surface/50 p-3 text-app-text-secondary">
-      <Icon size={22} />
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center border-2 border-app-border bg-app-card text-app-text-primary shadow-ink-sm">
+      <Icon size={20} />
     </div>
     <div className="min-w-0">
       <div className={labelClass}>{label}</div>
-      <h3 className="mt-2 text-2xl font-black uppercase italic tracking-tighter text-app-text-primary">{title}</h3>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-app-text-secondary/70">{description}</p>
+      <h3 className="mt-1 font-display text-2xl uppercase tracking-wider text-app-text-primary leading-tight">{title}</h3>
+      <p className="mt-1 max-w-3xl font-mono text-xs leading-relaxed text-app-text-secondary/80">{description}</p>
     </div>
   </div>
 );
 
 const InfoRow = ({ label, value }: { label: string; value: ReactNode }) => (
-  <div className="flex items-center justify-between gap-4 border-b border-app-border/60 py-3 last:border-b-0">
-    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-app-text-secondary/50">{label}</span>
-    <span className="text-right text-xs font-bold text-app-text-primary">{value}</span>
+  <div className="flex items-center justify-between gap-4 border-b border-app-border py-2.5 last:border-b-0">
+    <span className="font-pixel text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/70">{label}</span>
+    <span className="text-right font-mono text-xs font-bold text-app-text-primary">{value}</span>
   </div>
 );
 
@@ -204,60 +228,83 @@ const ToggleButton = ({
   description,
   icon: Icon,
   onClick,
-  accentClass,
+  accentClass: _accentClass,
 }: {
   active: boolean;
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   onClick: () => void;
-  accentClass: string;
+  accentClass?: string;
 }) => (
   <button
     type="button"
     onClick={onClick}
     className={cx(
-      "rounded-3xl border p-5 text-left transition-all",
-      active ? accentClass : "border-app-border bg-app-bg/25 text-app-text-secondary hover:bg-app-surface/50 hover:text-app-text-primary"
+      "border-2 p-5 text-left transition-all relative overflow-hidden group",
+      active
+        ? "border-app-text-primary bg-app-card shadow-ink"
+        : "border-app-border bg-app-surface text-app-text-secondary hover:border-app-accent hover:bg-app-card hover:text-app-text-primary shadow-ink-sm"
     )}
   >
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <div className="rounded-2xl border border-current/20 bg-current/10 p-3"><Icon size={18} /></div>
-      <span className="rounded-full border border-current/20 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em]">{active ? "Ativo" : "Opcional"}</span>
+    <div className="mb-3 flex items-start justify-between gap-3">
+      <div className={cx(
+        "flex h-9 w-9 items-center justify-center border-2 transition-colors",
+        active ? "border-app-text-primary bg-app-accent text-white" : "border-app-border bg-app-card text-app-text-secondary"
+      )}>
+        <Icon size={18} />
+      </div>
+      <span className={cx(
+        "border px-2 py-0.5 font-pixel text-[9px] font-black uppercase tracking-wider",
+        active ? "border-app-text-primary bg-app-accent text-white" : "border-app-border bg-app-card text-app-text-secondary/60"
+      )}>
+        {active ? "ATIVO" : "OPCIONAL"}
+      </span>
     </div>
-    <h4 className="text-base font-black italic text-app-text-primary">{title}</h4>
-    <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">{description}</p>
+    <h4 className="font-display text-lg uppercase tracking-wide text-app-text-primary">{title}</h4>
+    <p className="mt-1 font-mono text-xs leading-relaxed text-app-text-secondary/80">{description}</p>
   </button>
 );
 
 const EngineCard = ({
   active,
-  icon: Icon,
+  icon,
   title,
   badge,
   description,
-  tone,
   onClick,
 }: {
   active: boolean;
-  icon: LucideIcon;
+  icon: React.ReactNode;
   title: string;
   badge: string;
   description: string;
-  tone: string;
+  tone?: string;
   onClick: () => void;
 }) => (
   <button
     type="button"
     onClick={onClick}
-    className={cx("rounded-3xl border p-5 text-left transition-all", active ? tone : "border-app-border bg-app-bg/25 hover:bg-app-surface/50")}
+    className={cx(
+      "border-2 p-4 text-left transition-all relative group",
+      active
+        ? "border-app-text-primary bg-app-card shadow-ink -translate-x-0.5 -translate-y-0.5"
+        : "border-app-border bg-app-surface hover:border-app-accent hover:bg-app-card hover:shadow-ink-sm"
+    )}
   >
-    <div className="mb-4 flex items-start justify-between gap-3">
-      <Icon size={22} />
-      <span className="rounded-full border border-app-border px-2 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-app-text-secondary">{badge}</span>
+    <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="flex h-9 w-9 items-center justify-center border-2 border-app-border bg-app-card p-1.5 text-app-text-primary group-hover:border-app-accent transition-colors">
+        {icon}
+      </div>
+      <span className={cx(
+        "border px-2 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider",
+        active ? "border-app-accent bg-app-accent/10 text-app-accent" : "border-app-border text-app-text-secondary/60"
+      )}>
+        {badge}
+      </span>
     </div>
-    <h5 className="font-black italic text-app-text-primary">{title}</h5>
-    <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">{description}</p>
+    <h5 className="font-display text-base uppercase tracking-wide text-app-text-primary">{title}</h5>
+    <p className="mt-1 font-mono text-[11px] leading-relaxed text-app-text-secondary/80">{description}</p>
   </button>
 );
 const SettingsView: React.FC<SettingsViewProps> = ({
@@ -298,6 +345,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     setAiThinkingEnabled,
     aiInferBlockTypesEnabled,
     setAiInferBlockTypesEnabled,
+    aiSecondPassEnabled,
+    setAiSecondPassEnabled,
     resetOnboarding,
     clearStore,
   } = useMangaStore();
@@ -374,21 +423,46 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     <div className="space-y-4">
       <label className="block">
         <span className={labelClass}>Gemini API Key</span>
-        <input type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="Cole sua chave do Google AI Studio" className={cx(inputClass, "mt-2")} />
-        <p className="mt-2 text-xs leading-relaxed text-app-text-secondary/60">A chave é armazenada de forma segura no cofre do sistema operacional.</p>
+        <input
+          type="password"
+          value={apiKey}
+          onChange={(event) => setApiKey(event.target.value)}
+          placeholder="Cole sua chave do Google AI Studio"
+          className={cx(inputClass, "mt-2")}
+        />
+        <p className="mt-2 font-mono text-[10px] text-app-text-secondary/70">
+          A chave é armazenada de forma segura no cofre do sistema operacional (Keyring).
+        </p>
       </label>
 
       <div className="grid gap-3 sm:grid-cols-2">
         {GEMINI_MODEL_OPTIONS.map((model) => {
           const isSelected = geminiModel === model.id;
           return (
-            <button key={model.id} type="button" onClick={() => { setGeminiModel(model.id); setTranslationEngine("gemini"); }} className={cx("rounded-2xl border p-4 text-left transition-all", isSelected ? "border-emerald-500/30 bg-emerald-500/10" : "border-app-border bg-app-bg/30 hover:bg-app-surface/50")}>
+            <button
+              key={model.id}
+              type="button"
+              onClick={() => { setGeminiModel(model.id); setTranslationEngine("gemini"); }}
+              className={cx(
+                "border-2 p-4 text-left transition-all relative group",
+                isSelected
+                  ? "border-app-text-primary bg-app-card shadow-ink -translate-x-0.5 -translate-y-0.5"
+                  : "border-app-border bg-app-surface hover:border-app-accent hover:bg-app-card hover:shadow-ink-sm"
+              )}
+            >
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-sm font-black text-app-text-primary">{model.label}</span>
-                <span className="rounded-full border border-app-border px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-app-text-secondary">{getGeminiAccessLabel(model.access)}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <GeminiLogo className="h-4 w-4 flex-shrink-0" />
+                  <span className="font-display text-sm uppercase tracking-wide text-app-text-primary truncate">{model.label}</span>
+                </div>
+                <span className="border border-app-border px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-app-text-secondary/70 flex-shrink-0">
+                  {getGeminiAccessLabel(model.access)}
+                </span>
               </div>
-              <p className="text-xs leading-relaxed text-app-text-secondary/70">{model.description}</p>
-              <div className="mt-3 text-[9px] font-bold uppercase tracking-[0.18em] text-app-text-secondary/50">{getGeminiFamilyLabel(model.family)} {isSelected ? "- selecionado" : ""}</div>
+              <p className="font-mono text-xs leading-relaxed text-app-text-secondary/80">{model.description}</p>
+              <div className="mt-3 font-pixel text-[9px] uppercase tracking-wider text-app-accent">
+                {getGeminiFamilyLabel(model.family)} {isSelected ? "✓ Selecionado" : ""}
+              </div>
             </button>
           );
         })}
@@ -407,13 +481,26 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         {OLLAMA_MODEL_OPTIONS.map((model) => {
           const isSelected = ollamaModel === model.id;
           return (
-            <button key={model.id} type="button" onClick={() => { setOllamaModel(model.id); setTranslationEngine("ollama"); }} className={cx("rounded-2xl border p-4 text-left transition-all", isSelected ? "border-violet-500/30 bg-violet-500/10" : "border-app-border bg-app-bg/30 hover:bg-app-surface/50")}>
+            <button
+              key={model.id}
+              type="button"
+              onClick={() => { setOllamaModel(model.id); setTranslationEngine("ollama"); }}
+              className={cx(
+                "border-2 p-4 text-left transition-all relative group",
+                isSelected
+                  ? "border-app-text-primary bg-app-card shadow-ink -translate-x-0.5 -translate-y-0.5"
+                  : "border-app-border bg-app-surface hover:border-app-accent hover:bg-app-card hover:shadow-ink-sm"
+              )}
+            >
               <div className="mb-2 flex items-start justify-between gap-2">
-                <span className="text-sm font-black text-app-text-primary">{model.label}</span>
-                <span className="text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary/50">{model.sizeLabel}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <OllamaLogo className="h-4 w-4 flex-shrink-0 text-app-text-primary" />
+                  <span className="font-display text-sm uppercase tracking-wide text-app-text-primary truncate">{model.label}</span>
+                </div>
+                <span className="border border-app-border px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-app-text-secondary/70 flex-shrink-0">{model.sizeLabel}</span>
               </div>
-              <p className="text-xs leading-relaxed text-app-text-secondary/70">{model.description}</p>
-              <code className="mt-3 block rounded-xl border border-app-border bg-app-surface/50 px-3 py-2 text-[10px] text-app-text-primary">{model.installCommand}</code>
+              <p className="font-mono text-xs leading-relaxed text-app-text-secondary/80">{model.description}</p>
+              <code className="mt-3 block border border-app-border bg-app-card px-2.5 py-1.5 font-pixel text-[10px] text-app-text-primary/90 select-all">{model.installCommand}</code>
             </button>
           );
         })}
@@ -445,8 +532,8 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         </label>
       ) : (
         <div className={cardClass}>
-          <div className="mb-2 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={16} className="text-blue-400" /><span className="text-sm font-black">Servidor local</span></div>
-          <p className="text-xs leading-relaxed text-app-text-secondary/70">Deixe o LM Studio aberto em <span className="text-app-text-primary">localhost:1234</span>. O app tenta detectar o modelo carregado automaticamente.</p>
+          <div className="mb-2 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={16} className="text-emerald-500" /><span className="font-display text-sm uppercase tracking-wide">Servidor local</span></div>
+          <p className="font-mono text-xs leading-relaxed text-app-text-secondary/80">Deixe o LM Studio aberto em <span className="font-bold text-app-text-primary">localhost:1234</span>. O app tenta detectar o modelo carregado automaticamente.</p>
         </div>
       )}
 
@@ -454,65 +541,115 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         {selectedOpenAiProvider.models.map((model) => {
           const isSelected = openAiCompatibleModel === model.id;
           return (
-            <button key={model.id} type="button" onClick={() => { setOpenAiCompatibleModel(model.id); setOpenRouterModelMode(selectedOpenAiProvider.id === "openrouter" && model.id === OPENROUTER_AUTO_FREE_MODEL_ID ? "auto-free" : "manual"); setTranslationEngine("openaiCompatible"); }} className={cx("rounded-2xl border p-4 text-left transition-all", isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-app-border bg-app-bg/30 hover:bg-app-surface/50")}>
+            <button
+              key={model.id}
+              type="button"
+              onClick={() => {
+                setOpenAiCompatibleModel(model.id);
+                setOpenRouterModelMode(selectedOpenAiProvider.id === "openrouter" && model.id === OPENROUTER_AUTO_FREE_MODEL_ID ? "auto-free" : "manual");
+                setTranslationEngine("openaiCompatible");
+              }}
+              className={cx(
+                "border-2 p-4 text-left transition-all relative group",
+                isSelected
+                  ? "border-app-text-primary bg-app-card shadow-ink -translate-x-0.5 -translate-y-0.5"
+                  : "border-app-border bg-app-surface hover:border-app-accent hover:bg-app-card hover:shadow-ink-sm"
+              )}
+            >
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-sm font-black text-app-text-primary">{model.label}</span>
-                {model.recommended && <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-emerald-400">Sugestão</span>}
+                <div className="flex items-center gap-2 min-w-0">
+                  {getProviderLogo(selectedOpenAiProvider.id, "h-4 w-4 flex-shrink-0 text-app-accent")}
+                  <span className="font-display text-sm uppercase tracking-wide text-app-text-primary truncate">{model.label}</span>
+                </div>
+                {model.recommended && (
+                  <span className="border border-emerald-600/40 bg-emerald-600/10 px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-emerald-500 flex-shrink-0">
+                    Sugestão
+                  </span>
+                )}
               </div>
-              <p className="text-xs leading-relaxed text-app-text-secondary/70">{model.description}</p>
-              <p className="mt-3 break-all text-[10px] font-mono uppercase tracking-wider text-app-text-secondary/50">{model.id === OPENROUTER_AUTO_FREE_MODEL_ID ? "Fila grátis / vision" : model.id}</p>
+              <p className="font-mono text-xs leading-relaxed text-app-text-secondary/80">{model.description}</p>
+              <p className="mt-3 break-all font-pixel text-[10px] uppercase tracking-wider text-app-accent">{model.id === OPENROUTER_AUTO_FREE_MODEL_ID ? "Fila grátis / vision" : model.id}</p>
             </button>
           );
         })}
       </div>
 
       {selectedOpenAiProvider.id === "openrouter" && (
-        <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs leading-relaxed text-app-text-secondary/80">
-          <span className="font-black uppercase tracking-[0.18em] text-amber-400">Aviso rápido:</span>{" "}
+        <div className="border-2 border-dashed border-amber-500/40 bg-amber-500/10 p-3.5 font-mono text-xs leading-relaxed text-app-text-primary shadow-ink-sm">
+          <span className="font-pixel font-bold uppercase tracking-widest text-amber-500">Aviso rápido:</span>{" "}
           no modo grátis, a qualidade depende do modelo disponível no momento. O app tenta corrigir respostas
           duplicadas ou mal formatadas, mas alguns modelos podem só transcrever em vez de traduzir.
         </div>
       )}
 
-      <div className="rounded-3xl border border-app-border bg-app-bg/30 p-4">
+      <div className="border-2 border-app-border bg-app-surface p-4 shadow-ink-sm">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <div><div className={labelClass}>Avançado</div><p className="mt-1 text-xs text-app-text-secondary/60">Use apenas se você já souber o ID exato do modelo.</p></div>
-          <Button type="button" variant="outline" onClick={() => { void openExternalUrl(selectedOpenAiProvider.docsUrl); }} className="rounded-xl border-app-border px-4 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary">Docs <ExternalLink size={13} className="ml-2" /></Button>
+          <div><div className={labelClass}>Avançado</div><p className="mt-1 font-mono text-xs text-app-text-secondary/80">Use apenas se você já souber o ID exato do modelo.</p></div>
+          <button type="button" onClick={() => { void openExternalUrl(selectedOpenAiProvider.docsUrl); }} className="btn border-2 border-app-border bg-app-card px-3 py-1 font-display text-[10px] uppercase tracking-wider text-app-text-secondary hover:border-app-accent hover:text-app-text-primary shadow-ink-sm flex items-center gap-1.5">Docs <ExternalLink size={12} /></button>
         </div>
         <input type="text" value={selectedOpenAiProvider.id === "openrouter" && openRouterModelMode === "auto-free" ? "" : openAiCompatibleModel} onChange={(event) => { setOpenAiCompatibleModel(event.target.value); setOpenRouterModelMode("manual"); setTranslationEngine("openaiCompatible"); }} placeholder={selectedOpenAiProvider.id === "openrouter" ? "Cole um ID manual, ex: google/gemini-2.5-flash" : selectedOpenAiModel.id} className={inputClass} />
         {selectedOpenAiProvider.id === "openrouter" && (
-          <Button type="button" variant="outline" onClick={handleRefreshOpenRouterFreeModels} disabled={isRefreshingOpenRouterModels} className="mt-3 w-full rounded-xl border-emerald-500/20 py-5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500 hover:bg-emerald-500/10">
-            <RefreshCw className={cx("mr-2 h-4 w-4", isRefreshingOpenRouterModels && "animate-spin")} /> Atualizar lista grátis
-          </Button>
+          <button type="button" onClick={handleRefreshOpenRouterFreeModels} disabled={isRefreshingOpenRouterModels} className="btn primary border-2 border-app-text-primary bg-emerald-600 px-4 py-2.5 font-black text-xs uppercase tracking-wider text-white shadow-ink transition-all hover:bg-emerald-500 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-ink-hover w-full mt-3 flex items-center justify-center gap-2">
+            <RefreshCw className={cx("h-4 w-4", isRefreshingOpenRouterModels && "animate-spin")} /> Atualizar lista grátis
+          </button>
         )}
       </div>
     </div>
   );
   const renderAiSection = () => (
     <section className="space-y-6">
-      <SectionTitle icon={Sparkles} label="Motores de tradução" title="Escolha como a IA trabalha" description="Selecione entre nuvem, APIs flexíveis e modelos locais. O modo recomendado continua simples, mas quem quiser ajustar tem espaço para isso." />
+      <SectionTitle icon={InkWellIcon} label="Motores de tradução" title="Escolha como a IA trabalha" description="Selecione entre nuvem, APIs flexíveis e modelos locais. O modo recomendado continua simples, mas quem quiser ajustar tem espaço para isso." />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
         <div className={panelClass}>
           <div className="mb-4 flex items-center justify-between gap-3">
-            <div><div className={labelClass}>Motor ativo</div><h4 className="mt-2 text-xl font-black italic text-app-text-primary">{activeEngineLabel}</h4></div>
-            <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-400">Pronto para AI Draft</span>
+            <div><div className={labelClass}>Motor ativo</div><h4 className="mt-1 font-display text-2xl uppercase tracking-wide text-app-text-primary">{activeEngineLabel}</h4></div>
+            <span className="border-2 border-emerald-600/40 bg-emerald-600/10 px-2.5 py-1 font-pixel text-[9px] font-black uppercase tracking-wider text-emerald-500">Pronto para AI Draft</span>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <EngineCard active={translationEngine === "gemini"} icon={Cloud} title="Google Gemini" badge="Confiável" description="Melhor escolha para qualidade consistente e pouco atrito no dia a dia." tone="border-emerald-500/30 bg-emerald-500/10" onClick={() => setTranslationEngine("gemini")} />
+            <EngineCard
+              active={translationEngine === "gemini"}
+              icon={<GeminiLogo className="h-5 w-5" />}
+              title="Google Gemini"
+              badge="Confiável"
+              description="Melhor escolha para qualidade consistente e pouco atrito no dia a dia."
+              onClick={() => setTranslationEngine("gemini")}
+            />
             {OPENAI_COMPATIBLE_PROVIDERS.map((provider) => {
               const isSelected = translationEngine === "openaiCompatible" && selectedOpenAiProvider.id === provider.id;
-              const Icon = provider.id === "lmstudio" ? Cpu : provider.id === "groq" ? Zap : Cloud;
+              const logo = provider.id === "groq" ? (
+                <GroqLogo className="h-5 w-5 text-[#F55036]" />
+              ) : provider.id === "lmstudio" ? (
+                <LMStudioLogo className="h-5 w-5 text-[#A855F7]" />
+              ) : (
+                <OpenRouterLogo className="h-5 w-5 text-app-accent" />
+              );
               const chip = provider.id === "groq" ? "Turbo" : provider.id === "lmstudio" ? "Local" : "Flexível";
-              const tone = provider.id === "groq" ? "border-orange-500/30 bg-orange-500/10" : provider.id === "lmstudio" ? "border-blue-500/30 bg-blue-500/10" : "border-cyan-500/30 bg-cyan-500/10";
-              return <EngineCard key={provider.id} active={isSelected} icon={Icon} title={provider.label} badge={chip} description={provider.description} tone={tone} onClick={() => handleOpenAiProviderSelect(provider.id)} />;
+              return (
+                <EngineCard
+                  key={provider.id}
+                  active={isSelected}
+                  icon={logo}
+                  title={provider.label}
+                  badge={chip}
+                  description={provider.description}
+                  onClick={() => handleOpenAiProviderSelect(provider.id)}
+                />
+              );
             })}
-            <EngineCard active={translationEngine === "ollama"} icon={Cpu} title="Ollama Local" badge="Experimental" description="Opção local simples para quem já usa Ollama, mas pode ser lenta em CPU." tone="border-violet-500/30 bg-violet-500/10" onClick={() => setTranslationEngine("ollama")} />
+            <EngineCard
+              active={translationEngine === "ollama"}
+              icon={<OllamaLogo className="h-5 w-5 text-app-text-primary" />}
+              title="Ollama Local"
+              badge="Experimental"
+              description="Opção local simples para quem já usa Ollama, mas pode ser lenta em CPU."
+              onClick={() => setTranslationEngine("ollama")}
+            />
           </div>
         </div>
         <div className={panelClass}>
           <div className="mb-5 flex items-center justify-between gap-3">
-            <div><div className={labelClass}>Configuração do motor</div><h4 className="mt-2 text-xl font-black italic text-app-text-primary">{activeEngineLabel}</h4></div>
-            <button type="button" onClick={() => setActiveSection("editor")} className="flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary">Ajustes do draft <ChevronRight size={12} /></button>
+            <div><div className={labelClass}>Configuração do motor</div><h4 className="mt-1 font-display text-2xl uppercase tracking-wide text-app-text-primary">{activeEngineLabel}</h4></div>
+            <button type="button" onClick={() => setActiveSection("editor")} className="flex items-center gap-1 font-pixel text-[9px] font-black uppercase tracking-wider text-app-text-secondary hover:text-app-text-primary">Ajustes do draft <ChevronRight size={12} /></button>
           </div>
           {translationEngine === "gemini" && renderGeminiSettings()}
           {translationEngine === "ollama" && renderOllamaSettings()}
@@ -524,35 +661,136 @@ const SettingsView: React.FC<SettingsViewProps> = ({
 
   const renderEditorSection = () => (
     <section className="space-y-6">
-      <SectionTitle icon={Wand2} label="AI Draft" title="Comportamento do editor" description="Ajustes que afetam como o rascunho da IA chega na fila de blocos. Também aparecem no editor para troca rápida durante o trabalho." />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ToggleButton active={aiThinkingEnabled} title="Thinking mais cuidadoso" description="Ajuda modelos locais/reasoning a não só transcrever o inglês, mas pode aumentar bastante o tempo de resposta." icon={Brain} onClick={() => setAiThinkingEnabled(!aiThinkingEnabled)} accentClass="border-amber-500/30 bg-amber-500/10 text-amber-400" />
-        <ToggleButton active={aiInferBlockTypesEnabled} title="Detectar tipos de balão" description="Quando ligado, a IA tenta classificar narração, pensamento, texto fora de balão e balão duplo. Se o modelo errar, deixe desligado." icon={Tags} onClick={() => setAiInferBlockTypesEnabled(!aiInferBlockTypesEnabled)} accentClass="border-cyan-500/30 bg-cyan-500/10 text-cyan-400" />
-      </div>
+      <SectionTitle
+        icon={GPenIcon}
+        label="Persona & AI Draft"
+        title="Perfil de Tradução & Comportamento"
+        description="Ajuste a persona editorial, o preset cultural de idioma (Mangá JP, Manhwa KR, Manhua CN), o tom de voz e as diretrizes exclusivas do System Prompt da IA."
+      />
+
       <div className={panelClass}>
-        <div className="mb-4 flex items-center gap-2 text-app-text-primary"><Info size={16} className="text-app-accent" /><h4 className="text-sm font-black uppercase tracking-[0.18em]">Sugestão prática</h4></div>
+        <TranslationProfilePanel />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <ToggleButton
+          active={aiThinkingEnabled}
+          title="Thinking mais cuidadoso"
+          description="Ajuda modelos locais/reasoning a não só transcrever o inglês, mas pode aumentar bastante o tempo de resposta."
+          icon={Brain}
+          onClick={() => setAiThinkingEnabled(!aiThinkingEnabled)}
+        />
+        <ToggleButton
+          active={aiInferBlockTypesEnabled}
+          title="Detectar tipos de balão"
+          description="Quando ligado, a IA tenta classificar narração, pensamento, texto fora de balão e balão duplo. Se o modelo errar, deixe desligado."
+          icon={Tags}
+          onClick={() => setAiInferBlockTypesEnabled(!aiInferBlockTypesEnabled)}
+        />
+        <ToggleButton
+          active={aiSecondPassEnabled}
+          title="Segunda Passada (Naturalidade)"
+          description="Refinamento adicional somente-texto focado em ritmo, gírias e diálogos orgânicos em PT-BR. Consome mais tokens da API."
+          icon={DialoguePolishIcon}
+          onClick={() => setAiSecondPassEnabled(!aiSecondPassEnabled)}
+        />
+      </div>
+
+      <div className={panelClass}>
+        <div className="mb-4 flex items-center gap-2 text-app-text-primary">
+          <Info size={16} className="text-app-accent" />
+          <h4 className="font-display text-sm uppercase tracking-wider">Sugestão prática de produção</h4>
+        </div>
         <div className="grid gap-3 md:grid-cols-3">
-          <div className={cardClass}><div className={labelClass}>Uso diário</div><p className="mt-2 text-sm font-bold text-app-text-primary">Thinking desligado</p><p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">Mais rápido para Gemini, Groq e páginas simples.</p></div>
-          <div className={cardClass}><div className={labelClass}>Modelos locais</div><p className="mt-2 text-sm font-bold text-app-text-primary">Thinking ligado</p><p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">Pode melhorar LM Studio, especialmente em modelos menores.</p></div>
-          <div className={cardClass}><div className={labelClass}>Tipos</div><p className="mt-2 text-sm font-bold text-app-text-primary">Opcional</p><p className="mt-2 text-xs leading-relaxed text-app-text-secondary/70">Se a classificação vier ruim, usar tudo como bloco neutro é melhor.</p></div>
+          <div className={cardClass}>
+            <div className={labelClass}>Uso diário</div>
+            <p className="mt-1 font-display text-sm uppercase tracking-wide text-app-text-primary">Thinking desligado</p>
+            <p className="mt-1 font-mono text-xs leading-relaxed text-app-text-secondary/80">Mais rápido para Gemini, Groq e páginas simples.</p>
+          </div>
+          <div className={cardClass}>
+            <div className={labelClass}>Modelos locais</div>
+            <p className="mt-1 font-display text-sm uppercase tracking-wide text-app-text-primary">Thinking ligado</p>
+            <p className="mt-1 font-mono text-xs leading-relaxed text-app-text-secondary/80">Pode melhorar LM Studio, especialmente em modelos menores.</p>
+          </div>
+          <div className={cardClass}>
+            <div className={labelClass}>Tipos</div>
+            <p className="mt-1 font-display text-sm uppercase tracking-wide text-app-text-primary">Opcional</p>
+            <p className="mt-1 font-mono text-xs leading-relaxed text-app-text-secondary/80">Se a classificação vier ruim, usar tudo como bloco neutro é melhor.</p>
+          </div>
         </div>
       </div>
     </section>
   );
-
   const renderAppearanceSection = () => (
     <section className="space-y-6">
-      <SectionTitle icon={Palette} label="Visual" title="Aparência do app" description="Escolha o tema que combina melhor com seu ambiente. A interface continua seguindo a identidade editorial/scan-tech do MangAI." />
+      <SectionTitle icon={Palette} label="Identidade Visual" title="Aparência do Aplicativo" description="Alterne entre o Nanquim Profundo e o Papel Washi Cru tradicional. Ambos os estilos preservam a autenticidade editorial de mangá e descartam minimalismo genérico." />
       <div className="grid gap-4 md:grid-cols-2">
-        <button type="button" onClick={() => setTheme("dark-organic")} className={cx("rounded-[2rem] border p-6 text-left transition-all", theme === "dark-organic" ? "border-emerald-500/30 bg-emerald-500/10" : "border-app-border bg-app-surface/30 hover:bg-app-surface/50")}>
-          <div className="mb-8 h-24 rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_42%),linear-gradient(135deg,#090909,#151515)]" />
-          <h4 className="text-xl font-black italic text-app-text-primary">Dark Organic</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Tema escuro para focar na leitura e trabalhar por mais tempo.</p>
-          {theme === "dark-organic" && <div className="mt-4 text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400">Ativo</div>}
+        {/* Dark Organic / Nanquim */}
+        <button
+          type="button"
+          onClick={() => setTheme("dark-organic")}
+          className={cx(
+            "border-2 p-6 text-left transition-all relative overflow-hidden group",
+            theme === "dark-organic"
+              ? "border-app-text-primary bg-app-card shadow-ink -translate-x-0.5 -translate-y-0.5"
+              : "border-app-border bg-app-surface hover:border-app-accent shadow-ink-sm"
+          )}
+        >
+          <div className="mb-6 h-24 border-2 border-app-border bg-[#0B0C10] p-4 relative overflow-hidden flex items-center justify-between">
+            <div className="halftone absolute inset-0 opacity-40 pointer-events-none" />
+            <div className="z-10 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center border-2 border-white bg-app-accent text-white font-brush text-2xl font-black shadow-ink-sm">
+                墨
+              </div>
+              <div>
+                <span className="block font-display text-lg uppercase tracking-wider text-white">Nanquim Profundo</span>
+                <span className="block font-pixel text-[9px] uppercase tracking-widest text-white/60">DARK ORGANIC // 執筆</span>
+              </div>
+            </div>
+          </div>
+          <h4 className="font-display text-xl uppercase tracking-wider text-app-text-primary">Dark Organic (Nanquim)</h4>
+          <p className="mt-2 font-mono text-xs leading-relaxed text-app-text-secondary/80">
+            Mesa de mangaká noturna: nanquim preto puro, retículas halftones profundas e acentos em vermelhão Hanko. Ideal para concentração em sessões prolongadas de tradução.
+          </p>
+          {theme === "dark-organic" && (
+            <div className="mt-4 inline-block border-2 border-app-text-primary bg-app-accent px-3 py-1 font-pixel text-[9px] font-black uppercase tracking-widest text-white shadow-ink-sm">
+              [済] TEMA EM USO
+            </div>
+          )}
         </button>
-        <button type="button" onClick={() => setTheme("paper-light")} className={cx("rounded-[2rem] border p-6 text-left transition-all", theme === "paper-light" ? "border-blue-500/30 bg-blue-500/10" : "border-app-border bg-app-surface/30 hover:bg-app-surface/50")}>
-          <div className="mb-8 h-24 rounded-3xl border border-stone-300 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.16),transparent_45%),linear-gradient(135deg,#fffef8,#eee9d8)]" />
-          <h4 className="text-xl font-black italic text-app-text-primary">Paper Light</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Tema claro com visual de papel, bom para ambientes iluminados.</p>
-          {theme === "paper-light" && <div className="mt-4 text-[9px] font-black uppercase tracking-[0.2em] text-blue-400">Ativo</div>}
+
+        {/* Paper Light / Washi Cru */}
+        <button
+          type="button"
+          onClick={() => setTheme("paper-light")}
+          className={cx(
+            "border-2 p-6 text-left transition-all relative overflow-hidden group",
+            theme === "paper-light"
+              ? "border-app-text-primary bg-app-card shadow-ink -translate-x-0.5 -translate-y-0.5"
+              : "border-app-border bg-app-surface hover:border-app-accent shadow-ink-sm"
+          )}
+        >
+          <div className="mb-6 h-24 border-2 border-stone-400 bg-[#F3EFE3] p-4 relative overflow-hidden flex items-center justify-between text-stone-900">
+            <div className="halftone-paper absolute inset-0 opacity-40 pointer-events-none" />
+            <div className="z-10 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center border-2 border-stone-900 bg-stone-900 text-[#F3EFE3] font-brush text-2xl font-black shadow-ink-sm">
+                和
+              </div>
+              <div>
+                <span className="block font-display text-lg uppercase tracking-wider text-stone-900">Papel Washi Cru</span>
+                <span className="block font-pixel text-[9px] uppercase tracking-widest text-stone-700">PAPER LIGHT // 和紙</span>
+              </div>
+            </div>
+          </div>
+          <h4 className="font-display text-xl uppercase tracking-wider text-app-text-primary">Paper Light (Washi Cru)</h4>
+          <p className="mt-2 font-mono text-xs leading-relaxed text-app-text-secondary/80">
+            Manuscrito impresso: textura de papel artesanal washi marfim com traços de nanquim preto de alto contraste. Perfeito para ambientes claros com estética editorial clássica.
+          </p>
+          {theme === "paper-light" && (
+            <div className="mt-4 inline-block border-2 border-app-text-primary bg-app-accent px-3 py-1 font-pixel text-[9px] font-black uppercase tracking-widest text-white shadow-ink-sm">
+              [済] TEMA EM USO
+            </div>
+          )}
         </button>
       </div>
     </section>
@@ -563,46 +801,144 @@ const SettingsView: React.FC<SettingsViewProps> = ({
       <SectionTitle icon={Database} label="Privacidade local" title="Dados deste computador" description="O MangAI salva configurações, chaves e projetos localmente para você não precisar configurar tudo de novo a cada abertura." />
       <div className="grid gap-4 xl:grid-cols-2">
         <div className={panelClass}>
-          <div className="mb-4 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={18} className="text-emerald-400" /><h4 className="text-lg font-black italic">O que fica salvo?</h4></div>
-          <div className="rounded-3xl border border-app-border bg-app-bg/30 px-5 py-2">
-            <InfoRow label="Gemini key" value={apiKey ? "Cofre do SO" : "Não configurada"} />
-            <InfoRow label="OpenRouter key" value={openRouterApiKey ? "Cofre do SO" : "Não configurada"} />
-            <InfoRow label="Groq key" value={groqApiKey ? "Cofre do SO" : "Não configurada"} />
-            <InfoRow label="Projetos" value="SQLite local" />
+          <div className="mb-4 flex items-center gap-2 text-app-text-primary"><ShieldCheck size={18} className="text-emerald-500" /><h4 className="font-display text-lg uppercase tracking-wider">O que fica salvo?</h4></div>
+          <div className="border-2 border-app-border bg-app-card px-4 py-2 shadow-ink-sm">
+            <InfoRow label="Gemini key" value={apiKey ? "Cofre do SO (Keyring)" : "Não configurada"} />
+            <InfoRow label="OpenRouter key" value={openRouterApiKey ? "Cofre do SO (Keyring)" : "Não configurada"} />
+            <InfoRow label="Groq key" value={groqApiKey ? "Cofre do SO (Keyring)" : "Não configurada"} />
+            <InfoRow label="Projetos & Capítulos" value="SQLite Local" />
+            <InfoRow label="Glossário" value="SQLite Local" />
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-app-text-secondary/60">O app armazena suas chaves no gerenciador de credenciais do sistema operacional (Windows Credential Manager / macOS Keychain). As chamadas são feitas direto para o provedor escolhido.</p>
+          <p className="mt-4 font-mono text-xs leading-relaxed text-app-text-secondary/70">O app armazena suas chaves no gerenciador de credenciais do sistema operacional (Windows Credential Manager / macOS Keychain). As chamadas são feitas diretamente para o provedor configurado.</p>
         </div>
         <div className="space-y-4">
-          <div className="rounded-[2rem] border border-app-border bg-app-surface/25 p-5"><h4 className="text-lg font-black italic text-app-text-primary">Tutorial inicial</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Reative as dicas do primeiro uso caso queira rever o fluxo do app.</p><Button onClick={handleResetOnboarding} variant="outline" className="mt-5 w-full rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-widest text-app-text-secondary hover:text-app-text-primary"><RotateCcw size={16} className="mr-2" /> Mostrar tutorial</Button></div>
-          <div className="rounded-[2rem] border border-rose-500/20 bg-rose-500/5 p-5"><h4 className="text-lg font-black italic text-rose-400">Limpar tudo</h4><p className="mt-2 text-sm leading-relaxed text-app-text-secondary/70">Remove histórico, cache, projetos salvos e chaves deste computador.</p><Button onClick={() => setConfirmWipe(true)} variant="destructive" className="mt-5 w-full rounded-2xl py-6 text-[10px] font-black uppercase tracking-widest"><Trash2 size={16} className="mr-2" /> Apagar dados deste app</Button></div>
+          <div className={panelClass}>
+            <h4 className="font-display text-lg uppercase tracking-wider text-app-text-primary">Tutorial Inicial</h4>
+            <p className="mt-1 font-mono text-xs leading-relaxed text-app-text-secondary/80">Reative o guia passo a passo da mesa de trabalho caso deseje rever o fluxo do app.</p>
+            <button
+              type="button"
+              onClick={handleResetOnboarding}
+              className="btn border-2 border-app-border bg-app-card py-2.5 font-bold text-xs uppercase tracking-wider text-app-text-secondary hover:border-app-accent hover:text-app-text-primary shadow-ink-sm transition-all w-full mt-4 flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={15} /> Mostrar Tutorial
+            </button>
+          </div>
+          <div className="border-2 border-rose-600/40 bg-rose-500/10 p-5 shadow-ink-sm">
+            <h4 className="font-display text-lg uppercase tracking-wider text-rose-500">Limpar Todos os Dados</h4>
+            <p className="mt-1 font-mono text-xs leading-relaxed text-app-text-secondary/80">Remove permanentemente histórico, cache de imagens, projetos salvos e chaves deste computador.</p>
+            <button
+              type="button"
+              onClick={() => setConfirmWipe(true)}
+              className="btn border-2 border-rose-700 bg-rose-600 py-2.5 font-black text-xs uppercase tracking-wider text-white hover:bg-rose-700 shadow-ink transition-all w-full mt-4 flex items-center justify-center gap-2"
+            >
+              <Trash2 size={15} /> Apagar Dados Deste App
+            </button>
+          </div>
         </div>
       </div>
     </section>
   );
+
   const renderUpdatesSection = () => (
     <section className="space-y-6">
-      <SectionTitle icon={RefreshCw} label="Release" title="Atualizações e changelog" description="Confira a versão instalada, procure updates pelo GitHub Releases e veja o que mudou nas últimas versões." />
+      <SectionTitle icon={RefreshCw} label="Distribuição" title="Atualizações e Changelog" description="Confira a versão instalada, procure novidades pelo GitHub Releases e veja as melhorias acumuladas no ciclo." />
       <div className="grid gap-4 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]">
         <div className={panelClass}>
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div><div className={labelClass}>Versão instalada</div><h4 className="mt-2 text-2xl font-black italic text-app-text-primary">MangAI {appVersion}</h4></div>
-            {availableUpdate ? <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-400">Nova {availableUpdate.version}</span> : <span className="rounded-full border border-app-border bg-app-bg/40 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary">Sem update pendente</span>}
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <div className={labelClass}>Versão instalada</div>
+              <h4 className="mt-1 font-display text-2xl uppercase tracking-wider text-app-text-primary">MangAI {appVersion}</h4>
+            </div>
+            {availableUpdate ? (
+              <span className="border-2 border-amber-600 bg-amber-500 text-black px-2.5 py-1 font-pixel text-[9px] font-black uppercase tracking-wider shadow-ink-sm">
+                NOVA {availableUpdate.version}
+              </span>
+            ) : (
+              <span className="border border-app-border bg-app-card px-2.5 py-1 font-pixel text-[9px] font-black uppercase tracking-wider text-app-text-secondary/70">
+                SEM UPDATE PENDENTE
+              </span>
+            )}
           </div>
-          <div className="rounded-3xl border border-app-border bg-app-bg/30 px-5 py-3"><InfoRow label="Última verificação" value={formatLastCheck(lastUpdateCheck)} /><InfoRow label="Canal" value="GitHub Releases" /></div>
-          {(updateStatusMessage || updateError) && <p className="mt-4 rounded-2xl border border-app-border bg-app-bg/30 p-4 text-xs leading-relaxed text-app-text-secondary/70">{updateError || updateStatusMessage}</p>}
-          {isInstallingUpdate && <div className="mt-5"><div className="mb-2 flex items-center justify-between text-[11px] text-app-text-secondary/70"><span>Progresso do download</span><span>{updateProgressPercent ?? 0}%</span></div><div className="h-2 overflow-hidden rounded-full bg-app-bg/60"><div className="h-full bg-emerald-400 transition-all duration-300" style={{ width: `${updateProgressPercent ?? 0}%` }} /></div></div>}
+          <div className="border-2 border-app-border bg-app-card px-4 py-2 shadow-ink-sm">
+            <InfoRow label="Última verificação" value={formatLastCheck(lastUpdateCheck)} />
+            <InfoRow label="Canal" value="GitHub Releases (Oficial)" />
+          </div>
+          {(updateStatusMessage || updateError) && (
+            <p className="mt-4 border border-dashed border-app-border bg-app-card p-3 font-mono text-xs leading-relaxed text-app-text-secondary">
+              {updateError || updateStatusMessage}
+            </p>
+          )}
+          {isInstallingUpdate && (
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center justify-between font-mono text-[11px] text-app-text-secondary">
+                <span>PROGRESSO DO DOWNLOAD</span>
+                <span className="font-bold text-amber-500">{updateProgressPercent ?? 0}%</span>
+              </div>
+              <div className="h-3 overflow-hidden border-2 border-app-border bg-app-card">
+                <div
+                  className="bar-stripes h-full bg-gradient-to-r from-amber-500 to-app-accent transition-all duration-300"
+                  style={{ width: `${updateProgressPercent ?? 0}%` }}
+                />
+              </div>
+            </div>
+          )}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <Button onClick={() => { void onCheckForUpdates(); }} variant="outline" disabled={isCheckingUpdates || isInstallingUpdate} className="rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"><RefreshCw className={cx("mr-2 h-4 w-4", isCheckingUpdates && "animate-spin")} />{isCheckingUpdates ? "Verificando..." : "Verificar agora"}</Button>
-            <Button onClick={() => { void onInstallUpdate(); }} disabled={!availableUpdate || isInstallingUpdate || isCheckingUpdates} className="rounded-2xl py-6 text-[10px] font-black uppercase tracking-[0.18em]">{isInstallingUpdate ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}{isInstallingUpdate ? "Instalando" : availableUpdate ? `Instalar ${availableUpdate.version}` : "Nenhum update agora"}</Button>
+            <button
+              type="button"
+              onClick={() => { void onCheckForUpdates(); }}
+              disabled={isCheckingUpdates || isInstallingUpdate}
+              className="btn border-2 border-app-border bg-app-card py-2.5 font-bold text-xs uppercase tracking-wider text-app-text-secondary hover:border-app-accent hover:text-app-text-primary shadow-ink-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={cx("h-4 w-4", isCheckingUpdates && "animate-spin")} />
+              {isCheckingUpdates ? "Verificando..." : "Verificar agora"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { void onInstallUpdate(); }}
+              disabled={!availableUpdate || isInstallingUpdate || isCheckingUpdates}
+              className="btn primary border-2 border-app-text-primary bg-amber-500 py-2.5 font-black text-xs uppercase tracking-wider text-black shadow-ink transition-all hover:bg-amber-400 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-ink-hover flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isInstallingUpdate ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>Instalando...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  <span>{availableUpdate ? `Instalar ${availableUpdate.version}` : "Nenhum update agora"}</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Painel de Changelog */}
         <div className={panelClass}>
-          <div className="mb-5 flex items-center gap-2 text-app-text-primary"><History size={18} className="text-app-accent" /><h4 className="text-lg font-black italic">Changelog</h4></div>
-          <div className="space-y-3">
+          <div className="mb-4 flex items-center gap-2 text-app-text-primary">
+            <History size={18} className="text-app-accent" />
+            <h4 className="font-display text-lg uppercase tracking-wider">Histórico de Lançamentos</h4>
+          </div>
+          <div className="space-y-3 max-h-[460px] overflow-y-auto no-scrollbar pr-1">
             {CHANGELOG_ITEMS.map((entry) => (
-              <article key={entry.version} className="rounded-3xl border border-app-border bg-app-bg/30 p-5">
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><div className="text-[10px] font-black uppercase tracking-[0.22em] text-app-text-secondary/50">{entry.version}</div><h5 className="mt-1 text-base font-black italic text-app-text-primary">{entry.title}</h5></div><span className="rounded-full border border-app-border bg-app-surface/40 px-3 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-app-text-secondary">{entry.badge}</span></div>
-                <ul className="space-y-2 text-xs leading-relaxed text-app-text-secondary/70">{entry.items.map((item) => <li key={item} className="flex gap-2"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-app-accent" /><span>{item}</span></li>)}</ul>
+              <article key={entry.version} className="border-2 border-app-border bg-app-card p-4 shadow-ink-sm">
+                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-3 border-b border-app-border pb-2">
+                  <div>
+                    <div className="font-pixel text-[9px] font-bold uppercase tracking-widest text-app-accent">{entry.version}</div>
+                    <h5 className="font-display text-base uppercase tracking-wide text-app-text-primary mt-0.5">{entry.title}</h5>
+                  </div>
+                  <span className="border border-app-border bg-app-surface px-2 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-app-text-secondary/80">
+                    {entry.badge}
+                  </span>
+                </div>
+                <ul className="space-y-1.5 font-mono text-xs leading-relaxed text-app-text-secondary/80">
+                  {entry.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <span className="text-amber-500 font-bold shrink-0">✒</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
@@ -613,19 +949,36 @@ const SettingsView: React.FC<SettingsViewProps> = ({
 
   const renderAboutSection = () => (
     <section className="space-y-6">
-      <SectionTitle icon={Info} label="Projeto" title="MangAI Translator" description="Desktop app para localização assistida de mangá e quadrinhos, feito para acelerar o rascunho sem tirar o controle editorial de você." />
+      <SectionTitle icon={Info} label="Projeto Aberto" title="MangAI Translator" description="Aplicativo desktop para localização assistida de mangás, manwhas e quadrinhos, criado para acelerar o rascunho sem abrir mão do controle artesanal e da diagramação humana." />
       <div className="grid gap-4 lg:grid-cols-2">
         <div className={panelClass}>
-          <h4 className="text-xl font-black italic text-app-text-primary">Beta aberto</h4>
-          <p className="mt-3 text-sm leading-relaxed text-app-text-secondary/70">O app ainda está evoluindo com feedback da comunidade. Bugs e sugestões são bem-vindos no GitHub.</p>
+          <h4 className="font-display text-xl uppercase tracking-wider text-app-text-primary">Desenvolvimento Ativo</h4>
+          <p className="mt-2 font-mono text-xs leading-relaxed text-app-text-secondary/80">O app é desenvolvido de forma aberta e contínua com feedback dos scanlators. Sugestões, dúvidas e correções são muito bem-vindas no GitHub.</p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <Button variant="outline" onClick={() => { void openExternalUrl(GITHUB_URL); }} className="rounded-2xl border-app-border py-6 text-[10px] font-black uppercase tracking-[0.18em] text-app-text-secondary hover:text-app-text-primary"><Github size={16} className="mr-2" /> GitHub</Button>
-            <Button onClick={() => { void openExternalUrl(SUPPORT_URL); }} className="rounded-2xl bg-[#FF5E5B] py-6 text-[10px] font-black uppercase tracking-[0.18em] text-white hover:bg-[#ff7b78]"><Heart size={16} className="mr-2" /> Ko-fi</Button>
+            <button
+              type="button"
+              onClick={() => { void openExternalUrl(GITHUB_URL); }}
+              className="btn border-2 border-app-border bg-app-card py-2.5 font-bold text-xs uppercase tracking-wider text-app-text-secondary hover:border-app-accent hover:text-app-text-primary shadow-ink-sm transition-all flex items-center justify-center gap-2"
+            >
+              <Github size={16} /> GitHub
+            </button>
+            <button
+              type="button"
+              onClick={() => { void openExternalUrl(SUPPORT_URL); }}
+              className="btn primary border-2 border-app-text-primary bg-[#FF5E5B] py-2.5 font-black text-xs uppercase tracking-wider text-white shadow-ink transition-all hover:bg-[#ff7b78] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-ink-hover flex items-center justify-center gap-2"
+            >
+              <Heart size={16} /> Apoiar no Ko-fi
+            </button>
           </div>
         </div>
         <div className={panelClass}>
-          <h4 className="text-xl font-black italic text-app-text-primary">Resumo</h4>
-          <div className="mt-4 rounded-3xl border border-app-border bg-app-bg/30 px-5 py-2"><InfoRow label="Versão" value={appVersion} /><InfoRow label="Licença" value="MIT" /><InfoRow label="Release" value="GitHub Releases" /><InfoRow label="Apoio" value="Ko-fi / comunidade" /></div>
+          <h4 className="font-display text-xl uppercase tracking-wider text-app-text-primary">Ficha Editorial</h4>
+          <div className="mt-3 border-2 border-app-border bg-app-card px-4 py-2 shadow-ink-sm">
+            <InfoRow label="Versão" value={appVersion} />
+            <InfoRow label="Licença" value="MIT (Código Aberto)" />
+            <InfoRow label="Canal de Entrega" value="GitHub Releases" />
+            <InfoRow label="Comunidade" value="Scanlators & Criadores" />
+          </div>
         </div>
       </div>
     </section>
@@ -644,29 +997,78 @@ const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[2.5rem] border border-app-border bg-app-surface/20 p-6 shadow-2xl backdrop-blur-md">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
-          <div className="rounded-2xl border border-app-border bg-app-surface/50 p-3"><Settings className="text-app-text-secondary" size={24} /></div>
-          <div className="min-w-0"><h2 className="text-3xl font-black uppercase tracking-tighter italic text-app-text-primary">Configurações <span className="text-app-text-secondary/20">do app</span></h2><p className="text-[10px] font-mono uppercase tracking-[0.2em] text-app-text-secondary/50">IA, editor, aparência, dados e atualizações em seções separadas</p></div>
+    <div className="flex h-full flex-col overflow-hidden border-2 border-app-border bg-app-card text-app-text-primary p-6 shadow-ink-lg relative">
+      {/* Cantoneiras Tonbo de Corte Editorial */}
+      <div className="absolute top-2 left-2 font-pixel text-xs text-app-border select-none pointer-events-none">┌</div>
+      <div className="absolute top-2 right-2 font-pixel text-xs text-app-border select-none pointer-events-none">┐</div>
+      <div className="absolute bottom-2 left-2 font-pixel text-xs text-app-border select-none pointer-events-none">└</div>
+      <div className="absolute bottom-2 right-2 font-pixel text-xs text-app-border select-none pointer-events-none">┘</div>
+
+      {/* Retícula sutil */}
+      <div className="halftone absolute inset-0 opacity-[0.03] pointer-events-none" />
+
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 z-10 relative">
+        <div className="flex min-w-0 items-center gap-3.5">
+          {/* Selo Hanko Editorial [設] */}
+          <div className="inline-grid h-12 w-12 shrink-0 place-items-center border-2 border-app-text-primary bg-app-accent text-white shadow-ink-sm -rotate-2 select-none">
+            <span className="font-brush text-2xl font-black leading-none">設</span>
+          </div>
+          <div className="min-w-0">
+            <span className="font-pixel text-[9px] font-bold uppercase tracking-widest text-app-text-secondary/70">
+              PAINEL DE CONTROLE // SYSTEM CONFIG
+            </span>
+            <h2 className="font-display text-3xl uppercase tracking-wider text-app-text-primary leading-tight mt-0.5">
+              Configurações Editoriais
+            </h2>
+          </div>
         </div>
-        <Button variant="ghost" onClick={onBack} className="text-[10px] font-bold uppercase tracking-widest text-app-text-secondary hover:bg-app-surface/50 hover:text-app-text-primary">Voltar para o painel</Button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="btn border-2 border-app-border bg-app-surface px-4 py-2 font-bold text-xs uppercase tracking-wider text-app-text-secondary hover:border-app-accent hover:text-app-text-primary shadow-ink-sm transition-all"
+        >
+          Voltar para o Painel
+        </button>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-5 lg:grid-cols-[245px_minmax(0,1fr)] lg:grid-rows-none">
-        <aside className="custom-scrollbar flex gap-2 overflow-x-auto rounded-[2rem] border border-app-border bg-app-bg/25 p-3 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] gap-5 lg:grid-cols-[250px_minmax(0,1fr)] lg:grid-rows-none z-10 relative">
+        <aside className="custom-scrollbar flex gap-2 overflow-x-auto border-2 border-app-border bg-app-surface p-3 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden shadow-ink-sm">
           {SETTINGS_SECTIONS.map((section) => {
-            const Icon = section.icon;
             const isActive = activeSection === section.id;
             return (
-              <button key={section.id} type="button" onClick={() => setActiveSection(section.id)} className={cx("flex min-w-[150px] items-center gap-3 rounded-2xl border px-4 py-4 text-left transition-all lg:min-w-0", isActive ? "border-app-accent/30 bg-app-accent/10 text-app-text-primary" : "border-transparent text-app-text-secondary hover:border-app-border hover:bg-app-surface/30 hover:text-app-text-primary")}>
-                <span className="rounded-xl border border-current/20 bg-current/10 p-2"><Icon size={16} /></span>
-                <span className="min-w-0"><span className="block text-sm font-black uppercase tracking-tight">{section.label}</span><span className="block text-[9px] font-bold uppercase tracking-[0.2em] opacity-55">{section.kicker}</span></span>
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveSection(section.id)}
+                className={cx(
+                  "flex min-w-[150px] items-center gap-3 border-2 px-3.5 py-3 text-left transition-all lg:min-w-0 shadow-ink-sm",
+                  isActive
+                    ? "border-app-text-primary bg-app-accent text-white shadow-ink -translate-x-0.5 -translate-y-0.5"
+                    : "border-app-border bg-app-card text-app-text-secondary hover:border-app-accent hover:text-app-text-primary"
+                )}
+              >
+                <div className={cx(
+                  "flex h-8 w-8 shrink-0 items-center justify-center border font-brush text-sm font-black",
+                  isActive ? "border-white bg-black/20 text-white" : "border-app-border bg-app-surface text-app-text-primary"
+                )}>
+                  {section.hanko}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block font-display text-sm uppercase tracking-wider truncate">{section.label}</span>
+                  <span className={cx(
+                    "block font-pixel text-[8px] uppercase tracking-widest",
+                    isActive ? "text-white/80" : "text-app-text-secondary/60"
+                  )}>
+                    {section.kicker}
+                  </span>
+                </div>
               </button>
             );
           })}
         </aside>
-        <main className="custom-scrollbar min-h-0 overflow-y-auto rounded-[2rem] border border-app-border bg-app-bg/20 p-6">{renderActiveSection()}</main>
+        <main className="custom-scrollbar min-h-0 overflow-y-auto border-2 border-app-border bg-app-surface/60 p-6 shadow-ink-sm">
+          {renderActiveSection()}
+        </main>
       </div>
 
       <ConfirmModal isOpen={confirmWipe} onClose={() => setConfirmWipe(false)} onConfirm={() => { void handleWipeAll(); }} title="Apagar dados do app?" description="Esta ação não pode ser desfeita. Suas traduções salvas localmente, imagens em cache e chaves de API serão removidas deste computador." confirmText="Sim, apagar dados" variant="destructive" />

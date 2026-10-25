@@ -9,8 +9,9 @@ import {
   type OpenAiCompatibleProviderId,
   type OpenRouterModelMode,
 } from "@/config/openAiCompatibleProviders";
-import { BlockType, TranslationEngine } from "@/store/useMangaStore";
+import { BlockType, TranslationEngine, TranslationProfile } from "@/store/useMangaStore";
 import { GlossaryTerm } from "./dbService";
+import { executeSecondPassRefinement } from "./secondPassService";
 
 export interface TranslationResult {
   text: string;
@@ -35,12 +36,50 @@ export const translatePage = async (
   previousContext: string | null,
   onResult: (results: TranslationResult[]) => void,
   onProgress?: (chunk: string) => void,
-  onStatusChange?: (update: OllamaStatusUpdate | OpenAiCompatibleStatusUpdate) => void
+  onStatusChange?: (update: OllamaStatusUpdate | OpenAiCompatibleStatusUpdate) => void,
+  profile?: TranslationProfile,
+  aiSecondPassEnabled = false
 ) => {
+  const deliverResults = async (rawResults: TranslationResult[]) => {
+    let finalResults = rawResults;
+
+    if (aiSecondPassEnabled && finalResults.length > 0) {
+      try {
+        finalResults = await executeSecondPassRefinement({
+          blocks: finalResults,
+          engine,
+          apiKey,
+          openRouterApiKey,
+          groqApiKey,
+          customApiKey,
+          geminiModel,
+          ollamaModel,
+          openAiCompatibleProvider,
+          openAiCompatibleModel,
+          openRouterModelMode,
+          profile,
+          glossary,
+          previousContext,
+          onStatusChange: (status) => {
+            onStatusChange?.({
+              stage: "processing",
+              message: status.message,
+            });
+          },
+        });
+      } catch (err) {
+        console.warn("[translatePage] 2ª passada falhou; entregando 1ª passada:", err);
+      }
+    }
+
+    onResult(finalResults);
+  };
+
   if (engine === "gemini") {
     if (!apiKey) {
       throw new Error("API Key do Gemini nao configurada.");
     }
+    let geminiBlocks: TranslationResult[] = [];
     await translateWithGemini(
       apiKey,
       geminiModel,
@@ -49,8 +88,13 @@ export const translatePage = async (
       aiInferBlockTypesEnabled,
       glossary,
       previousContext,
-      onResult
+      (results) => {
+        geminiBlocks = results;
+      },
+      0,
+      profile
     );
+    await deliverResults(geminiBlocks);
     return;
   }
 
@@ -63,14 +107,14 @@ export const translatePage = async (
       glossary,
       previousContext,
       onProgress,
-      onStatusChange
+      onStatusChange,
+      profile
     );
-    onResult(
-      results.map((result) => ({
-        text: result.text,
-        type: aiInferBlockTypesEnabled ? (result.type as BlockType | undefined) : "none",
-      }))
-    );
+    const mapped = results.map((result) => ({
+      text: result.text,
+      type: aiInferBlockTypesEnabled ? (result.type as BlockType | undefined) : "none",
+    }));
+    await deliverResults(mapped);
     return;
   }
 
@@ -90,13 +134,13 @@ export const translatePage = async (
     aiInferBlockTypesEnabled,
     glossary,
     previousContext,
-    onStatusChange
+    onStatusChange,
+    profile
   );
 
-  onResult(
-    results.map((result) => ({
-      text: result.text,
-      type: aiInferBlockTypesEnabled ? (result.type as BlockType | undefined) : "none",
-    }))
-  );
+  const mapped = results.map((result) => ({
+    text: result.text,
+    type: aiInferBlockTypesEnabled ? (result.type as BlockType | undefined) : "none",
+  }));
+  await deliverResults(mapped);
 };

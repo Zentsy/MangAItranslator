@@ -20,6 +20,10 @@ struct PersistedBlockInput {
     text: String,
     #[serde(rename = "type")]
     block_type: String,
+    bbox_x: Option<f64>,
+    bbox_y: Option<f64>,
+    bbox_w: Option<f64>,
+    bbox_h: Option<f64>,
 }
 
 #[derive(Deserialize)]
@@ -189,13 +193,17 @@ async fn save_page_atomic(
 
     for (index, block) in page.blocks.iter().enumerate() {
         sqlx::query(
-            "INSERT INTO blocks (id, page_id, text, type, order_index) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO blocks (id, page_id, text, type, order_index, bbox_x, bbox_y, bbox_w, bbox_h) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(&block.id)
         .bind(&page.id)
         .bind(&block.text)
         .bind(&block.block_type)
         .bind(index as i64)
+        .bind(block.bbox_x)
+        .bind(block.bbox_y)
+        .bind(block.bbox_w)
+        .bind(block.bbox_h)
         .execute(&mut *transaction)
         .await
         .map_err(|e| e.to_string())?;
@@ -347,6 +355,16 @@ pub fn run() {
                     translation TEXT NOT NULL,
                     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
                 );
+            ",
+        kind: MigrationKind::Up,
+    }, Migration {
+        version: 3,
+        description: "add_block_coordinates",
+        sql: "
+                ALTER TABLE blocks ADD COLUMN bbox_x REAL;
+                ALTER TABLE blocks ADD COLUMN bbox_y REAL;
+                ALTER TABLE blocks ADD COLUMN bbox_w REAL;
+                ALTER TABLE blocks ADD COLUMN bbox_h REAL;
             ",
         kind: MigrationKind::Up,
     }];

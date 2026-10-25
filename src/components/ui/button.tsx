@@ -19,6 +19,14 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        hanko:
+          "bg-hanko text-white border-2 border-app-border shadow-ink font-display uppercase tracking-wider hover:bg-hanko-bright active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+        ink:
+          "bg-app-card text-app-text-primary border-2 border-app-border shadow-ink font-display uppercase tracking-wider hover:border-hanko hover:text-hanko active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+        washi:
+          "bg-washi text-nanquim border-2 border-app-border shadow-ink font-body hover:bg-washi-parch active:translate-x-[2px] active:translate-y-[2px] active:shadow-none",
+        manga:
+          "bg-app-surface text-app-text-primary border border-app-border shadow-ink font-display tracking-wider hover:border-hanko active:translate-x-[1px] active:translate-y-[1px] active:shadow-none",
       },
       size: {
         default: "h-9 px-4 py-2",

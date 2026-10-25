@@ -4,13 +4,13 @@
 
 @layer base {
   :root {
-    /* Padrão (Dark Organic) */
-    --app-bg: 10 10 10;
-    --app-surface: 20 20 20;
-    --app-accent: 16 185 129;
-    --app-text-primary: 242 242 242;
-    --app-text-secondary: 160 160 160;
-    --app-border: 38 38 38;
+    /* Padrão (Dark Organic / Nanquim) */
+    --app-bg: 11 12 16;
+    --app-surface: 20 22 29;
+    --app-accent: 232 56 43;
+    --app-text-primary: 243 239 227;
+    --app-text-secondary: 175 170 160;
+    --app-border: 42 46 61;
 
     /* Cores dos Blocos de Tradução (HLS ou RGB para manter consistência) */
     --block-rect: 142 70% 45%;    
@@ -42,50 +42,128 @@
   }
 
   .theme-dark-organic {
-    --app-bg: 10 10 10;
-    --app-surface: 20 20 20;
-    --app-accent: 16 185 129;
-    --app-text-primary: 242 242 242;
-    --app-text-secondary: 160 160 160;
-    --app-border: 38 38 38;
+    --app-bg: 11 12 16;
+    --app-surface: 20 22 29;
+    --app-accent: 232 56 43;
+    --app-text-primary: 243 239 227;
+    --app-text-secondary: 175 170 160;
+    --app-border: 42 46 61;
   }
 
   .theme-paper-light {
-    --app-bg: 240 238 225;       /* Creme/Papel envelhecido */
-    --app-surface: 255 255 252;  /* Branco puro para áreas de foco */
-    --app-accent: 37 99 235;     /* Azul Royal mais suave */
-    --app-text-primary: 28 25 23; /* Marrom quase preto para conforto */
-    --app-text-secondary: 87 83 78;
-    --app-border: 214 211 209;
+    --app-bg: 243 239 227;       /* Papel Washi Cru */
+    --app-surface: 255 255 252;  /* Branco marfim para áreas de foco */
+    --app-accent: 232 56 43;     /* Vermelhão Hanko */
+    --app-text-primary: 27 24 29; /* Nanquim profundo para leitura */
+    --app-text-secondary: 95 90 85;
+    --app-border: 212 203 186;
   }
 }
 
 @layer utilities {
-  .bg-paper-grain {
-    background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+  /* Texturas táteis de mangá da landing page */
+  .halftone {
+    background-image: radial-gradient(circle, rgba(27, 24, 29, 0.22) 1.1px, transparent 1.5px);
+    background-size: 11px 11px;
+  }
+  .halftone-paper {
+    background-image: radial-gradient(circle, rgba(243, 239, 227, 0.16) 1.1px, transparent 1.5px);
+    background-size: 11px 11px;
+  }
+  .halftone-verm {
+    background-image: radial-gradient(circle, rgba(232, 56, 43, 0.4) 1.1px, transparent 1.5px);
+    background-size: 10px 10px;
+  }
+  .speedlines {
+    background-image: repeating-linear-gradient(
+      115deg,
+      transparent 0 26px,
+      rgba(243, 239, 227, 0.05) 26px 28px
+    );
+  }
+  .theme-paper-light .speedlines {
+    background-image: repeating-linear-gradient(
+      115deg,
+      transparent 0 26px,
+      rgba(27, 24, 29, 0.05) 26px 28px
+    );
+  }
+  .noise-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .theme-paper-light .noise-layer {
+    opacity: 0.06;
+  }
+  .bar-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(243, 239, 227, 0.25) 0 7px,
+      transparent 7px 14px
+    );
+  }
+  .theme-paper-light .bar-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      rgba(27, 24, 29, 0.15) 0 7px,
+      transparent 7px 14px
+    );
+  }
+  .keycap {
+    font-family: "DotGothic16", monospace;
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.8rem;
+    height: 1.8rem;
+    padding: 0 0.4rem;
+    background: #F3EFE3;
+    color: #1B181D;
+    border: 2px solid #1B181D;
+    box-shadow: 0 2px 0 #1B181D;
+    border-radius: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+  .otl-ink {
+    -webkit-text-stroke: 2px #1B181D;
+    color: transparent;
+  }
+  .otl-paper {
+    -webkit-text-stroke: 2px #F3EFE3;
+    color: transparent;
+  }
+  .otl-verm {
+    -webkit-text-stroke: 2px #E8382B;
+    color: transparent;
   }
 }
 
 body {
-  @apply bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text-primary))] antialiased overflow-hidden;
+  @apply bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text-primary))] antialiased overflow-hidden font-body;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Scrollbar Personalizada Estilo Cyber */
+/* Scrollbar Personalizada Estilo Nanquim & Washi */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgb(var(--app-bg) / 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  background: rgb(var(--app-accent) / 0.4);
+  border: 1px solid rgb(var(--app-border) / 0.6);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgb(var(--app-accent) / 0.8);
 }

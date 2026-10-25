@@ -1,5 +1,5 @@
 import React from "react";
-import logoNanquim from "@/assets/branding/mangai-logo-nanquim.png";
+import { MangAIOfficialLogo } from "@/components/icons/MangAIOfficialLogo";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface BrandMarkProps {
@@ -7,51 +7,45 @@ interface BrandMarkProps {
   contrast?: "auto" | "dark" | "light";
 }
 
-const BrandSymbol: React.FC<{
-  className: string;
-}> = ({ className }) => (
-  <img
-    src={logoNanquim}
-    alt="MangAI Logo"
-    aria-hidden="true"
-    draggable={false}
-    className={`${className} select-none rounded-[0.7rem] object-cover`}
-  />
-);
 const BrandMark: React.FC<BrandMarkProps> = ({ compact = false, contrast = "auto" }) => {
   const { theme } = useTheme();
-  const resolvedContrast =
-    contrast === "auto" ? (theme === "paper-light" ? "light" : "dark") : contrast;
-  const subtitleClass = resolvedContrast === "light"
-    ? "text-app-text-secondary/65"
-    : "text-app-text-secondary/55";
+  const isLight =
+    contrast === "auto" ? theme === "paper-light" : contrast === "light";
 
   if (compact) {
     return (
-      <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-[1.35rem] border border-app-border bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_55%),linear-gradient(160deg,rgba(255,255,255,0.08),transparent_60%)] shadow-[0_14px_28px_-18px_rgba(0,0,0,0.7)]">
-        <div className="absolute inset-1 rounded-[1rem] border border-app-border/40" />
-        <BrandSymbol className="relative z-10 h-11 w-11" />
+      <div className="group relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border-2 border-app-border bg-app-card shadow-ink transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:border-app-accent">
+        <MangAIOfficialLogo size={34} showText={false} />
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-5">
-      <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[1.7rem] border border-app-border bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_55%),linear-gradient(160deg,rgba(255,255,255,0.08),transparent_60%)] shadow-[0_18px_34px_-20px_rgba(0,0,0,0.72)]">
-        <div className="absolute inset-1.5 rounded-[1.25rem] border border-app-border/40" />
-        <BrandSymbol className="relative z-10 h-12 w-12" />
+    <div className="flex items-center gap-4 select-none">
+      {/* Moldura da Logo com Borda Nanquim e Selo Hanko */}
+      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border-2 border-app-border bg-app-card shadow-ink transition-transform hover:-translate-y-0.5">
+        <MangAIOfficialLogo size={44} showText={false} />
       </div>
+
+      {/* Tipografia Editorial de Mangá */}
       <div className="min-w-0">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 leading-none">
-          <span className="text-[2rem] font-black uppercase tracking-[-0.06em] text-app-text-primary">
+        <div className="flex flex-wrap items-baseline gap-x-2 leading-none">
+          <span className="font-display text-3xl uppercase tracking-wider text-current font-black">
             MangAI
           </span>
-          <span className="text-[1.75rem] font-black uppercase italic tracking-[-0.05em] text-app-text-secondary/58">
+          <span className="font-display text-xl uppercase tracking-tight text-app-accent font-bold">
             Translator
           </span>
+          <span className="rounded border border-app-accent/40 bg-app-accent/10 px-1.5 py-0.5 font-pixel text-[9px] font-black uppercase tracking-widest text-app-accent">
+            v0.4.0
+          </span>
         </div>
-        <div className={`mt-2 text-[11px] font-mono uppercase tracking-[0.24em] ${subtitleClass}`}>
-          Ferramenta editorial para manga e quadrinhos
+        <div
+          className={`mt-1 font-pixel text-[10px] uppercase tracking-[0.2em] font-bold ${
+            isLight ? "text-nanquim/70" : "text-washi/60"
+          }`}
+        >
+          マンガAI翻訳 &bull; Localização Editorial Assistida
         </div>
       </div>
     </div>
