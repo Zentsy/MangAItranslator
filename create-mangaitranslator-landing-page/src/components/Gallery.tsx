@@ -30,7 +30,7 @@ export default function Gallery() {
               </h2>
             </div>
             <p className="max-w-md leading-relaxed text-paper/60">
-              Capturas reais da v0.3.0 — passe o cursor pra endireitar a página na mesa de arte.
+              Capturas reais da v0.4.0 — passe o cursor pra endireitar a página na mesa de arte.
             </p>
           </div>
         </Reveal>

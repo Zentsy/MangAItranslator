@@ -244,55 +244,56 @@ export const MODELS = [
 
 export const CHANGELOG = [
   {
-    title: "Identidade Nanquim & Pena G",
-    desc: "Nova arte autêntica com estética densa de mangá editorial — a mesma que inspirou esta página.",
+    title: "Design System Paper Light (Washi Cru)",
+    desc: "Nova identidade visual densa e imersiva inspirada em papel Washi tradicional, nanquim puro e selos Hanko, com contraste editorial perfeito para leituras diurnas.",
   },
   {
-    title: "Tradução em lote (Batch Queue)",
-    desc: "Processamento sequencial de múltiplas páginas com monitor de progresso no cabeçalho do editor.",
+    title: "Segunda Passada de Naturalidade (PT-BR)",
+    desc: "Polimento refinado por IA após o rascunho literal inicial para deixar os diálogos naturais, fluidos e expressivos, preservando o contexto dramático de cada balão.",
   },
   {
-    title: "Glossário persistente por projeto",
-    desc: "Termos, pronomes e golpes salvos em SQLite local e injetados nos prompts de cada página.",
+    title: "Preset Japonês Raw → PT-BR Direto",
+    desc: "Engenharia de prompt de alta precisão para quadrinhos em japonês original, com desambiguação de kanjis homófonos, furigana e respeito à leitura vertical (tategaki).",
   },
   {
-    title: "Memória de curto prazo",
-    desc: "Contexto entre páginas consecutivas para manter pronomes e falas contínuas consistentes.",
+    title: "Perfis de Tradução por Mídia",
+    desc: "Presets dedicados para Mangá (JP), Manhwa (KR), Manhua (CN) e Comics (US) com controle de tom de voz (Natural, Informal, Formal, Cru) e live inspector.",
   },
   {
-    title: "Atalhos rápidos de edição",
-    desc: "Teclas M para mesclar balões adjacentes e S para inverter a ordem de leitura.",
+    title: "Iconografia Autoral & Adeus AI Slop",
+    desc: "Substituição completa de ícones genéricos por arte vetorial autoral em SVG puro: Penas G, tinteiros, selos Hanko e balões de mangá com economia de 1.8MB no bundle.",
   },
   {
-    title: "Cofre de chaves (Keyring)",
-    desc: "API keys de cada provedor isoladas no gerenciador de credenciais seguro do sistema.",
+    title: "OpenRouter Auto-Free Estabilizado",
+    desc: "Roteador inteligente de modelos vision gratuitos com fallback instantâneo, supressão de tokens de pensamento (<think>) e teto estendido de 4096 tokens.",
   },
   {
-    title: "Modelos de última geração",
-    desc: "Gemini 3.8 Flash, Claude Sonnet 5, Claude Fable 5.1, GPT-6 Astra e Qwen 3.8 27B via Groq.",
+    title: "Tradução em Lote & Glossário SQLite",
+    desc: "Fila de processamento contínuo com monitor de progresso em tempo real e memória léxica persistente por projeto para coerência narrativa total.",
   },
 ];
 
 export const ROADMAP = [
   {
-    title: "Próximas melhorias",
+    title: "Ciclo Ativo: Fase v0.5.0",
     jp: "次の改善",
     tone: "ink" as const,
     items: [
-      "Perfis de tradução por idioma de origem e destino",
-      "Revisão de naturalidade depois do rascunho inicial",
-      "Exportação visual com tradução aplicada sobre a imagem",
-      "Limpeza de balões, redraw e typesetting assistido",
+      "Typesetter Helper Visual com fontes de mangá embutidas",
+      "Dicionário interativo de Onomatopeias e SFX japonesas (擬音語・擬態語)",
+      "Pacote de Projeto .mangai para intercâmbio entre equipes de scanlation",
+      "Detecção local de coordenadas de balões via WebAssembly (WASM)",
     ],
   },
   {
-    title: "Futuro",
+    title: "Futuro v1.0.0",
     jp: "未来",
     tone: "paper" as const,
     items: [
       "Code signing no Windows — adeus, aviso do SmartScreen",
       "Leitura direto da fonte via extensões, no espírito do Mihon",
-      "Inglês como idioma de saída: JP, KO e ZH direto pro EN",
+      "Multiplataforma oficial: instaladores nativos para Linux e macOS",
+      "Tradução 100% offline com runtime e modelos locais embarcados",
     ],
   },
   {
@@ -300,14 +301,20 @@ export const ROADMAP = [
     jp: "研究中",
     tone: "ghost" as const,
     items: [
-      "Experiência mobile ou modo leitor para acompanhar traduções",
-      "OCR e visão próprios para reduzir dependência de motores",
-      "A sua ideia aqui — abra uma issue e entre pro roadmap",
+      "Limpeza inteligente de balões e redraw automático assistido",
+      "Modo leitor mobile para acompanhamento e revisão remota de capítulos",
+      "A sua ideia aqui — abra uma issue no GitHub e entre pro projeto",
     ],
   },
 ];
 
 export const TICKER: { t: string; brush?: boolean }[] = [
+  { t: "Segunda Passada" },
+  { t: "推敲", brush: true },
+  { t: "Preset Japonês Raw" },
+  { t: "和文", brush: true },
+  { t: "Design Paper Light" },
+  { t: "和紙", brush: true },
   { t: "Tradução em lote" },
   { t: "翻訳", brush: true },
   { t: "Glossário SQLite" },
