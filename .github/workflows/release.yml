@@ -8,6 +8,7 @@ on:
 
 jobs:
   publish-tauri:
+    if: github.repository == 'Zentsy/MangAItranslator'
     permissions:
       contents: write
 
