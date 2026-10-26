@@ -173,7 +173,7 @@ export default function Opening() {
 
           {/* carimbo hanko */}
           <div className="stamp pointer-events-none absolute right-0 top-14 hidden select-none border-[3px] border-verm px-4 py-3 text-verm sm:block lg:-right-10 [border-style:double] [border-width:6px]">
-            <span className="block font-display text-2xl leading-none">v0.3.0</span>
+            <span className="block font-display text-2xl leading-none">v0.4.0</span>
             <span className="mt-1 block font-pixel text-[10px] tracking-widest">BETA · 試験版</span>
           </div>
         </div>

@@ -167,7 +167,7 @@ export function Footer() {
             <ul className="mt-4 space-y-3 font-pixel text-sm">
               {[
                 { href: LINKS.repo, label: "GitHub ↗" },
-                { href: LINKS.v030, label: "Release v0.3.0 ↗" },
+                { href: LINKS.v040, label: "Release v0.4.0 ↗" },
                 { href: LINKS.license, label: "Licença MIT ↗" },
                 { href: LINKS.issues, label: "Reportar bug ↗" },
                 { href: "#roadmap", label: "Roadmap" },
@@ -232,7 +232,7 @@ export function Footer() {
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t-2 border-paper/15 pt-6 font-pixel text-xs text-paper/45">
           <p>© 2026 Zentsy — open source sob licença MIT</p>
           <p>
-            v0.3.0 · beta · <span className="font-brush text-sm text-verm">翻訳は愛だ</span>
+            v0.4.0 · beta · <span className="font-brush text-sm text-verm">翻訳は愛だ</span>
           </p>
         </div>
       </div>

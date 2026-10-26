@@ -16,14 +16,13 @@ export function Changelog() {
                 Novidades da
               </h2>
               <p className="otl-verm mt-2 font-display text-8xl leading-none md:text-9xl">
-                v0.3.0
+                v0.4.0
               </p>
               <p className="mt-7 max-w-sm leading-relaxed text-ink/75">
-                Identidade Nanquim & Pena G, lote, glossário e memória — o salto que transformou o
-                rascunho de IA em um fluxo editorial de verdade.
+                Identidade Paper Light, Segunda Passada, Presets Raw e Iconografia Autoral — o salto que transformou o MangAI Translator em um estúdio editorial completo.
               </p>
               <a
-                href={LINKS.v030}
+                href={LINKS.v040}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-7 inline-block border-[3px] border-ink px-5 py-3 font-display text-base tracking-wide text-ink transition-all duration-200 hover:bg-ink hover:text-paper"
