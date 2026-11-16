@@ -1,4 +1,5 @@
 import React from "react";
+import { APP_VERSION_LABEL } from "@/config/version";
 
 interface MangAIOfficialLogoProps {
   className?: string;
@@ -136,7 +137,7 @@ export const MangAIOfficialLogo: React.FC<MangAIOfficialLogoProps> = ({
             Mang<span className="text-app-accent">AI</span>
           </span>
           <span className="rounded border border-app-accent bg-app-accent/15 px-1 py-0.2 font-pixel text-[8px] font-black uppercase tracking-widest text-app-accent">
-            v0.4.0
+            {APP_VERSION_LABEL}
           </span>
         </div>
         <span className="font-pixel text-[9px] uppercase tracking-[0.25em] text-app-text-secondary/70 mt-0.5">

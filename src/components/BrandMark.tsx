@@ -1,6 +1,7 @@
 import React from "react";
 import { MangAIOfficialLogo } from "@/components/icons/MangAIOfficialLogo";
 import { useTheme } from "@/contexts/ThemeContext";
+import { APP_VERSION_LABEL } from "@/config/version";
 
 interface BrandMarkProps {
   compact?: boolean;
@@ -37,7 +38,7 @@ const BrandMark: React.FC<BrandMarkProps> = ({ compact = false, contrast = "auto
             Translator
           </span>
           <span className="rounded border border-app-accent/40 bg-app-accent/10 px-1.5 py-0.5 font-pixel text-[9px] font-black uppercase tracking-widest text-app-accent">
-            v0.4.0
+            {APP_VERSION_LABEL}
           </span>
         </div>
         <div
