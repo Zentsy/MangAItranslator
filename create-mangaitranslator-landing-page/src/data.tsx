@@ -248,6 +248,14 @@ export const MODELS = [
 
 export const CHANGELOG = [
   {
+    title: "Suporte a Gemini 4 Hydrogen & Novos Modelos de IA",
+    desc: "Integração do Gemini 4 Hydrogen (novo padrão recomendado de 1M tokens), Gemini 4 Argon, Claude Fable 5.2 / Sonnet 5.5, GPT-6 Astra e Qwen 4 Max com insígnia visual ★ NEW.",
+  },
+  {
+    title: "System Prompts em Inglês & Engenharia Multimodal",
+    desc: "Instruções de sistema reescritas integralmente em inglês técnico para máxima fidelidade semântica e adesão estrita ao formato JSON, com tradução final direta em PT-BR.",
+  },
+  {
     title: "Design System Paper Light (Washi Cru)",
     desc: "Nova identidade visual densa e imersiva inspirada em papel Washi tradicional, nanquim puro e selos Hanko, com contraste editorial perfeito para leituras diurnas.",
   },
