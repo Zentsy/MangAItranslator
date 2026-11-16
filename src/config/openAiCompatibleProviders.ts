@@ -5,6 +5,7 @@ export interface OpenAiCompatibleModelOption {
   label: string;
   description: string;
   recommended?: boolean;
+  isNew?: boolean;
 }
 
 export interface OpenAiCompatibleProviderOption {
@@ -30,7 +31,7 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
     baseUrl: "https://openrouter.ai/api/v1",
     apiKeyLabel: "OpenRouter API Key",
     requiresApiKey: true,
-    description: "Acesso a vários modelos vision por uma única API, dependendo da disponibilidade da conta.",
+    description: "Acesso a centenas de modelos vision e multimodais por uma única API, com roteamento dinâmico e opções gratuitas.",
     docsUrl: "https://openrouter.ai/docs",
     models: [
       {
@@ -40,30 +41,65 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
           "Escolhe automaticamente modelos vision gratuitos e tenta outro se bater cota ou indisponibilidade.",
         recommended: true,
       },
+      // Google
+      {
+        id: "google/gemini-4-hydrogen",
+        label: "Gemini 4 Hydrogen",
+        description: "Google Gemini 4 Hydrogen via OpenRouter (Nov/2026). Workhorse de altíssima eficiência e velocidade da família Gemini 4.",
+        isNew: true,
+      },
+      {
+        id: "google/gemini-4-argon",
+        label: "Gemini 4 Argon",
+        description: "Google Gemini 4 Argon via OpenRouter. Flagship mais recente com raciocínio de 1M tokens e alta precisão.",
+        isNew: true,
+      },
+      {
+        id: "google/gemini-4-carbon",
+        label: "Gemini 4 Carbon",
+        description: "Geração Gemini 4 equilibrada para alto rendimento e multimodalidade densa.",
+        isNew: true,
+      },
       {
         id: "google/gemini-3.8-flash",
         label: "Gemini 3.8 Flash",
-        description: "Google Gemini 3.8 Flash via OpenRouter. Flagship ágil e multimodal de alta precisão.",
+        description: "Flagship ágil e multimodal de alta precisão para tradução e OCR rápido.",
+        isNew: true,
       },
       {
-        id: "google/gemini-3.7-flash",
-        label: "Gemini 3.7 Flash",
-        description: "Google Gemini 3.7 Flash com raciocínio híbrido e excelente visão.",
+        id: "google/gemini-omni-1.2-flash",
+        label: "Gemini Omni 1.2 Flash",
+        description: "Modelo multimodal ultrarrápido com visão nativa e baixa latência.",
       },
       {
-        id: "google/gemini-3.5-flash",
-        label: "Gemini 3.5 Flash",
-        description: "Versão intermediária estável e rápida para leitura de balões.",
+        id: "google/gemini-3.6-flash",
+        label: "Gemini 3.6 Flash",
+        description: "Versão estável e rápida para leitura contínua de balões.",
+      },
+      // Anthropic
+      {
+        id: "anthropic/claude-fable-5.2",
+        label: "Claude Fable 5.2",
+        description: "Topo absoluto de linha da Anthropic com raciocínio profundo e naturalidade editorial impecável em PT-BR.",
+        isNew: true,
       },
       {
-        id: "anthropic/claude-fable-5.1",
-        label: "Claude Fable 5.1",
-        description: "Nova geração topo de linha da Anthropic com naturalidade editorial impecável em PT-BR.",
+        id: "anthropic/claude-opus-5.5",
+        label: "Claude Opus 5.5",
+        description: "Modelo de altíssima capacidade para adaptação cultural, gírias e subtextos narrativos complexos.",
+        isNew: true,
       },
       {
-        id: "anthropic/claude-sonnet-5",
-        label: "Claude Sonnet 5",
-        description: "Flagship moderno da família Sonnet com alta capacidade de análise e adaptação cultural.",
+        id: "anthropic/claude-sonnet-5.5",
+        label: "Claude Sonnet 5.5",
+        description: "Workhorse moderno da família Sonnet com alta capacidade analítica, velocidade e fidelidade visual.",
+        isNew: true,
+      },
+      {
+        id: "anthropic/claude-haiku-5.5",
+        label: "Claude Haiku 5.5",
+        description: "Modelo ultra veloz e de baixo custo para rascunhos rápidos e tarefas de alta cadência.",
+        isNew: true,
       },
       {
         id: "anthropic/claude-3.7-sonnet",
@@ -75,30 +111,67 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
         label: "Claude 3.5 Sonnet",
         description: "Referência clássica em tradução editorial de mangás e HQs.",
       },
+      // OpenAI
+      {
+        id: "openai/gpt-6.1-terra",
+        label: "GPT-6.1 Terra",
+        description: "Geração 6.1 da OpenAI com alta precisão contextual e robustez analítica.",
+        isNew: true,
+      },
+      {
+        id: "openai/gpt-6.1-sol",
+        label: "GPT-6.1 Sol",
+        description: "Versão otimizada de alta inteligência para fluxos contínuos e velocidade superior.",
+        isNew: true,
+      },
       {
         id: "openai/gpt-6-astra",
         label: "GPT-6 Astra",
-        description: "Nova geração multimodal da OpenAI com visão profunda e interpretação semântica.",
+        description: "Flagship ultra-avançado da OpenAI com visão profunda e interpretação semântica.",
+        isNew: true,
+      },
+      {
+        id: "openai/gpt-6-luna",
+        label: "GPT-6 Luna",
+        description: "Excelente compreensão de contexto, visão apurada e alta velocidade de resposta.",
+        isNew: true,
       },
       {
         id: "openai/gpt-5.6-luna",
         label: "GPT-5.6 Luna",
-        description: "Excelente compreensão de contexto e alta velocidade de resposta.",
+        description: "Modelo ágil e consolidado da geração 5.6.",
+      },
+      {
+        id: "openai/gpt-5-pro",
+        label: "GPT-5 Pro",
+        description: "Modelo unificado com raciocínio profundo e visão computacional avançada.",
+      },
+      {
+        id: "openai/o3-pro",
+        label: "OpenAI o3 Pro",
+        description: "Modelo de raciocínio profundo focado em problemas complexos e deduções visuais difíceis.",
       },
       {
         id: "openai/gpt-4o",
         label: "GPT-4o",
-        description: "Modelo flagship consolidado da OpenAI com visão avançada.",
+        description: "Modelo flagship clássico consolidado da OpenAI com visão avançada.",
       },
       {
         id: "openai/gpt-4o-mini",
         label: "GPT-4o Mini",
         description: "Alternativa compacta e rápida para rascunhos e testes.",
       },
+      // Qwen & DeepSeek
+      {
+        id: "qwen/qwen4-max",
+        label: "Qwen 4 Max",
+        description: "Novo flagship topo de linha da Alibaba Cloud com capacidade visual e OCR de última geração.",
+        isNew: true,
+      },
       {
         id: "qwen/qwen3.8-27b",
         label: "Qwen 3.8 27B",
-        description: "Modelo aberto de última geração com desempenho excepcional em OCR de mangá.",
+        description: "Modelo aberto com desempenho excepcional em OCR de mangá e balões verticais.",
       },
       {
         id: "qwen/qwen3.8-flash",
@@ -111,9 +184,16 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
         description: "Especialista em visão computacional e reconhecimento de caracteres japoneses estilizados.",
       },
       {
-        id: "deepseek/deepseek-v4-flash-vision-exp",
-        label: "DeepSeek V4 Flash Vision",
-        description: "Modelo experimental da DeepSeek com velocidade e alta precisão multimodal.",
+        id: "deepseek/deepseek-v4.1-flash",
+        label: "DeepSeek V4.1 Flash",
+        description: "Novo modelo multimodal nativo da DeepSeek com velocidade extrema e altíssima precisão visual.",
+        isNew: true,
+      },
+      {
+        id: "deepseek/deepseek-v4-pro",
+        label: "DeepSeek V4 Pro",
+        description: "Flagship de raciocínio e visão da DeepSeek para desafios complexos de localização.",
+        isNew: true,
       },
     ],
   },
@@ -135,22 +215,38 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
       {
         id: "qwen3-vl-8b-instruct",
         label: "Qwen 3 VL 8B",
-        description: "Sugestão local recomendada com ótimo equilíbrio entre OCR e tradução.",
+        description: "Sugestão local recomendada com ótimo equilíbrio entre OCR e tradução em GPUs médias (8-12GB).",
       },
       {
         id: "qwen3-vl-32b-instruct",
         label: "Qwen 3 VL 32B",
-        description: "Máxima precisão local se sua máquina tiver VRAM dedicada suficiente.",
+        description: "Máxima precisão local se sua máquina tiver 24GB+ de VRAM dedicada.",
       },
       {
-        id: "qwen2.5-vl-7b-instruct",
-        label: "Qwen 2.5 VL 7B",
-        description: "Sugestão comprovada para OCR em placas de vídeo médias.",
+        id: "qwen3-vl-4b-instruct",
+        label: "Qwen 3 VL 4B",
+        description: "Opção leve e rápida para laptops e placas de entrada.",
+      },
+      {
+        id: "gemma-4-26b-a4b-it",
+        label: "Gemma 4 26B-A4B-IT",
+        description: "Novo modelo aberto multimodal da Google de alta fidelidade visual e semântica.",
+        isNew: true,
       },
       {
         id: "gemma3-4b-it",
         label: "Gemma 3 4B-IT",
-        description: "Opção compacta e multimodal para testes leves e rápidos.",
+        description: "Opção compacta e multimodal da Google para testes leves e rápidos.",
+      },
+      {
+        id: "qwen2.5-vl-7b-instruct",
+        label: "Qwen 2.5 VL 7B",
+        description: "Sugestão comprovada para OCR em páginas densas.",
+      },
+      {
+        id: "minicpm-v-8b",
+        label: "MiniCPM-V 8B",
+        description: "Especialista em OCR de alta precisão para documentos e layouts complexos.",
       },
     ],
   },
@@ -170,9 +266,10 @@ export const OPENAI_COMPATIBLE_PROVIDERS: OpenAiCompatibleProviderOption[] = [
         recommended: true,
       },
       {
-        id: "qwen/qwen3.6-27b",
-        label: "Qwen 3.6 27B",
-        description: "Multimodal Vision comprovado no Groq para OCR e tradução de balões.",
+        id: "meta-models/muse-spark-open",
+        label: "Meta Muse Spark",
+        description: "Modelo multimodal MoE de raciocínio da Meta com alta acurácia visual.",
+        isNew: true,
       },
       {
         id: "llama-3.3-70b-versatile",

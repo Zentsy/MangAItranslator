@@ -36,70 +36,66 @@ const TRANSLATION_SCHEMA_DESCRIPTION = `{
   ]
 }`;
 
-const SYSTEM_PROMPT = `Voce e um tradutor especializado em mangas.
-Sua unica tarefa e ler o texto da imagem e devolver a traducao final em portugues brasileiro.
+const SYSTEM_PROMPT = `You are an expert manga and comic OCR and localization engine.
+Your sole task is to read the text from the image in correct reading order and return the final translation in natural Brazilian Portuguese (PT-BR).
 
-REGRAS:
-- ORDEM: siga a leitura de manga, da direita para a esquerda e de cima para baixo.
-- IDIOMA: cada item em "translations.text" deve estar em PT-BR natural e legivel.
-- NAO COPIE O INGLES: nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.
-- OCR: se um balao estiver vazio, ilegivel ou sem texto relevante, nao invente conteudo.
-- TIPO: quando conseguir inferir, use "rect", "outside", "thought", "double" ou "none".
-- FORMATO: responda somente em JSON valido, sem markdown e sem comentarios.
+RULES:
+- READING ORDER: follow standard manga reading order, from right to left and top to bottom.
+- LANGUAGE: every item in "translations[].text" must be delivered in fluent, natural PT-BR.
+- DO NOT COPY SOURCE LANGUAGE: never return the original source phrase unless unavoidable proper nouns.
+- OCR FAITHFULNESS: if a bubble is empty, illegible, or without relevant text, do not invent content.
+- TYPE: when confident, use "rect", "outside", "thought", "double", or "none".
+- FORMAT: respond strictly in valid JSON matching the requested schema, without markdown fences and without commentary.
 
-SCHEMA JSON OBRIGATORIO:
+MANDATORY JSON SCHEMA:
 ${TRANSLATION_SCHEMA_DESCRIPTION}`;
 
 const getThinkingInstruction = (thinkingEnabled: boolean) =>
   thinkingEnabled
-    ? "THINKING: pense internamente antes de responder para evitar apenas transcrever o ingles. A resposta final ainda deve ser somente JSON em PT-BR."
-    : "THINKING: priorize velocidade. Nao inclua raciocinio, notas ou explicacoes; devolva somente o JSON final.";
+    ? "THINKING: reason internally before answering to avoid literal transcription. The final output must strictly be JSON in PT-BR."
+    : "THINKING: prioritize speed. Do not include reasoning, notes, or explanations; return strictly the final JSON.";
 
 const getTypeInstruction = (inferBlockTypes: boolean) =>
   inferBlockTypes
-    ? 'TIPO: quando conseguir inferir com confianca, use "rect", "outside", "thought", "double" ou "none".'
-    : 'TIPO: nao classifique balao/container. Use "none" como type em todos os blocos.';
+    ? 'TYPE: when confident, classify container type as "rect", "outside", "thought", "double", or "none".'
+    : 'TYPE: do not classify containers. Use "none" as type for all blocks.';
 
 const buildSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean, glossary: GlossaryTerm[] = [], previousContext: string | null = null) => {
   const glossaryInstruction =
     glossary.length > 0
-      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
-${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
+      ? `\nGLOSSARY (Strictly prioritize these translations):\n${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
       : "";
   const contextInstruction =
     previousContext
-      ? `\nCONTEXTO DA PAGINA ANTERIOR (Use para manter continuidade):
-${previousContext}`
+      ? `\nPREVIOUS PAGE CONTEXT (Use to maintain continuity):\n${previousContext}`
       : "";
   return `${SYSTEM_PROMPT}${glossaryInstruction}${contextInstruction}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
 };
 
-const buildUserPrompt = (inferBlockTypes: boolean) => `Analise esta pagina de manga e retorne somente o JSON solicitado.
-Cada bloco deve conter a traducao final em PT-BR.${
-  inferBlockTypes ? " Inclua o tipo visual do texto quando tiver confianca." : ' Use "type": "none" em todos os blocos.'
+const buildUserPrompt = (inferBlockTypes: boolean) => `Analyze this comic/manga page image and return only the requested JSON.
+Each block must contain the final translation in PT-BR.${
+  inferBlockTypes ? ' Include visual container type when confident.' : ' Use "type": "none" for all blocks.'
 }`;
 
-const REPAIR_SYSTEM_PROMPT = `Voce e um tradutor editorial de mangas.
-Recebera blocos de OCR/transcricao que podem estar em ingles, japones romanizado ou misturados.
-Sua tarefa e devolver os mesmos blocos em portugues brasileiro natural.
+const REPAIR_SYSTEM_PROMPT = `You are an expert comic and manga editorial translation proofreading engine.
+You will receive OCR/transcription blocks that may be in Japanese, Korean, Chinese, English, or mixed drafts.
+Your task is to refine and translate them into natural Brazilian Portuguese (PT-BR).
 
-REGRAS:
-- Traduza falas e narracao em ingles para PT-BR.
-- Preserve nomes proprios, nomes de lugares e honorificos quando fizer sentido.
-- Preserve a ordem e o tipo de cada bloco.
-- Nao explique nada.
-- Responda somente em JSON valido no schema solicitado.`;
+RULES:
+- Translate dialogue and narration accurately into natural PT-BR.
+- Preserve proper names, place names, and honorifics when appropriate.
+- Preserve the exact order and type of each block.
+- Do not output any explanation or commentary.
+- Respond strictly in valid JSON matching the requested schema.`;
 
 const buildRepairSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean, glossary: GlossaryTerm[] = [], previousContext: string | null = null) => {
   const glossaryInstruction =
     glossary.length > 0
-      ? `\nGLOSSARIO (Use estas traduções preferencialmente):
-${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
+      ? `\nGLOSSARY (Strictly prioritize these translations):\n${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
       : "";
   const contextInstruction =
     previousContext
-      ? `\nCONTEXTO DA PAGINA ANTERIOR (Use para manter continuidade):
-${previousContext}`
+      ? `\nPREVIOUS PAGE CONTEXT (Use to maintain continuity):\n${previousContext}`
       : "";
   return `${REPAIR_SYSTEM_PROMPT}${glossaryInstruction}${contextInstruction}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
 };
@@ -715,10 +711,10 @@ const buildRepairRequestBody = (
   },
   {
     role: "user",
-    content: `Traduza estes blocos para PT-BR.${
+    content: `Translate these blocks into natural Brazilian Portuguese (PT-BR).${
       inferBlockTypes
-        ? ' Mantenha o campo "type" de cada item se ele estiver correto.'
-        : ' Defina "type": "none" em todos os itens.'
+        ? ' Preserve the "type" field of each item if correct.'
+        : ' Set "type": "none" on all items.'
     }
 
 ${JSON.stringify({ translations: blocks }, null, 2)}`,
@@ -950,10 +946,10 @@ const buildLmStudioNativeRepairRequestBody = (
   profile?: TranslationProfile
 ) => ({
   model,
-  input: `Traduza estes blocos para PT-BR.${
+  input: `Translate these blocks into natural Brazilian Portuguese (PT-BR).${
     inferBlockTypes
-      ? ' Mantenha o campo "type" de cada item se ele estiver correto.'
-      : ' Defina "type": "none" em todos os itens.'
+      ? ' Preserve the "type" field of each item if correct.'
+      : ' Set "type": "none" on all items.'
   }
 
 ${JSON.stringify({ translations: blocks }, null, 2)}`,

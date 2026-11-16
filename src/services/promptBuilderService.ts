@@ -24,98 +24,98 @@ export const getLanguageInstructions = (
 ): string => {
   const targetLabel =
     target === "pt-BR"
-      ? "Português Brasileiro (PT-BR)"
+      ? "Brazilian Portuguese (PT-BR)"
       : target === "es"
-        ? "Espanhol"
-        : "Inglês";
+        ? "Spanish"
+        : "English";
 
   if (source === "ja") {
-    return `PRESET LINGUÍSTICO: JAPONÊS RAW -> ${targetLabel.toUpperCase()} (TRADUÇÃO DIRETA)
-- DESAMBIGUAÇÃO CRÍTICA DE KANJI & FURIGANA (MÁXIMA ATENÇÃO):
-  1. KANJIS DENSOS OU ESTILIZADOS: Páginas originais japonesas contêm kanjis com traços visualmente próximos (ex: 土/士, 未/末, 待/持, 鳴/嗚, 千/于, 日/曰, 人/入). DESAMBIGUE SEMPRE pelo contexto gramatical da oração, relações dos personagens e sentido da cena. NUNCA invente caracteres sem nexo.
-  2. FURIGANA (RUBY TEXT): Quando houver furigana (leitura fonética em hiragana/katakana pequeno posicionado ao lado ou acima do kanji), use-o EXCLUSIVAMENTE para decifrar a pronúncia/leitura pretendida pelo autor (incluindo trocadilhos e leituras estilizadas tipo ateji). JAMAIS transcreva, anexe ou duplique o furigana como texto avulso na tradução final.
-  3. ORDEM VERTICAL (TATEGAKI): A escrita vertical tradicional é lida de cima para baixo em colunas, e as colunas avançam da DIREITA PARA A ESQUERDA. Respeite as conexões naturais das frases sem misturar linhas paralelas de um mesmo balão.
-  4. TRADUÇÃO DIRETA SEM ESCALA EM INGLÊS: Converta a semântica japonesa diretamente para o ${targetLabel}, preservando a força expressiva e evitando construções artificiais derivadas do inglês.
-  5. CONTRAÇÕES COLOQUIAIS & DIALETOS: Reconheça contrações orais do japonês informal (〜ちゃう, 〜じゃん, 〜っす, 〜とく, 〜なきゃ, 〜だろ, 〜ぜ, 〜ぞ) e a omissão de sujeitos (eu, você, ele), inferindo os pronomes corretos pela dinâmica da cena e verbos de benefício (kureru, ageru, morau).`;
+    return `LANGUAGE PRESET: RAW JAPANESE -> ${targetLabel.toUpperCase()} (DIRECT TRANSLATION)
+- CRITICAL KANJI & FURIGANA DISAMBIGUATION (MAXIMUM PRIORITY):
+  1. DENSE OR STYLIZED KANJI: Original Japanese raw pages contain visually similar kanji with subtle stroke differences (e.g., 土/士, 未/末, 待/持, 鳴/嗚, 千/于, 日/曰, 人/入). ALWAYS disambiguate based on sentence grammar, character relationships, and scene context. NEVER hallucinate nonsensical characters.
+  2. FURIGANA (RUBY TEXT): When furigana (small phonetic hiragana/katakana above or beside kanji) is present, use it EXCLUSIVELY to decode the author's intended pronunciation and nuance (including puns and stylized ateji). NEVER transcribe, append, or duplicate furigana as loose separate text in the final translation.
+  3. VERTICAL READING ORDER (TATEGAKI): Traditional vertical text reads top-to-bottom in columns advancing from RIGHT TO LEFT. Respect natural sentence continuity without intertwining parallel lines from the same bubble.
+  4. DIRECT TRANSLATION WITHOUT ENGLISH PIVOT: Convert Japanese semantics directly into fluent ${targetLabel}, preserving expressive power and avoiding awkward constructs derived from intermediate English.
+  5. COLLOQUIAL CONTRACTIONS & DIALECTS: Accurately identify spoken contractions in informal Japanese (〜ちゃう, 〜じゃん, 〜っす, 〜とく, 〜なきゃ, 〜だろ, 〜ぜ, 〜ぞ) and omitted subjects (I, you, he/she), inferring the correct pronouns from scene dynamics and benefactive verbs (kureru, ageru, morau).`;
   }
 
   if (source === "ko") {
-    return `PRESET LINGUÍSTICO: COREANO (MANHWA/HANGUL) -> ${targetLabel.toUpperCase()}
-- Leitura horizontal/vertical contínua de webtoon.
-- Atenção a partículas gramaticais de tópico/sujeito (은/는, 이/가) e níveis de polidez (Banmal vs. Jondaenmal).`;
+    return `LANGUAGE PRESET: KOREAN (MANHWA/HANGUL) -> ${targetLabel.toUpperCase()}
+- Continuous vertical/horizontal webtoon flow.
+- Pay strict attention to topic/subject grammatical particles (은/는, 이/가) and politeness levels (Banmal vs. Jondaenmal).`;
   }
 
   if (source === "zh") {
-    return `PRESET LINGUÍSTICO: CHINÊS (MANHUA/HANZI) -> ${targetLabel.toUpperCase()}
-- Distinção entre caracteres simplificados e tradicionais.
-- Atenção a expressões idiomáticas de 4 caracteres (Chengyu) e terminologias de artes marciais/cultivo (Xianxia/Wuxia).`;
+    return `LANGUAGE PRESET: CHINESE (MANHUA/HANZI) -> ${targetLabel.toUpperCase()}
+- Accurate distinction between simplified and traditional characters.
+- Pay attention to 4-character idioms (Chengyu) and martial arts/cultivation terminology (Xianxia/Wuxia).`;
   }
 
   if (source === "en") {
-    return `PRESET LINGUÍSTICO: INGLÊS (SCANLATION OCIDENTAL) -> ${targetLabel.toUpperCase()}
-- Traduza as falas e narrações em inglês para ${targetLabel} natural.
-- Evite traduções literais de falsos cognatos (ex: actually, pretend, realize) e expressões idiomáticas ocidentais.`;
+    return `LANGUAGE PRESET: ENGLISH (WESTERN COMICS / SCANLATION) -> ${targetLabel.toUpperCase()}
+- Translate dialogue and narration accurately into natural ${targetLabel}.
+- Avoid literal translations of false cognates (e.g., actually, pretend, realize) and Western idioms.`;
   }
 
-  return `PRESET LINGUÍSTICO: AUTO-DETECÇÃO DE IDIOMA -> ${targetLabel.toUpperCase()}
-- Identifique automaticamente o idioma do texto nos balões e entregue a tradução final em ${targetLabel} fluído.`;
+  return `LANGUAGE PRESET: AUTO-DETECT SOURCE LANGUAGE -> ${targetLabel.toUpperCase()}
+- Automatically detect the language of the text inside speech bubbles and output the final translation in fluent ${targetLabel}.`;
 };
 
 export const getMediumInstructions = (medium: TargetMedium, honorifics: HonorificsStyle): string => {
   switch (medium) {
     case "manga":
-      return `ORIGEM: Mangá japonês tradicional.
-- ORDEM DE LEITURA: Rigorosamente da Direita para a Esquerda (RTL) e de cima para baixo.
-- CULTURA & HONORÍFICOS: ${
+      return `SOURCE MEDIUM: Traditional Japanese Manga.
+- READING ORDER: Strictly Right-to-Left (RTL) and Top-to-Bottom.
+- CULTURE & HONORIFICS: ${
         honorifics === "preserve"
-          ? "PRESERVE sufixos honoríficos japoneses (-san, -kun, -chan, -sama, -senpai, -sensei, -dono) com hífen após o nome, pois definem a hierarquia e nuances de respeito entre personagens."
-          : "LOCALIZE ou omita honoríficos japoneses para o português natural (use Senhor, Mestre, Irmão ou apenas o nome, conforme a intimidade)."
+          ? "PRESERVE Japanese honorific suffixes (-san, -kun, -chan, -sama, -senpai, -sensei, -dono) hyphenated after character names, as they define social hierarchy and interpersonal intimacy."
+          : "LOCALIZE or omit Japanese honorific suffixes into natural target language conventions based on character intimacy."
       }`;
 
     case "manhwa":
-      return `ORIGEM: Manhwa coreano (Webtoon).
-- ORDEM DE LEITURA: Leitura vertical contínua (de cima para baixo), e horizontal ocidental (esquerda para a direita) nas falas.
-- CULTURA & TRATAMENTO: ${
+      return `SOURCE MEDIUM: Korean Manhwa (Webtoon).
+- READING ORDER: Continuous vertical layout (top-to-bottom), and standard horizontal reading within speech bubbles.
+- CULTURE & HONORIFICS: ${
         honorifics === "preserve"
-          ? "PRESERVE termos de respeito e parentesco social coreanos (Hyung, Oppa, Noona, Unnie, Sunbae, Hubae, Ajusshi, Ajumma) quando usados como forma de tratamento."
-          : "LOCALIZE os termos de parentesco/respeito coreanos para equivalentes brasileiros naturais (Mano, Irmão, Irmã, Veterano, Senhor) dependendo do contexto da relação."
+          ? "PRESERVE Korean kinship and social respect terms (Hyung, Oppa, Noona, Unnie, Sunbae, Hubae, Ajusshi, Ajumma) when used as terms of address."
+          : "LOCALIZE Korean kinship/respect terms into natural target language equivalents based on relationship context."
       }`;
 
     case "manhua":
-      return `ORIGEM: Manhua chinês (Cultivo, Wuxia ou Xianxia).
-- ORDEM DE LEITURA: Esquerda para a Direita ou vertical.
-- CULTURA & CULTIVO: ${
+      return `SOURCE MEDIUM: Chinese Manhua (Cultivation, Wuxia, or Xianxia).
+- READING ORDER: Left-to-Right or vertical columns.
+- CULTURE & HONORIFICS: ${
         honorifics === "preserve"
-          ? "PRESERVE termos de tratamento, seitas e artes marciais chinesas (Shifu, Gege, Meimei, Shixiong, Shidi, Dantian, Qi) conforme convenções de scanlation de Xianxia/Wuxia."
-          : "LOCALIZE os títulos chineses para o português (Mestre, Irmão Mais Velho, Irmãzinha) facilitando a leitura acessível."
+          ? "PRESERVE Chinese martial arts and cultivation titles (Shifu, Gege, Meimei, Shixiong, Shidi, Dantian, Qi) following Xianxia/Wuxia scanlation standards."
+          : "LOCALIZE Chinese titles into natural target language equivalents to ensure accessible reading."
       }`;
 
     case "comic":
-      return `ORIGEM: Quadrinhos ocidentais (Comics / Graphic Novels).
-- ORDEM DE LEITURA: Ocidental padrão, da Esquerda para a Direita (LTR) e de cima para baixo.
-- CULTURA: Linguagem direta de HQs ocidentais, sem convenções ou sufixos orientais.`;
+      return `SOURCE MEDIUM: Western Comics / Graphic Novels.
+- READING ORDER: Western standard Left-to-Right (LTR) and Top-to-Bottom.
+- CULTURE: Direct western comic dialogue style without oriental honorific conventions.`;
   }
 };
 
 export const getToneInstructions = (tone: TranslationTone): string => {
   switch (tone) {
     case "natural":
-      return "TOM DE VOZ: Natural, fluido e expressivo de scanlation brasileira moderna. Adapte expressões idiomáticas para o português do Brasil sem soar robótico ou excessivamente acadêmico.";
+      return "TONE OF VOICE: Natural, fluid, and expressive modern scanlation style. Adapt idioms into organic spoken dialogue without sounding robotic or excessively academic.";
     case "informal":
-      return "TOM DE VOZ: Altamente coloquial, jovem e dinâmico. Use contrações orais comuns do Brasil (tá, pra, cê, valeu) e gírias contemporâneas autênticas adequadas a um diálogo falado.";
+      return "TONE OF VOICE: Highly colloquial, youthful, and dynamic. Use common spoken contractions and authentic contemporary slang suited for vivid spoken dialogue.";
     case "formal":
-      return "TOM DE VOZ: Polido, culto e literário. Mantenha gramática culta, evite gírias modernas ou contrações chulas, preservando solenidade e dignidade na fala dos personagens.";
+      return "TONE OF VOICE: Polished, refined, and literary. Use elevated grammar, avoid modern slang or vulgar contractions, maintaining character solemnity and dignity.";
     case "raw":
-      return "TOM DE VOZ: Direto e estritamente literal ao texto original, priorizando máxima fidelidade semântica sem adaptações livres.";
+      return "TONE OF VOICE: Direct and strictly literal to the source text, prioritizing maximum semantic fidelity over creative adaptation.";
   }
 };
 
 export const getProfanityInstructions = (profanity: ProfanityLevel): string => {
   switch (profanity) {
     case "uncensored":
-      return "VOCABULÁRIO / XINGAMENTOS: Sem censura. Palavrões, provocações e ofensas presentes no original devem ser traduzidos com termos equivalentes e expressivos do português brasileiro com a mesma intensidade emocional da cena.";
+      return "PROFANITY & EXPLETIVES: Uncensored. Translate insults, curses, and aggressive language present in the original with natural, equally intense equivalents in the target language.";
     case "soft":
-      return "VOCABULÁRIO / XINGAMENTOS: Suavizado e atenuado. Evite palavrões pesados de baixo calão; substitua ofensas intensas por termos atenuados (ex: 'droga', 'maldito', 'idiota', 'desgraça').";
+      return "PROFANITY & EXPLETIVES: Softened and toned down. Avoid heavy vulgarity; replace intense profanity with milder expressions (e.g., 'damn', 'jerk', 'curse it').";
   }
 };
 
@@ -131,56 +131,56 @@ export const buildEditorialSystemPrompt = (options: PromptBuilderOptions): strin
 
   const targetLangLabel =
     profile.targetLanguage === "pt-BR"
-      ? "português brasileiro (PT-BR)"
+      ? "Brazilian Portuguese (PT-BR)"
       : profile.targetLanguage === "es"
-        ? "espanhol"
-        : "inglês";
+        ? "Spanish"
+        : "English";
 
   const customText = profile.customDirectives?.trim()
-    ? `\nDIRETRIZES PERSONALIZADAS DO TRADUTOR (REGRAS EXCLUSIVAS DO PROJETO):\n${profile.customDirectives.trim()}`
+    ? `\nCUSTOM TRANSLATOR DIRECTIVES (PROJECT EXCLUSIVE RULES):\n${profile.customDirectives.trim()}`
     : "";
 
   const glossaryText =
     glossary.length > 0
-      ? `\nGLOSSÁRIO OBRIGATÓRIO DO PROJETO (Use estas traduções preferencialmente):\n${glossary
+      ? `\nMANDATORY PROJECT GLOSSARY (Strictly prioritize these translations):\n${glossary
           .map((t) => `- "${t.term}": "${t.translation}"`)
           .join("\n")}`
       : "";
 
   const contextText = previousContext
-    ? `\nCONTEXTO DA PÁGINA ANTERIOR (Use para manter continuidade narrativa e pronomes):\n${previousContext}`
+    ? `\nPREVIOUS PAGE CONTEXT (Use to maintain narrative continuity and consistent pronouns):\n${previousContext}`
     : "";
 
   const thinkingText = options.thinkingEnabled
-    ? "THINKING: Pense internamente antes de responder para interpretar nuances contextuais e evitar transcrição literal, mas retorne estritamente o JSON final."
-    : "THINKING: Priorize velocidade e concisão; não inclua raciocínio, notas ou explicações.";
+    ? "THINKING: Reason internally before answering to understand contextual nuances and avoid literal word-by-word transcription, but return strictly the final JSON."
+    : "THINKING: Prioritize speed and conciseness; do not output reasoning, notes, or explanations.";
 
   const typeText = options.inferBlockTypes
-    ? 'TIPO VISUAL: Quando conseguir inferir com confiança, classifique cada balão como "rect" (narração/caixa), "outside" (texto fora/sfx), "thought" (pensamento), "double" (balão duplo) ou "none".'
-    : 'TIPO VISUAL: Não classifique balões/containers; use "none" como "type" em todos os blocos.';
+    ? 'VISUAL CONTAINER CLASSIFICATION: When confident, classify each bubble/container as "rect" (narration/box), "outside" (text outside bubbles/sfx), "thought" (thought bubble), "double" (double/overlapping bubble), or "none".'
+    : 'VISUAL CONTAINER CLASSIFICATION: Do not classify containers; use "none" as "type" for all blocks.';
 
-  return `Você é um tradutor e adaptador editorial especializado em quadrinhos e mangás.
-Sua única tarefa é transcrever o texto da imagem na ordem correta e devolver a tradução final em ${targetLangLabel}.
+  return `You are an expert manga, comic, and webtoon OCR, localization, and translation engine.
+Your sole task is to transcribe all text from the image in correct reading order and return the final translation in ${targetLangLabel}.
 
 ${languageText}
 
 ${mediumText}
 - ${toneText}
 - ${profanityText}
-- IDIOMA: Cada item em "translations.text" deve ser entregue em ${targetLangLabel} fluído.
-- NÃO COPIE O IDIOMA DE ORIGEM: Nunca repita a frase no idioma original, exceto nomes próprios inevitáveis.
-- OCR FIEL: Se um balão estiver vazio, ilegível ou for apenas um desenho/ruído, não invente conteúdo.
+- TARGET LANGUAGE: Every item in "translations[].text" must be delivered in fluent, natural ${targetLangLabel}.
+- DO NOT COPY SOURCE LANGUAGE: Never output phrases in the original source language unless they are unavoidable proper nouns or names.
+- FAITHFUL OCR: If a bubble is empty, illegible, or contains only drawing/visual noise, do not invent content.
 - ${thinkingText}
 - ${typeText}${customText}${glossaryText}${contextText}
-- FORMATO: Responda estritamente em JSON válido seguindo o schema solicitado, sem markdown e sem comentários.`;
+- FORMAT: Respond strictly in valid JSON matching the requested schema, without markdown fences and without commentary.`;
 };
 
 export const buildEditorialUserPrompt = (inferBlockTypes: boolean, targetLanguage: TargetLanguage = "pt-BR"): string => {
-  const targetLabel = targetLanguage === "pt-BR" ? "PT-BR" : targetLanguage === "es" ? "Espanhol" : "Inglês";
-  return `Analise esta página de quadrinhos/mangá e retorne somente o JSON solicitado com a tradução final em ${targetLabel}.${
+  const targetLabel = targetLanguage === "pt-BR" ? "Brazilian Portuguese (PT-BR)" : targetLanguage === "es" ? "Spanish" : "English";
+  return `Analyze this comic/manga page image and return only the requested JSON with the final translation in ${targetLabel}.${
     inferBlockTypes
-      ? ' Inclua o tipo visual ("rect", "outside", "thought", "double" ou "none") quando tiver confiança.'
-      : ' Use "type": "none" em todos os blocos.'
+      ? ' Include the visual container type ("rect", "outside", "thought", "double", or "none") when confident.'
+      : ' Use "type": "none" for all blocks.'
   }`;
 };
 
@@ -191,30 +191,37 @@ export const buildEditorialRepairPrompt = (options: PromptBuilderOptions): strin
 
   const toneText = getToneInstructions(profile.tone);
   const profanityText = getProfanityInstructions(profile.profanity);
+  const targetLangLabel =
+    profile.targetLanguage === "pt-BR"
+      ? "Brazilian Portuguese (PT-BR)"
+      : profile.targetLanguage === "es"
+        ? "Spanish"
+        : "English";
+
   const customText = profile.customDirectives?.trim()
-    ? `\nDIRETRIZES PERSONALIZADAS DO TRADUTOR:\n${profile.customDirectives.trim()}`
+    ? `\nCUSTOM TRANSLATOR DIRECTIVES:\n${profile.customDirectives.trim()}`
     : "";
 
   const glossaryText =
     glossary.length > 0
-      ? `\nGLOSSÁRIO (Use estas traduções preferencialmente):\n${glossary
+      ? `\nPROJECT GLOSSARY (Strictly prioritize these translations):\n${glossary
           .map((t) => `- "${t.term}": "${t.translation}"`)
           .join("\n")}`
       : "";
 
   const contextText = previousContext
-    ? `\nCONTEXTO DA PÁGINA ANTERIOR:\n${previousContext}`
+    ? `\nPREVIOUS PAGE CONTEXT:\n${previousContext}`
     : "";
 
-  return `Você é um revisor editorial de quadrinhos e mangás.
-Receberá blocos transcritos que podem estar em inglês, japonês ou rascunho.
-Sua tarefa é refiná-los para português brasileiro natural.
+  return `You are an expert comic and manga editorial proofreading and translation repair engine.
+You will receive transcribed blocks that may be in Japanese, Korean, Chinese, English, or raw drafts.
+Your task is to refine and translate them into natural, fluent ${targetLangLabel}.
 
-REGRAS:
+RULES:
 - ${toneText}
 - ${profanityText}
-- Preserve a ordem original dos blocos.
-- Responda apenas em JSON válido no schema solicitado.${customText}${glossaryText}${contextText}`;
+- Preserve the exact original sequence and block count.
+- Respond strictly in valid JSON matching the requested schema without commentary.${customText}${glossaryText}${contextText}`;
 };
 
 export const buildEditorialSecondPassPrompt = (options: PromptBuilderOptions): string => {
@@ -224,36 +231,43 @@ export const buildEditorialSecondPassPrompt = (options: PromptBuilderOptions): s
 
   const toneText = getToneInstructions(profile.tone);
   const profanityText = getProfanityInstructions(profile.profanity);
+  const targetLangLabel =
+    profile.targetLanguage === "pt-BR"
+      ? "Brazilian Portuguese (PT-BR)"
+      : profile.targetLanguage === "es"
+        ? "Spanish"
+        : "English";
+
   const customText = profile.customDirectives?.trim()
-    ? `\nDIRETRIZES PERSONALIZADAS DO TRADUTOR:\n${profile.customDirectives.trim()}`
+    ? `\nCUSTOM TRANSLATOR DIRECTIVES:\n${profile.customDirectives.trim()}`
     : "";
 
   const glossaryText =
     glossary.length > 0
-      ? `\nGLOSSÁRIO OBRIGATÓRIO (Mantenha rigorosamente estes termos):\n${glossary
+      ? `\nMANDATORY GLOSSARY (Strictly maintain these terms):\n${glossary
           .map((t) => `- "${t.term}": "${t.translation}"`)
           .join("\n")}`
       : "";
 
   const contextText = previousContext
-    ? `\nCONTEXTO DA PÁGINA ANTERIOR:\n${previousContext}`
+    ? `\nPREVIOUS PAGE CONTEXT:\n${previousContext}`
     : "";
 
-  return `Você é um Diretor Editorial e Revisor Chefe especializado em scanlations e quadrinhos publicados no Brasil.
-Você receberá os blocos de tradução inicial de uma página.
+  return `You are a Chief Editorial Director specialized in professional comic and manga scanlation and localization.
+You will receive initial translation blocks from a comic page.
 
-SUA MISSÃO NA 2ª PASSADA (LAPIDAÇÃO DE NATURALIDADE):
-1. NATURALIDADE COLOQUIAL: Elimine qualquer traço de tradução robótica, dura ou calques do japonês/inglês. As falas devem soar 100% orgânicas, como pessoas reais conversando no português do Brasil.
-2. CADÊNCIA & CONCISÃO: Ajuste o ritmo e tamanho das frases para que caibam bem nos balões de quadrinhos sem perder impacto emocional.
-3. PRESERVAÇÃO DE ESTRUTURA: Mantenha RIGOROSAMENTE a mesma quantidade de itens na lista, na mesma ordem sequencial e preservando o campo "type" de cada item.
+YOUR MISSION IN THE 2ND PASS (NATURAL DIALOGUE POLISHING):
+1. COLLOQUIAL NATURALNESS: Eliminate any robotic phrasing, stiff syntax, or literal calques from the source language. Speech must sound 100% organic, like real people speaking in ${targetLangLabel}.
+2. PACING & CONCISENESS: Refine sentence rhythm and brevity so dialogues fit comfortably inside comic balloons without losing emotional punch or character voice.
+3. STRUCTURAL PRESERVATION: STRICTLY maintain the exact same number of items in the list, in the identical sequential order, preserving the "type" field of each item.
 4. ${toneText}
 5. ${profanityText}${customText}${glossaryText}${contextText}
 
-SCHEMA OBRIGATÓRIO DE RESPOSTA:
-Responda APENAS em JSON válido no formato:
+MANDATORY RESPONSE SCHEMA:
+Respond ONLY with valid JSON in this exact structure:
 {
   "translations": [
-    { "text": "fala polida e natural em PT-BR", "type": "tipo_original" }
+    { "text": "polished natural dialogue in ${targetLangLabel}", "type": "original_type" }
   ]
 }`;
 };

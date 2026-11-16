@@ -65,16 +65,16 @@ const parseRefinedBlocks = (rawText: string): Array<{ text: string; type?: strin
 };
 
 const buildSecondPassUserPrompt = (blocks: TranslationResult[]): string => {
-  return `Por favor, faça a 2ª passada editorial refinando as falas abaixo para português brasileiro 100% natural, coloquial e fluido.
-Mantenha exatamente a mesma ordem e preserve os tipos ("type").
+  return `Please perform the 2nd pass editorial refinement on the dialogue blocks below, making them 100% natural, colloquial, and fluent.
+Preserve the exact same order and keep the visual container types ("type").
 
-ENTRADA DA 1ª PASSADA:
+INPUT FROM 1ST PASS:
 ${JSON.stringify({ translations: blocks }, null, 2)}
 
-Devolva APENAS o JSON no formato:
+Return ONLY valid JSON matching this schema:
 {
   "translations": [
-    { "text": "fala refinada em PT-BR", "type": "mesmo_tipo" }
+    { "text": "polished natural dialogue", "type": "same_type" }
   ]
 }`;
 };

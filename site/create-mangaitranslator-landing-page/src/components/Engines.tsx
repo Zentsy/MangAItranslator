@@ -115,14 +115,30 @@ export default function Engines() {
               Modelos de última geração suportados →
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              {MODELS.map((m) => (
-                <span
-                  key={m}
-                  className="cursor-default border-2 border-ink bg-paper px-4 py-1.5 font-display text-lg tracking-wide text-ink transition-all duration-200 hover:-translate-y-0.5 hover:bg-ink hover:text-paper"
-                >
-                  {m}
-                </span>
-              ))}
+              {MODELS.map((m) => {
+                const isNew = [
+                  "Gemini 4 Hydrogen",
+                  "Gemini 4 Argon",
+                  "Claude Fable 5.2",
+                  "Claude Sonnet 5.5",
+                  "GPT-6 Astra",
+                  "Qwen 4 Max",
+                  "Gemma 4",
+                ].includes(m);
+                return (
+                  <span
+                    key={m}
+                    className="inline-flex items-center gap-2 cursor-default border-2 border-ink bg-paper px-4 py-1.5 font-display text-lg tracking-wide text-ink transition-all duration-200 hover:-translate-y-0.5 hover:bg-ink hover:text-paper"
+                  >
+                    <span>{m}</span>
+                    {isNew && (
+                      <span className="border border-verm bg-verm/15 px-1.5 py-0.5 font-pixel text-[9px] font-black tracking-widest text-verm">
+                        NEW
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </Reveal>

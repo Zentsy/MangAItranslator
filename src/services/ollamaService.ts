@@ -36,44 +36,44 @@ export interface OllamaStatusUpdate {
   message: string;
 }
 
-const OLLAMA_SYSTEM_PROMPT = `Voce e um extrator de texto para traducao de manga.
-Sua tarefa e olhar a pagina, ler o texto na ordem correta e traduzir para portugues do Brasil.
+const OLLAMA_SYSTEM_PROMPT = `You are an expert manga and comic OCR and translation engine.
+Your task is to analyze the page image, read text in correct reading order, and translate it into natural Brazilian Portuguese (PT-BR).
 
-REGRAS:
-- ORDEM: respeite a leitura de manga, da direita para a esquerda e de cima para baixo.
-- TEXTO: traduza apenas o conteudo visivel da pagina.
-- FORMATO: responda apenas com JSON valido, sem markdown e sem comentarios.
-- TIPO: use um destes tipos quando conseguir inferir o container do texto:
-  - "rect" para narracao/caixa retangular
-  - "outside" para texto fora de balao, sfx ou texto solto
-  - "thought" para pensamento
-  - "double" para balao duplo/sobreposto
-  - "none" quando nao tiver certeza
+RULES:
+- READING ORDER: follow standard manga reading order, from right to left and top to bottom.
+- TEXT: transcribe and translate visible text from the page faithfully.
+- FORMAT: respond strictly with valid JSON, without markdown fences and without commentary.
+- TYPE: classify visual container type when confident:
+  - "rect" for narration / rectangular text box
+  - "outside" for text outside bubbles, sfx, or floating text
+  - "thought" for thought bubbles
+  - "double" for double or overlapping bubbles
+  - "none" when uncertain
 
-SCHEMA JSON OBRIGATORIO:
+MANDATORY JSON SCHEMA:
 {
   "translations": [
-    { "text": "fala 1", "type": "none" },
-    { "text": "fala 2", "type": "rect" }
+    { "text": "translated dialogue 1", "type": "none" },
+    { "text": "translated dialogue 2", "type": "rect" }
   ]
 }
 
-Se a pagina nao tiver texto traduzivel, retorne {"translations": []}.`;
+If the page has no translatable text, return {"translations": []}.`;
 
 const getThinkingInstruction = (thinkingEnabled: boolean) =>
   thinkingEnabled
-    ? "\nTHINKING: pense antes de responder se o modelo suportar raciocinio, mas devolva apenas o JSON final."
-    : "\nTHINKING: nao use cadeia de pensamento; seja direto e devolva apenas o JSON final.";
+    ? "\nTHINKING: reason internally before answering if supported, but return strictly the final JSON."
+    : "\nTHINKING: do not output chain-of-thought; be direct and return strictly the final JSON.";
 
 const getTypeInstruction = (inferBlockTypes: boolean) =>
   inferBlockTypes
-    ? '\nTIPO: tente inferir o tipo visual quando tiver confianca. Use "rect", "outside", "thought", "double" ou "none".'
-    : '\nTIPO: nao tente classificar balao/container. Use "none" em todos os blocos.';
+    ? '\nTYPE: classify visual container when confident: "rect", "outside", "thought", "double", or "none".'
+    : '\nTYPE: do not classify containers. Use "none" for all blocks.';
 
 const getOllamaUserPrompt = (inferBlockTypes: boolean) =>
-  `Analise esta pagina de manga e retorne somente o JSON solicitado.
+  `Analyze this comic/manga page image and return only the requested JSON.
 ${getTypeInstruction(inferBlockTypes)}
-Siga exatamente este schema:
+Strictly follow this schema:
 ${JSON.stringify(OLLAMA_TRANSLATION_SCHEMA)}`;
 
 const cleanJson = (text: string) => {

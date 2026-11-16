@@ -95,8 +95,18 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: s
 
 const CHANGELOG_ITEMS = [
   {
-    version: "v0.4.0",
+    version: "v0.4.1",
     badge: "Atual",
+    title: "Atualização de Modelos & System Prompts em Inglês",
+    items: [
+      "Integração do Gemini 4 Hydrogen (novo padrão recomendado), Gemini 4 Argon, Claude Fable 5.2, Claude Sonnet 5.5, GPT-6 Astra e Qwen 4 Max.",
+      "Identificador visual '★ NEW' para modelos de última geração no seletor de IA.",
+      "System Prompts técnicos reescritos integralmente em inglês para máxima aderência de formato e precisão semântica do LLM.",
+    ],
+  },
+  {
+    version: "v0.4.0",
+    badge: "Anterior",
     title: "Nova Identidade Nanquim, Segunda Passada & Iconografia Autoral",
     items: [
       "Nova Identidade Visual 'Paper Light' inspirada em Papel Washi cru, Nanquim e Pena G tradicional.",
@@ -454,6 +464,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="flex items-center gap-2 min-w-0">
                   <GeminiLogo className="h-4 w-4 flex-shrink-0" />
                   <span className="font-display text-sm uppercase tracking-wide text-app-text-primary truncate">{model.label}</span>
+                  {model.isNew && (
+                    <span className="border border-rose-600/60 bg-rose-500/15 px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-rose-500 shadow-ink-sm flex-shrink-0">
+                      ★ NEW
+                    </span>
+                  )}
                 </div>
                 <span className="border border-app-border px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-app-text-secondary/70 flex-shrink-0">
                   {getGeminiAccessLabel(model.access)}
@@ -496,6 +511,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="flex items-center gap-2 min-w-0">
                   <OllamaLogo className="h-4 w-4 flex-shrink-0 text-app-text-primary" />
                   <span className="font-display text-sm uppercase tracking-wide text-app-text-primary truncate">{model.label}</span>
+                  {model.isNew && (
+                    <span className="border border-rose-600/60 bg-rose-500/15 px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-rose-500 shadow-ink-sm flex-shrink-0">
+                      ★ NEW
+                    </span>
+                  )}
                 </div>
                 <span className="border border-app-border px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-app-text-secondary/70 flex-shrink-0">{model.sizeLabel}</span>
               </div>
@@ -560,6 +580,11 @@ const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="flex items-center gap-2 min-w-0">
                   {getProviderLogo(selectedOpenAiProvider.id, "h-4 w-4 flex-shrink-0 text-app-accent")}
                   <span className="font-display text-sm uppercase tracking-wide text-app-text-primary truncate">{model.label}</span>
+                  {model.isNew && (
+                    <span className="border border-rose-600/60 bg-rose-500/15 px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-rose-500 shadow-ink-sm flex-shrink-0">
+                      ★ NEW
+                    </span>
+                  )}
                 </div>
                 {model.recommended && (
                   <span className="border border-emerald-600/40 bg-emerald-600/10 px-1.5 py-0.5 font-pixel text-[8px] font-black uppercase tracking-wider text-emerald-500 flex-shrink-0">

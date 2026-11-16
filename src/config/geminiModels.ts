@@ -5,39 +5,43 @@ export interface GeminiModelOption {
   access: "free" | "paid" | "preview";
   description: string;
   recommended?: boolean;
+  isNew?: boolean;
 }
 
-export const DEFAULT_GEMINI_MODEL = "gemini-3.8-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-4-hydrogen";
 
 export const GEMINI_MODEL_OPTIONS: GeminiModelOption[] = [
+  {
+    id: "gemini-4-hydrogen",
+    label: "Gemini 4 Hydrogen",
+    family: "flash",
+    access: "free",
+    description: "Workhorse de alta eficiência da família Gemini 4 (Lançado Nov/2026). Raciocínio nativo com 1M tokens, altíssima velocidade e latência ultrabaixa para OCR e tradução.",
+    recommended: true,
+    isNew: true,
+  },
+  {
+    id: "gemini-4-argon",
+    label: "Gemini 4 Argon",
+    family: "pro",
+    access: "free",
+    description: "Flagship de raciocínio profundo da geração Gemini 4. Janela de 1M tokens, máxima precisão para kanjis raros, OCR complexo e onomatopeias.",
+    isNew: true,
+  },
   {
     id: "gemini-3.8-flash",
     label: "Gemini 3.8 Flash",
     family: "flash",
     access: "free",
-    description: "Modelo de última geração. Máxima velocidade com raciocínio multimodal de alta precisão.",
-    recommended: true,
-  },
-  {
-    id: "gemini-3.7-flash",
-    label: "Gemini 3.7 Flash",
-    family: "flash",
-    access: "free",
-    description: "Modelo avançado da série 3 com raciocínio híbrido e alta acurácia visual.",
+    description: "Modelo consagrado da série Flash. Máxima velocidade com raciocínio multimodal de alta precisão.",
+    isNew: true,
   },
   {
     id: "gemini-3.6-flash",
     label: "Gemini 3.6 Flash",
     family: "flash",
     access: "free",
-    description: "Versão ágil e estável para leitura rápida de quadrinhos e mangás.",
-  },
-  {
-    id: "gemini-3.5-flash",
-    label: "Gemini 3.5 Flash",
-    family: "flash",
-    access: "free",
-    description: "Excelente precisão em balões densos e detecção de caracteres japoneses complexos.",
+    description: "Sucessor estável do Gemini 3.5. Alta agilidade e leitura precisa para fluxos contínuos de tradução.",
   },
   {
     id: "gemini-3.5-flash-lite",
@@ -51,14 +55,14 @@ export const GEMINI_MODEL_OPTIONS: GeminiModelOption[] = [
     label: "Gemini 3.1 Pro (Preview)",
     family: "pro",
     access: "preview",
-    description: "Topo absoluto de linha para OCR complexo, onomatopeias estilizadas e balões difíceis.",
+    description: "Alta capacidade analítica para OCR denso, balões difíceis e adaptação poética.",
   },
   {
-    id: "gemini-3-flash-preview",
-    label: "Gemini 3 Flash (Preview)",
-    family: "flash",
+    id: "gemini-3.1-flash-lite",
+    label: "Gemini 3.1 Flash-Lite",
+    family: "flash-lite",
     access: "preview",
-    description: "Preview multimodal experimental da família Gemini 3.",
+    description: "Versão preliminar compacta focada em latência mínima.",
   },
   {
     id: "gemini-2.5-flash",

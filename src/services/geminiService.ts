@@ -74,7 +74,7 @@ const cleanJson = (text: string) => {
 const getGeminiThinkingConfig = (modelId: string, thinkingEnabled: boolean) => {
   const normalizedModel = modelId.toLowerCase();
 
-  if (normalizedModel.includes("gemini-3")) {
+  if (normalizedModel.includes("gemini-4") || normalizedModel.includes("gemini-3")) {
     return {
       thinkingLevel: thinkingEnabled ? "low" : "minimal",
     };

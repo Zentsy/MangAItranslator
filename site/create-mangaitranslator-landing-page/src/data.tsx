@@ -14,7 +14,8 @@ export const LINKS = {
   repo: "https://github.com/Zentsy/MangAItranslator",
   latest: "https://github.com/Zentsy/MangAItranslator/releases/latest",
   downloadDirect:
-    "https://github.com/Zentsy/MangAItranslator/releases/download/v0.4.0/MangAI.Translator_0.4.0_x64-setup.exe",
+    "https://github.com/Zentsy/MangAItranslator/releases/download/v0.4.1/MangAI.Translator_0.4.1_x64-setup.exe",
+  v041: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.1",
   v040: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.0",
   v030: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.5",
   issues: "https://github.com/Zentsy/MangAItranslator/issues",
@@ -29,13 +30,13 @@ export type DownloadInfo = {
 
 export const DownloadContext = createContext<DownloadInfo>({
   downloadUrl: LINKS.downloadDirect,
-  version: "v0.4.0",
+  version: "v0.4.1",
 });
 
 export function DownloadProvider({ children }: { children: ReactNode }) {
   const [info, setInfo] = useState<DownloadInfo>({
     downloadUrl: LINKS.downloadDirect,
-    version: "v0.4.0",
+    version: "v0.4.1",
   });
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function DownloadProvider({ children }: { children: ReactNode }) {
         if (exe?.browser_download_url) {
           setInfo({
             downloadUrl: exe.browser_download_url,
-            version: data.tag_name || "v0.4.0",
+            version: data.tag_name || "v0.4.1",
           });
         }
       })
@@ -235,10 +236,13 @@ export const STEPS: Step[] = [
 ];
 
 export const MODELS = [
+  "Gemini 4 Hydrogen",
+  "Gemini 4 Argon",
   "Gemini 3.8 Flash",
-  "Claude Sonnet 5",
-  "Claude Fable 5.1",
+  "Claude Fable 5.2",
+  "Claude Sonnet 5.5",
   "GPT-6 Astra",
+  "Qwen 4 Max",
   "Qwen 3.8 27B · Groq",
 ];
 
