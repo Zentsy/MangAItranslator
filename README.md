@@ -79,7 +79,13 @@ Se você baixou o app deste repositório oficial e quiser testar mesmo assim, re
 
 No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O app tenta corrigir respostas duplicadas, vazias ou mal formatadas, filtra automaticamente blocos internos de raciocínio (`<think>`) e tem fallback inteligente, mas alguns modelos pequenos podem apenas transcrever o texto em vez de traduzir.
 
-## ✒️ Novidades da Versão 0.4.0
+## ✒️ Novidades da Versão 0.4.1
+
+- **Suporte Oficial ao Gemini 4 Hydrogen & Geração 2026**: inclusão do `gemini-4-hydrogen` (workhorse recomendado de 1M tokens), `gemini-4-argon`, `claude-fable-5.2`, `claude-sonnet-5.5`, `gpt-6-astra` e `qwen4-max`.
+- **Identificador Visual '★ NEW'**: insígnia nos seletores de modelo para identificar facilmente as opções de IA mais recentes e de melhor custo-benefício.
+- **System Prompts Técnicos em Inglês**: prompts de sistema reescritos inteiramente em inglês para máxima precisão de OCR, respeito rigoroso ao schema JSON e tradução refinada direta em PT-BR.
+
+## 📜 Novidades da Versão 0.4.0
 
 - **Nova Identidade Visual "Paper Light"**: modo claro reconstruído do zero com papéis Washi cru, contrastes em nanquim e selos Hanko (認, 済, 動, 筆).
 - **Segunda Passada de Naturalidade**: revisão opcional pós-tradução para refinar a fluidez dos diálogos em português brasileiro sem perder o contexto dramático.
