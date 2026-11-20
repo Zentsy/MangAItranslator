@@ -7,7 +7,7 @@ import {
 } from "@/config/openAiCompatibleProviders";
 import type { TranslationEngine, TranslationProfile } from "@/store/useMangaStore";
 import type { GlossaryTerm } from "./dbService";
-import { buildEditorialSecondPassPrompt } from "./promptBuilderService";
+import { buildEditorialSecondPassPrompt, getTargetLanguageLabel } from "./promptBuilderService";
 import type { TranslationResult } from "./translationService";
 
 export interface SecondPassOptions {
@@ -64,8 +64,8 @@ const parseRefinedBlocks = (rawText: string): Array<{ text: string; type?: strin
   return [];
 };
 
-const buildSecondPassUserPrompt = (blocks: TranslationResult[]): string => {
-  return `Please perform the 2nd pass editorial refinement on the dialogue blocks below, making them 100% natural, colloquial, and fluent.
+const buildSecondPassUserPrompt = (blocks: TranslationResult[], targetLabel: string): string => {
+  return `Please perform the 2nd pass editorial refinement on the dialogue blocks below, making them 100% natural, colloquial, and fluent in ${targetLabel}.
 Preserve the exact same order and keep the visual container types ("type").
 
 INPUT FROM 1ST PASS:
@@ -74,7 +74,7 @@ ${JSON.stringify({ translations: blocks }, null, 2)}
 Return ONLY valid JSON matching this schema:
 {
   "translations": [
-    { "text": "polished natural dialogue", "type": "same_type" }
+    { "text": "polished natural dialogue in ${targetLabel}", "type": "same_type" }
   ]
 }`;
 };
@@ -121,13 +121,14 @@ export const executeSecondPassRefinement = async (
     message: "2ª Passada: Lapidando naturalidade dos diálogos em PT-BR...",
   });
 
+  const targetLabel = getTargetLanguageLabel(profile?.targetLanguage);
   const systemPrompt = buildEditorialSecondPassPrompt({
     profile,
     glossary,
     previousContext,
   });
 
-  const userPrompt = buildSecondPassUserPrompt(blocks);
+  const userPrompt = buildSecondPassUserPrompt(blocks, targetLabel);
 
   try {
     let rawResponse = "";

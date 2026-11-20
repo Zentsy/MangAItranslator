@@ -9,8 +9,10 @@ import {
   buildEditorialSystemPrompt,
   buildEditorialUserPrompt,
   buildEditorialRepairPrompt,
+  buildEditorialRepairUserPrompt,
+  hasUntranslatedEnglishBlocks,
 } from "./promptBuilderService";
-import type { TranslationProfile } from "@/store/useMangaStore";
+import type { TargetLanguage, TranslationProfile } from "@/store/useMangaStore";
 
 const OPENAI_COMPATIBLE_REQUEST_TIMEOUT_MS: Record<OpenAiCompatibleProviderId, number> = {
   openrouter: 90 * 1000,
@@ -25,80 +27,6 @@ const OPENROUTER_FREE_MODELS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const GROQ_BASE64_IMAGE_LIMIT_BYTES = 4 * 1024 * 1024;
 const VALID_BLOCK_TYPES = new Set(["rect", "outside", "thought", "double", "none"]);
 const VALID_BLOCK_TYPE_VALUES = ["rect", "outside", "thought", "double", "none"] as const;
-const ENGLISH_SIGNAL_PATTERN =
-  /\b(i|you|he|she|we|they|the|this|that|these|those|letter|truth|right|now|think|thought|come|came|leave|wait|actually|didn'?t|don'?t|can'?t|won'?t|is|are|am|was|were|have|has|had|will|would|should|could|everything)\b/i;
-const PORTUGUESE_SIGNAL_PATTERN =
-  /\b(voce|voc\u00ea|eu|ele|ela|nos|n\u00f3s|eles|elas|que|nao|n\u00e3o|sim|verdade|agora|carta|pensei|veio|venha|espera|espere|tudo|mesmo)\b/i;
-
-const TRANSLATION_SCHEMA_DESCRIPTION = `{
-  "translations": [
-    { "text": "fala traduzida", "type": "none" }
-  ]
-}`;
-
-const SYSTEM_PROMPT = `You are an expert manga and comic OCR and localization engine.
-Your sole task is to read the text from the image in correct reading order and return the final translation in natural Brazilian Portuguese (PT-BR).
-
-RULES:
-- READING ORDER: follow standard manga reading order, from right to left and top to bottom.
-- LANGUAGE: every item in "translations[].text" must be delivered in fluent, natural PT-BR.
-- DO NOT COPY SOURCE LANGUAGE: never return the original source phrase unless unavoidable proper nouns.
-- OCR FAITHFULNESS: if a bubble is empty, illegible, or without relevant text, do not invent content.
-- TYPE: when confident, use "rect", "outside", "thought", "double", or "none".
-- FORMAT: respond strictly in valid JSON matching the requested schema, without markdown fences and without commentary.
-
-MANDATORY JSON SCHEMA:
-${TRANSLATION_SCHEMA_DESCRIPTION}`;
-
-const getThinkingInstruction = (thinkingEnabled: boolean) =>
-  thinkingEnabled
-    ? "THINKING: reason internally before answering to avoid literal transcription. The final output must strictly be JSON in PT-BR."
-    : "THINKING: prioritize speed. Do not include reasoning, notes, or explanations; return strictly the final JSON.";
-
-const getTypeInstruction = (inferBlockTypes: boolean) =>
-  inferBlockTypes
-    ? 'TYPE: when confident, classify container type as "rect", "outside", "thought", "double", or "none".'
-    : 'TYPE: do not classify containers. Use "none" as type for all blocks.';
-
-const buildSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean, glossary: GlossaryTerm[] = [], previousContext: string | null = null) => {
-  const glossaryInstruction =
-    glossary.length > 0
-      ? `\nGLOSSARY (Strictly prioritize these translations):\n${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
-      : "";
-  const contextInstruction =
-    previousContext
-      ? `\nPREVIOUS PAGE CONTEXT (Use to maintain continuity):\n${previousContext}`
-      : "";
-  return `${SYSTEM_PROMPT}${glossaryInstruction}${contextInstruction}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
-};
-
-const buildUserPrompt = (inferBlockTypes: boolean) => `Analyze this comic/manga page image and return only the requested JSON.
-Each block must contain the final translation in PT-BR.${
-  inferBlockTypes ? ' Include visual container type when confident.' : ' Use "type": "none" for all blocks.'
-}`;
-
-const REPAIR_SYSTEM_PROMPT = `You are an expert comic and manga editorial translation proofreading engine.
-You will receive OCR/transcription blocks that may be in Japanese, Korean, Chinese, English, or mixed drafts.
-Your task is to refine and translate them into natural Brazilian Portuguese (PT-BR).
-
-RULES:
-- Translate dialogue and narration accurately into natural PT-BR.
-- Preserve proper names, place names, and honorifics when appropriate.
-- Preserve the exact order and type of each block.
-- Do not output any explanation or commentary.
-- Respond strictly in valid JSON matching the requested schema.`;
-
-const buildRepairSystemPrompt = (thinkingEnabled: boolean, inferBlockTypes: boolean, glossary: GlossaryTerm[] = [], previousContext: string | null = null) => {
-  const glossaryInstruction =
-    glossary.length > 0
-      ? `\nGLOSSARY (Strictly prioritize these translations):\n${glossary.map((t) => `- "${t.term}": "${t.translation}"`).join("\n")}`
-      : "";
-  const contextInstruction =
-    previousContext
-      ? `\nPREVIOUS PAGE CONTEXT (Use to maintain continuity):\n${previousContext}`
-      : "";
-  return `${REPAIR_SYSTEM_PROMPT}${glossaryInstruction}${contextInstruction}\n\n${getThinkingInstruction(thinkingEnabled)}\n${getTypeInstruction(inferBlockTypes)}`;
-};
 
 const TRANSLATION_RESPONSE_SCHEMA = {
   type: "object",
@@ -299,7 +227,10 @@ const parseBlocksFromJsonText = (jsonText: string) => {
   }
 };
 
-const parseTranslationResponse = (rawText: string): OpenAiCompatibleTranslationBlock[] => {
+const parseTranslationResponse = (
+  rawText: string,
+  targetLanguage: TargetLanguage = "pt-BR"
+): OpenAiCompatibleTranslationBlock[] => {
   const cleaned = cleanJson(rawText);
   if (!cleaned) {
     return [];
@@ -316,7 +247,7 @@ const parseTranslationResponse = (rawText: string): OpenAiCompatibleTranslationB
 
   if (jsonObjectBlocks.length > 0) {
     for (let index = jsonObjectBlocks.length - 1; index >= 0; index -= 1) {
-      if (!looksLikeEnglishTranscription(jsonObjectBlocks[index])) {
+      if (!hasUntranslatedEnglishBlocks(jsonObjectBlocks[index], targetLanguage)) {
         return jsonObjectBlocks[index];
       }
     }
@@ -406,19 +337,6 @@ const extractResponseText = (payload: unknown): string => {
   }
 
   return "";
-};
-
-const looksLikeEnglishTranscription = (blocks: OpenAiCompatibleTranslationBlock[]) => {
-  const textBlocks = blocks.filter((block) => block.text.trim().length > 0);
-  if (textBlocks.length === 0) {
-    return false;
-  }
-
-  const englishMatches = textBlocks.filter(
-    (block) => ENGLISH_SIGNAL_PATTERN.test(block.text) && !PORTUGUESE_SIGNAL_PATTERN.test(block.text)
-  ).length;
-
-  return englishMatches >= Math.max(2, Math.ceil(textBlocks.length * 0.45));
 };
 
 const isTransientOrFallbackableError = (error: unknown) => {
@@ -637,7 +555,7 @@ const buildOpenRouterAutoFreeVisionRequestBody = (
       content: [
         {
           type: "text",
-          text: buildEditorialUserPrompt(inferBlockTypes),
+          text: buildEditorialUserPrompt(inferBlockTypes, profile?.targetLanguage),
         },
         {
           type: "image_url",
@@ -676,7 +594,7 @@ const buildVisionRequestBody = (
     content: [
       {
         type: "text",
-        text: buildEditorialUserPrompt(inferBlockTypes),
+        text: buildEditorialUserPrompt(inferBlockTypes, profile?.targetLanguage),
       },
       {
         type: "image_url",
@@ -711,13 +629,7 @@ const buildRepairRequestBody = (
   },
   {
     role: "user",
-    content: `Translate these blocks into natural Brazilian Portuguese (PT-BR).${
-      inferBlockTypes
-        ? ' Preserve the "type" field of each item if correct.'
-        : ' Set "type": "none" on all items.'
-    }
-
-${JSON.stringify({ translations: blocks }, null, 2)}`,
+    content: buildEditorialRepairUserPrompt(blocks, inferBlockTypes, profile?.targetLanguage),
   },
 ], includeResponseFormat, thinkingEnabled);
 
@@ -913,7 +825,7 @@ const buildLmStudioNativeVisionRequestBody = (
   input: [
     {
       type: "text",
-      content: buildEditorialUserPrompt(inferBlockTypes),
+      content: buildEditorialUserPrompt(inferBlockTypes, profile?.targetLanguage),
     },
     {
       type: "image",
@@ -946,13 +858,7 @@ const buildLmStudioNativeRepairRequestBody = (
   profile?: TranslationProfile
 ) => ({
   model,
-  input: `Translate these blocks into natural Brazilian Portuguese (PT-BR).${
-    inferBlockTypes
-      ? ' Preserve the "type" field of each item if correct.'
-      : ' Set "type": "none" on all items.'
-  }
-
-${JSON.stringify({ translations: blocks }, null, 2)}`,
+  input: buildEditorialRepairUserPrompt(blocks, inferBlockTypes, profile?.targetLanguage),
   system_prompt: buildEditorialRepairPrompt({
     profile,
     thinkingEnabled,
@@ -1251,7 +1157,7 @@ export const translateWithOpenAiCompatible = async (
         );
         const rawText = extractResponseText(payload);
         console.info(`${requestLabel} resposta do roteador (${rawText.length} caracteres):`, rawText.slice(0, 400));
-        const routerBlocks = parseTranslationResponse(rawText);
+        const routerBlocks = parseTranslationResponse(rawText, profile?.targetLanguage);
 
         if (routerBlocks.length > 0) {
           parsedBlocks = routerBlocks;
@@ -1307,7 +1213,7 @@ export const translateWithOpenAiCompatible = async (
           );
           const rawFallbackText = extractResponseText(payload);
           console.info(`${requestLabel} resposta de ${freeModel.id} (${rawFallbackText.length} caracteres):`, rawFallbackText.slice(0, 400));
-          const fallbackBlocks = parseTranslationResponse(rawFallbackText);
+          const fallbackBlocks = parseTranslationResponse(rawFallbackText, profile?.targetLanguage);
 
           if (fallbackBlocks.length > 0) {
             parsedBlocks = fallbackBlocks;
@@ -1400,13 +1306,13 @@ export const translateWithOpenAiCompatible = async (
         message: "Resposta recebida. Validando o JSON da traducao...",
       });
 
-      parsedBlocks = parseTranslationResponse(rawText);
+      parsedBlocks = parseTranslationResponse(rawText, profile?.targetLanguage);
     }
 
-    if (parsedBlocks && looksLikeEnglishTranscription(parsedBlocks)) {
+    if (parsedBlocks && hasUntranslatedEnglishBlocks(parsedBlocks, profile?.targetLanguage)) {
       onStatusChange?.({
         stage: "repairing",
-        message: `${provider.label} transcreveu os balões. Refinando a tradução para PT-BR...`,
+        message: `${provider.label} transcreveu os balões. Refinando a tradução...`,
       });
 
       try {
@@ -1459,7 +1365,7 @@ export const translateWithOpenAiCompatible = async (
         }
 
         const repairedText = extractResponseText(repairPayload);
-        const repairedBlocks = parseTranslationResponse(repairedText);
+        const repairedBlocks = parseTranslationResponse(repairedText, profile?.targetLanguage);
 
         if (repairedBlocks.length > 0) {
           return repairedBlocks;

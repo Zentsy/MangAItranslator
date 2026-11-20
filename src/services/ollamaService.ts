@@ -274,7 +274,7 @@ export const translateImage = async (
           },
           {
             role: "user",
-            content: buildEditorialUserPrompt(inferBlockTypes),
+            content: buildEditorialUserPrompt(inferBlockTypes, profile?.targetLanguage),
             images: [base64Image],
           },
         ],

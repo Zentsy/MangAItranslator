@@ -1,7 +1,14 @@
 import { GoogleGenerativeAI, SchemaType, type ResponseSchema } from "@google/generative-ai";
 import { GlossaryTerm } from "./dbService";
-import { buildEditorialSystemPrompt } from "./promptBuilderService";
-import type { TranslationProfile } from "@/store/useMangaStore";
+import {
+  buildEditorialRepairPrompt,
+  buildEditorialRepairUserPrompt,
+  buildEditorialSystemPrompt,
+  buildEditorialUserPrompt,
+  getTargetLanguageLabel,
+  hasUntranslatedEnglishBlocks,
+} from "./promptBuilderService";
+import type { TargetLanguage, TranslationProfile } from "@/store/useMangaStore";
 
 const MAX_RETRIES = 2;
 const NON_RETRYABLE_GEMINI_CODES = new Set([
@@ -11,33 +18,40 @@ const NON_RETRYABLE_GEMINI_CODES = new Set([
   "GEMINI_BAD_REQUEST",
 ]);
 
-const translationResponseSchema: ResponseSchema = {
-  type: SchemaType.OBJECT,
-  properties: {
-    translations: {
-      type: SchemaType.ARRAY,
-      description: "Lista em ordem de leitura com as falas ja traduzidas para portugues brasileiro.",
-      items: {
-        type: SchemaType.OBJECT,
-        properties: {
-          text: {
-            type: SchemaType.STRING,
-            description:
-              "Traducao final em PT-BR. Nunca devolva a frase original em ingles, exceto nomes proprios inevitaveis.",
+const buildTranslationResponseSchema = (targetLanguage: TargetLanguage = "pt-BR"): ResponseSchema => {
+  const targetLabel = getTargetLanguageLabel(targetLanguage);
+  const noEnglishHint =
+    targetLanguage !== "en"
+      ? " Nunca devolva transcricao ou frases em ingles, exceto nomes proprios inevitaveis."
+      : "";
+
+  return {
+    type: SchemaType.OBJECT,
+    properties: {
+      translations: {
+        type: SchemaType.ARRAY,
+        description: `Lista em ordem de leitura com as falas ja traduzidas para ${targetLabel}.`,
+        items: {
+          type: SchemaType.OBJECT,
+          properties: {
+            text: {
+              type: SchemaType.STRING,
+              description: `Traducao final em ${targetLabel}.${noEnglishHint}`,
+            },
+            type: {
+              type: SchemaType.STRING,
+              format: "enum",
+              description:
+                'Tipo visual do texto quando solicitado: "rect", "outside", "thought", "double" ou "none".',
+              enum: ["rect", "outside", "thought", "double", "none"],
+            },
           },
-          type: {
-            type: SchemaType.STRING,
-            format: "enum",
-            description:
-              'Tipo visual do texto quando solicitado: "rect", "outside", "thought", "double" ou "none".',
-            enum: ["rect", "outside", "thought", "double", "none"],
-          },
+          required: ["text"],
         },
-        required: ["text"],
       },
     },
-  },
-  required: ["translations"],
+    required: ["translations"],
+  };
 };
 
 type GeminiErrorCode =
@@ -92,16 +106,6 @@ const getGeminiThinkingConfig = (modelId: string, thinkingEnabled: boolean) => {
 
   return undefined;
 };
-
-const getThinkingInstruction = (thinkingEnabled: boolean) =>
-  thinkingEnabled
-    ? "THINKING: pense internamente antes de responder para reduzir OCR literal e garantir traducao PT-BR, mas devolva somente o JSON final."
-    : "THINKING: priorize resposta direta e rapida; nao inclua raciocinio, notas ou explicacoes.";
-
-const getTypeInstruction = (inferBlockTypes: boolean) =>
-  inferBlockTypes
-    ? 'TIPO: quando conseguir inferir com confianca, inclua "type" como "rect", "outside", "thought", "double" ou "none".'
-    : 'TIPO: nao tente classificar balao/container; se devolver "type", use sempre "none".';
 
 const stringifyGeminiDetails = (details: unknown) => {
   if (!Array.isArray(details)) {
@@ -199,11 +203,8 @@ export const translateWithGemini = async (
   retryCount = 0,
   profile?: TranslationProfile
 ): Promise<void> => {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: geminiModel,
-  });
-
+  const targetLanguage = profile?.targetLanguage ?? "pt-BR";
+  const responseSchema = buildTranslationResponseSchema(targetLanguage);
   const systemPrompt = buildEditorialSystemPrompt({
     profile,
     thinkingEnabled: aiThinkingEnabled,
@@ -211,11 +212,18 @@ export const translateWithGemini = async (
     glossary,
     previousContext,
   });
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: geminiModel,
+    systemInstruction: systemPrompt,
+  });
+
   const thinkingConfig = getGeminiThinkingConfig(geminiModel, aiThinkingEnabled);
   const generationConfig: Record<string, unknown> = {
     temperature: 0.2,
     responseMimeType: "application/json",
-    responseSchema: translationResponseSchema,
+    responseSchema,
     ...(thinkingConfig ? { thinkingConfig } : {}),
   };
 
@@ -226,7 +234,7 @@ export const translateWithGemini = async (
           role: "user",
           parts: [
             {
-              text: systemPrompt,
+              text: buildEditorialUserPrompt(aiInferBlockTypesEnabled, targetLanguage),
             },
             {
               inlineData: {
@@ -246,7 +254,56 @@ export const translateWithGemini = async (
     try {
       const json = JSON.parse(cleaned);
       if (json.translations && Array.isArray(json.translations)) {
-        onResult(json.translations);
+        let finalBlocks = json.translations as Array<{
+          text: string;
+          type?: "rect" | "outside" | "thought" | "double" | "none";
+        }>;
+
+        if (hasUntranslatedEnglishBlocks(finalBlocks, targetLanguage)) {
+          console.warn(
+            `[gemini] Blocos em ingles detectados na resposta de ${geminiModel}; executando reparo automatico para ${targetLanguage}.`
+          );
+          try {
+            const repairModel = genAI.getGenerativeModel({
+              model: geminiModel,
+              systemInstruction: buildEditorialRepairPrompt({
+                profile,
+                thinkingEnabled: aiThinkingEnabled,
+                inferBlockTypes: aiInferBlockTypesEnabled,
+                glossary,
+                previousContext,
+              }),
+            });
+            const repairResult = await repairModel.generateContent({
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      text: buildEditorialRepairUserPrompt(
+                        finalBlocks,
+                        aiInferBlockTypesEnabled,
+                        targetLanguage
+                      ),
+                    },
+                  ],
+                },
+              ],
+              generationConfig,
+            });
+            const repairedJson = JSON.parse(cleanJson(repairResult.response.text()));
+            if (Array.isArray(repairedJson?.translations) && repairedJson.translations.length > 0) {
+              finalBlocks = repairedJson.translations;
+            }
+          } catch (repairError) {
+            console.warn(
+              "[gemini] Reparo pos-transcricao falhou; mantendo blocos originais.",
+              repairError
+            );
+          }
+        }
+
+        onResult(finalBlocks);
       } else {
         throw new Error("Formato de JSON invalido: campo translations ausente.");
       }
@@ -262,7 +319,8 @@ export const translateWithGemini = async (
           glossary,
           previousContext,
           onResult,
-          retryCount + 1
+          retryCount + 1,
+          profile
         );
       }
       throw parseError;
@@ -280,7 +338,8 @@ export const translateWithGemini = async (
         glossary,
         previousContext,
         onResult,
-        retryCount + 1
+        retryCount + 1,
+        profile
       );
     }
 

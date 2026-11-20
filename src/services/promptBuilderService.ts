@@ -18,16 +18,73 @@ export interface PromptBuilderOptions {
   previousContext?: string | null;
 }
 
+export const getTargetLanguageLabel = (target: TargetLanguage = "pt-BR"): string =>
+  target === "pt-BR"
+    ? "Brazilian Portuguese (PT-BR)"
+    : target === "es"
+      ? "Spanish"
+      : "English";
+
+const PORTUGUESE_OR_SPANISH_SIGNAL_PATTERN =
+  /[áàâãéêíóôõúçñ¿¡]|\b(voc[eê]|n[aã]o|sim|eu|ele|ela|n[oó]s|eles|elas|isso|isto|aqui|agora|porque|ent[aã]o|tudo|mesmo|ainda|muito|para|como|quem|onde|quando|est[aá]|vamos|pode|fazer|pero|nosotros|ellos|usted|ahora)\b/i;
+
+const ENGLISH_ONLY_SIGNAL_PATTERN =
+  /\b(the|this|that|these|those|with|from|what|where|when|why|how|you|your|you're|you've|you'll|they|their|they're|we|our|we're|she|her|his|him|are|were|was|have|has|had|will|would|should|could|can't|don't|didn't|won't|isn't|aren't|it's|that's|i'm|i've|i'll|there|here|just|only|about|into|because|actually|though|please|sorry|wait|nothing|something|everything|anything|someone|everyone|t\/n:|translator'?s?\s+note|reference|opening|nonsense|truth|letter|thought|leave)\b/i;
+
+const ENGLISH_ONLY_SIGNAL_GLOBAL_PATTERN = new RegExp(ENGLISH_ONLY_SIGNAL_PATTERN.source, "gi");
+
+export const hasUntranslatedEnglishBlocks = (
+  blocks: Array<{ text: string }>,
+  targetLanguage: TargetLanguage = "pt-BR"
+): boolean => {
+  if (targetLanguage === "en") {
+    return false;
+  }
+
+  const textBlocks = blocks.filter((block) => block.text.trim().length > 0);
+  if (textBlocks.length === 0) {
+    return false;
+  }
+
+  let englishBlockCount = 0;
+  let hasMultiWordEnglishBlock = false;
+
+  for (const block of textBlocks) {
+    if (PORTUGUESE_OR_SPANISH_SIGNAL_PATTERN.test(block.text)) {
+      continue;
+    }
+
+    const englishHits = block.text.match(ENGLISH_ONLY_SIGNAL_GLOBAL_PATTERN)?.length ?? 0;
+    if (englishHits > 0) {
+      englishBlockCount += 1;
+      if (englishHits >= 2) {
+        hasMultiWordEnglishBlock = true;
+      }
+    }
+  }
+
+  if (hasMultiWordEnglishBlock) {
+    return true;
+  }
+
+  if (englishBlockCount === 0) {
+    return false;
+  }
+
+  return textBlocks.length <= 2
+    ? englishBlockCount >= 1
+    : englishBlockCount >= Math.max(2, Math.ceil(textBlocks.length * 0.35));
+};
+
 export const getLanguageInstructions = (
   source: SourceLanguage = "ja",
   target: TargetLanguage = "pt-BR"
 ): string => {
-  const targetLabel =
-    target === "pt-BR"
-      ? "Brazilian Portuguese (PT-BR)"
-      : target === "es"
-        ? "Spanish"
-        : "English";
+  const targetLabel = getTargetLanguageLabel(target);
+  const noEnglishPivotRule =
+    target !== "en"
+      ? `\n- NEVER OUTPUT ENGLISH: Even if the image already contains English scanlation dialogue, sound effects, or translator notes (T/N), translate EVERY single text block into ${targetLabel}—never copy or transcribe them in English.`
+      : "";
 
   if (source === "ja") {
     return `LANGUAGE PRESET: RAW JAPANESE -> ${targetLabel.toUpperCase()} (DIRECT TRANSLATION)
@@ -36,29 +93,29 @@ export const getLanguageInstructions = (
   2. FURIGANA (RUBY TEXT): When furigana (small phonetic hiragana/katakana above or beside kanji) is present, use it EXCLUSIVELY to decode the author's intended pronunciation and nuance (including puns and stylized ateji). NEVER transcribe, append, or duplicate furigana as loose separate text in the final translation.
   3. VERTICAL READING ORDER (TATEGAKI): Traditional vertical text reads top-to-bottom in columns advancing from RIGHT TO LEFT. Respect natural sentence continuity without intertwining parallel lines from the same bubble.
   4. DIRECT TRANSLATION WITHOUT ENGLISH PIVOT: Convert Japanese semantics directly into fluent ${targetLabel}, preserving expressive power and avoiding awkward constructs derived from intermediate English.
-  5. COLLOQUIAL CONTRACTIONS & DIALECTS: Accurately identify spoken contractions in informal Japanese (〜ちゃう, 〜じゃん, 〜っす, 〜とく, 〜なきゃ, 〜だろ, 〜ぜ, 〜ぞ) and omitted subjects (I, you, he/she), inferring the correct pronouns from scene dynamics and benefactive verbs (kureru, ageru, morau).`;
+  5. COLLOQUIAL CONTRACTIONS & DIALECTS: Accurately identify spoken contractions in informal Japanese (〜ちゃう, 〜じゃん, 〜っす, 〜とく, 〜なきゃ, 〜だろ, 〜ぜ, 〜ぞ) and omitted subjects (I, you, he/she), inferring the correct pronouns from scene dynamics and benefactive verbs (kureru, ageru, morau).${noEnglishPivotRule}`;
   }
 
   if (source === "ko") {
     return `LANGUAGE PRESET: KOREAN (MANHWA/HANGUL) -> ${targetLabel.toUpperCase()}
 - Continuous vertical/horizontal webtoon flow.
-- Pay strict attention to topic/subject grammatical particles (은/는, 이/가) and politeness levels (Banmal vs. Jondaenmal).`;
+- Pay strict attention to topic/subject grammatical particles (은/는, 이/가) and politeness levels (Banmal vs. Jondaenmal).${noEnglishPivotRule}`;
   }
 
   if (source === "zh") {
     return `LANGUAGE PRESET: CHINESE (MANHUA/HANZI) -> ${targetLabel.toUpperCase()}
 - Accurate distinction between simplified and traditional characters.
-- Pay attention to 4-character idioms (Chengyu) and martial arts/cultivation terminology (Xianxia/Wuxia).`;
+- Pay attention to 4-character idioms (Chengyu) and martial arts/cultivation terminology (Xianxia/Wuxia).${noEnglishPivotRule}`;
   }
 
   if (source === "en") {
     return `LANGUAGE PRESET: ENGLISH (WESTERN COMICS / SCANLATION) -> ${targetLabel.toUpperCase()}
-- Translate dialogue and narration accurately into natural ${targetLabel}.
-- Avoid literal translations of false cognates (e.g., actually, pretend, realize) and Western idioms.`;
+- Translate dialogue, narration, and translator notes (T/N) accurately into natural ${targetLabel}.
+- Avoid literal translations of false cognates (e.g., actually, pretend, realize) and Western idioms.${noEnglishPivotRule}`;
   }
 
   return `LANGUAGE PRESET: AUTO-DETECT SOURCE LANGUAGE -> ${targetLabel.toUpperCase()}
-- Automatically detect the language of the text inside speech bubbles and output the final translation in fluent ${targetLabel}.`;
+- Automatically detect the language of the text inside speech bubbles and output the final translation in fluent ${targetLabel}.${noEnglishPivotRule}`;
 };
 
 export const getMediumInstructions = (medium: TargetMedium, honorifics: HonorificsStyle): string => {
@@ -128,13 +185,7 @@ export const buildEditorialSystemPrompt = (options: PromptBuilderOptions): strin
   const mediumText = getMediumInstructions(profile.targetMedium, profile.honorifics);
   const toneText = getToneInstructions(profile.tone);
   const profanityText = getProfanityInstructions(profile.profanity);
-
-  const targetLangLabel =
-    profile.targetLanguage === "pt-BR"
-      ? "Brazilian Portuguese (PT-BR)"
-      : profile.targetLanguage === "es"
-        ? "Spanish"
-        : "English";
+  const targetLangLabel = getTargetLanguageLabel(profile.targetLanguage);
 
   const customText = profile.customDirectives?.trim()
     ? `\nCUSTOM TRANSLATOR DIRECTIVES (PROJECT EXCLUSIVE RULES):\n${profile.customDirectives.trim()}`
@@ -152,15 +203,20 @@ export const buildEditorialSystemPrompt = (options: PromptBuilderOptions): strin
     : "";
 
   const thinkingText = options.thinkingEnabled
-    ? "THINKING: Reason internally before answering to understand contextual nuances and avoid literal word-by-word transcription, but return strictly the final JSON."
+    ? "THINKING: Reason internally before answering to understand contextual nuances and avoid literal word-by-word translation, but return strictly the final JSON."
     : "THINKING: Prioritize speed and conciseness; do not output reasoning, notes, or explanations.";
 
   const typeText = options.inferBlockTypes
     ? 'VISUAL CONTAINER CLASSIFICATION: When confident, classify each bubble/container as "rect" (narration/box), "outside" (text outside bubbles/sfx), "thought" (thought bubble), "double" (double/overlapping bubble), or "none".'
     : 'VISUAL CONTAINER CLASSIFICATION: Do not classify containers; use "none" as "type" for all blocks.';
 
+  const noEnglishOutputRule =
+    profile.targetLanguage !== "en"
+      ? `\n- CRITICAL OUTPUT LANGUAGE: Every single item in "translations[].text" MUST be written in ${targetLangLabel}. NEVER return an English transcription, English summary, or untranslated English sentences—even if the source image contains English dialogue or translator notes (T/N).`
+      : "";
+
   return `You are an expert manga, comic, and webtoon OCR, localization, and translation engine.
-Your sole task is to transcribe all text from the image in correct reading order and return the final translation in ${targetLangLabel}.
+Your sole task is to extract all text from the image in correct reading order and TRANSLATE every single dialogue, narration box, SFX, and note directly into ${targetLangLabel}.
 
 ${languageText}
 
@@ -168,7 +224,7 @@ ${mediumText}
 - ${toneText}
 - ${profanityText}
 - TARGET LANGUAGE: Every item in "translations[].text" must be delivered in fluent, natural ${targetLangLabel}.
-- DO NOT COPY SOURCE LANGUAGE: Never output phrases in the original source language unless they are unavoidable proper nouns or names.
+- DO NOT COPY SOURCE LANGUAGE: Never output phrases in the original source language unless they are unavoidable proper nouns or names.${noEnglishOutputRule}
 - FAITHFUL OCR: If a bubble is empty, illegible, or contains only drawing/visual noise, do not invent content.
 - ${thinkingText}
 - ${typeText}${customText}${glossaryText}${contextText}
@@ -176,8 +232,12 @@ ${mediumText}
 };
 
 export const buildEditorialUserPrompt = (inferBlockTypes: boolean, targetLanguage: TargetLanguage = "pt-BR"): string => {
-  const targetLabel = targetLanguage === "pt-BR" ? "Brazilian Portuguese (PT-BR)" : targetLanguage === "es" ? "Spanish" : "English";
-  return `Analyze this comic/manga page image and return only the requested JSON with the final translation in ${targetLabel}.${
+  const targetLabel = getTargetLanguageLabel(targetLanguage);
+  const languageGuard =
+    targetLanguage !== "en"
+      ? ` Do NOT output untranslated English transcription; every block (including any English dialogue or T/N notes) must be translated into ${targetLabel}.`
+      : "";
+  return `Read and translate all speech bubbles, narration boxes, and notes in this comic/manga page image into ${targetLabel}, returning only the requested JSON.${languageGuard}${
     inferBlockTypes
       ? ' Include the visual container type ("rect", "outside", "thought", "double", or "none") when confident.'
       : ' Use "type": "none" for all blocks.'
@@ -191,12 +251,7 @@ export const buildEditorialRepairPrompt = (options: PromptBuilderOptions): strin
 
   const toneText = getToneInstructions(profile.tone);
   const profanityText = getProfanityInstructions(profile.profanity);
-  const targetLangLabel =
-    profile.targetLanguage === "pt-BR"
-      ? "Brazilian Portuguese (PT-BR)"
-      : profile.targetLanguage === "es"
-        ? "Spanish"
-        : "English";
+  const targetLangLabel = getTargetLanguageLabel(profile.targetLanguage);
 
   const customText = profile.customDirectives?.trim()
     ? `\nCUSTOM TRANSLATOR DIRECTIVES:\n${profile.customDirectives.trim()}`
@@ -215,13 +270,32 @@ export const buildEditorialRepairPrompt = (options: PromptBuilderOptions): strin
 
   return `You are an expert comic and manga editorial proofreading and translation repair engine.
 You will receive transcribed blocks that may be in Japanese, Korean, Chinese, English, or raw drafts.
-Your task is to refine and translate them into natural, fluent ${targetLangLabel}.
+Your task is to refine and translate every block into natural, fluent ${targetLangLabel}.
 
 RULES:
 - ${toneText}
-- ${profanityText}
+- ${profanityText}${
+    profile.targetLanguage !== "en"
+      ? `\n- NEVER leave sentences in English. Translate all dialogue, narration, and translator notes (T/N) completely into ${targetLangLabel}.`
+      : ""
+  }
 - Preserve the exact original sequence and block count.
 - Respond strictly in valid JSON matching the requested schema without commentary.${customText}${glossaryText}${contextText}`;
+};
+
+export const buildEditorialRepairUserPrompt = (
+  blocks: Array<{ text: string; type?: string }>,
+  inferBlockTypes: boolean,
+  targetLanguage: TargetLanguage = "pt-BR"
+): string => {
+  const targetLabel = getTargetLanguageLabel(targetLanguage);
+  return `Translate every block below into natural ${targetLabel}.${
+    inferBlockTypes
+      ? ' Preserve the "type" field of each item if correct.'
+      : ' Set "type": "none" on all items.'
+  }
+
+${JSON.stringify({ translations: blocks }, null, 2)}`;
 };
 
 export const buildEditorialSecondPassPrompt = (options: PromptBuilderOptions): string => {
@@ -231,12 +305,7 @@ export const buildEditorialSecondPassPrompt = (options: PromptBuilderOptions): s
 
   const toneText = getToneInstructions(profile.tone);
   const profanityText = getProfanityInstructions(profile.profanity);
-  const targetLangLabel =
-    profile.targetLanguage === "pt-BR"
-      ? "Brazilian Portuguese (PT-BR)"
-      : profile.targetLanguage === "es"
-        ? "Spanish"
-        : "English";
+  const targetLangLabel = getTargetLanguageLabel(profile.targetLanguage);
 
   const customText = profile.customDirectives?.trim()
     ? `\nCUSTOM TRANSLATOR DIRECTIVES:\n${profile.customDirectives.trim()}`
