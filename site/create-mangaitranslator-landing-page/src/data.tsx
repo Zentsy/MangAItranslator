@@ -98,7 +98,7 @@ export const SHOTS: Shot[] = [
     jp: "一括",
   },
   {
-    src: SHOT("Glossario-v3.png"),
+    src: SHOT("glossario.png"),
     file: "glossario.png",
     caption: "termos persistidos em SQLite",
     jp: "用語集",
@@ -110,9 +110,9 @@ export const SHOTS: Shot[] = [
     jp: "出力",
   },
   {
-    src: SHOT("configs_v3.png"),
+    src: SHOT("configs.png"),
     file: "configs.png",
-    caption: "motores & modelos v0.3.0",
+    caption: "motores & modelos v0.4.2",
     jp: "設定",
   },
   {

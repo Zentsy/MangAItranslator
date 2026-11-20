@@ -137,7 +137,7 @@ O editor é o coração do app, agora com monitor de tradução em lote em tempo
 
 | Tradução em Lote (Batch) | Glossário por Projeto |
 | --- | --- |
-| ![Fila de tradução em lote](screenshots/batch.png) | ![Modal de glossário persistente](screenshots/Glossario-v3.png) |
+| ![Fila de tradução em lote](screenshots/batch.png) | ![Modal de glossário persistente](screenshots/glossario.png) |
 | Enfileire múltiplas páginas e acompanhe o progresso em tempo real enquanto revisa. | Defina termos, nomes e golpes persistidos em SQLite injetados nos prompts. |
 
 | Dashboard e Projetos | Exportação Editorial |
@@ -149,7 +149,7 @@ O editor é o coração do app, agora com monitor de tradução em lote em tempo
 
 | Modelos e Motores | Tema Paper Light |
 | --- | --- |
-| ![Seleção de modelos e motores](screenshots/configs_v3.png) | ![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png) |
+| ![Seleção de modelos e motores](screenshots/configs.png) | ![Dashboard no tema claro](screenshots/tema%20branco%20-%20home.png) |
 | Gemini 4 Argon, Gemini 3.8 Flash, Claude Fable 5.2, GPT-6 Astra, Groq LPU e modelos locais. | Interface editorial inspirada em papel Washi cru e Nanquim tradicional. |
 
 ## Fluxo rápido
