@@ -14,7 +14,8 @@ export const LINKS = {
   repo: "https://github.com/Zentsy/MangAItranslator",
   latest: "https://github.com/Zentsy/MangAItranslator/releases/latest",
   downloadDirect:
-    "https://github.com/Zentsy/MangAItranslator/releases/download/v0.4.1/MangAI.Translator_0.4.1_x64-setup.exe",
+    "https://github.com/Zentsy/MangAItranslator/releases/download/v0.4.2/MangAI.Translator_0.4.2_x64-setup.exe",
+  v042: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.2",
   v041: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.1",
   v040: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.0",
   v030: "https://github.com/Zentsy/MangAItranslator/releases/tag/v0.3.5",
@@ -30,13 +31,13 @@ export type DownloadInfo = {
 
 export const DownloadContext = createContext<DownloadInfo>({
   downloadUrl: LINKS.downloadDirect,
-  version: "v0.4.1",
+  version: "v0.4.2",
 });
 
 export function DownloadProvider({ children }: { children: ReactNode }) {
   const [info, setInfo] = useState<DownloadInfo>({
     downloadUrl: LINKS.downloadDirect,
-    version: "v0.4.1",
+    version: "v0.4.2",
   });
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export function DownloadProvider({ children }: { children: ReactNode }) {
         if (exe?.browser_download_url) {
           setInfo({
             downloadUrl: exe.browser_download_url,
-            version: data.tag_name || "v0.4.1",
+            version: data.tag_name || "v0.4.2",
           });
         }
       })
@@ -247,6 +248,18 @@ export const MODELS = [
 ];
 
 export const CHANGELOG = [
+  {
+    title: "Ajuste de Zoom Inteligente na Prancheta",
+    desc: "Páginas verticais e spreads duplos agora se ajustam por completo na tela em 100% (e no botão Reset), com alinhamento perfeito das caixas de balões e suporte a tiras longas.",
+  },
+  {
+    title: "Proteção Anti-Transcrição em Inglês (Gemini)",
+    desc: "Uso de systemInstruction nativo, preservação de perfil em retentativas e reparo automático caso modelos leves como Gemini 3.5 Flash-Lite devolvam texto sem traduzir.",
+  },
+  {
+    title: "Blindagem de Segurança & Launcher DEV Sem CMD",
+    desc: "Todos os 38 alertas do Dependabot zerados em Rust/Tauri e npm (tauri 2.12.7, zip 9.7.3, rustls 0.23.46) + novo atalho Abrir-MangAI.vbs para Windows.",
+  },
   {
     title: "Suporte a Gemini 4 Hydrogen & Novos Modelos de IA",
     desc: "Integração do Gemini 4 Hydrogen (novo padrão recomendado de 1M tokens), Gemini 4 Argon, Claude Fable 5.2 / Sonnet 5.5, GPT-6 Astra e Qwen 4 Max com insígnia visual ★ NEW.",
