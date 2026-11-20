@@ -165,17 +165,23 @@ O editor é o coração do app, agora com monitor de tradução em lote em tempo
 
 ### Próximo Ciclo: Fase v0.5.0 (Colaboração & Typesetting Assistido)
 
-- **Typesetter Helper Visual**: renderização prévia do texto traduzido diretamente dentro dos balões na imagem com tipografias clássicas de mangá.
-- **Dicionário de Onomatopeias (SFX)**: catálogo integrado de efeitos sonoros japoneses (擬音語・擬態語) com sugestões de adaptação para quadrinhos.
-- **Pacote de Projeto .mangai**: compartilhamento fácil de projetos completos (imagens, cache, SQLite e histórico) entre equipes de scanlation.
-- **Detecção Local de Coordenadas de Balões (WASM)**: pré-detecção de bounding boxes de balões no cliente via WebAssembly para ordenação visual imediata.
+- **Typesetter Helper Visual**: renderização prévia do texto traduzido diretamente dentro dos balões na imagem com tipografias clássicas de mangá embutidas.
+- **Dicionário de Onomatopeias (SFX)**: catálogo interativo integrado de efeitos sonoros japoneses (擬音語・擬態語) com sugestões de adaptação para quadrinhos.
+- **Pacote de Projeto `.mangai`**: exportação e importação empacotada de projetos completos (imagens, cache, SQLite e histórico) para troca rápida entre equipes de scanlation.
+- **Detecção Local de Coordenadas de Balões (WASM)**: pré-detecção de bounding boxes de balões no cliente via WebAssembly para seleção e ordenação visual imediata.
 
 ### Futuro (v1.0.0)
 
-- Code signing de distribuição no Windows para eliminar por completo os avisos do SmartScreen.
-- Leitura de mangás direto da fonte via extensões independentes (estilo Mihon).
-- Suporte a múltiplos idiomas de saída (JP, KO, ZH direto para EN e ES).
-- Distribuição multiplataforma oficial (Linux e macOS).
+- **Code signing no Windows**: certificado de assinatura de distribuição para eliminar os avisos do Windows SmartScreen.
+- **Extensões de fonte (estilo Mihon)**: leitura de mangás direto da fonte via extensões independentes.
+- **Distribuição multiplataforma oficial**: instaladores nativos para Linux (`.deb` / `AppImage`) e macOS (`.dmg`).
+- **Tradução 100% offline embarcada**: runtime e modelos locais integrados sem depender de servidores externos.
+
+### Em pesquisa (Backlog contínuo)
+
+- Limpeza inteligente de balões e *redraw* automático assistido.
+- Importação e exportação de glossários em CSV/JSON para reutilização entre capítulos.
+- Personalização tipográfica no editor e modo leitor mobile para revisão remota.
 
 ## Desenvolvimento
 
@@ -228,7 +234,7 @@ O deploy para produção gera um bundle standalone unificado (`site/index.html`)
 
 ## Status do projeto
 
-O app está funcional e pronto para uso real no Windows. Com a entrega da **v0.4.0**, a interface atinge sua maturidade visual Nanquim & Washi e ganha recursos profissionais de controle editorial e refinamento de linguagem.
+O app está funcional e pronto para uso real no Windows. Com a chegada da **v0.4.2**, o projeto consolida a identidade visual Nanquim & Washi, suporte a Gemini 4, zoom responsivo na prancheta, proteção anti-transcrição em inglês e zero alertas conhecidos de segurança.
 
 ## Uso responsável
 
