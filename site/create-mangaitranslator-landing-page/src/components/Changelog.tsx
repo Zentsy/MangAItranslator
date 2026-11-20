@@ -16,13 +16,13 @@ export function Changelog() {
                 Novidades da
               </h2>
               <p className="otl-verm mt-2 font-display text-8xl leading-none md:text-9xl">
-                v0.4.1
+                v0.4.2
               </p>
               <p className="mt-7 max-w-sm leading-relaxed text-ink/75">
-                Suporte a Gemini 4 Hydrogen, Novos Modelos de IA, System Prompts em Inglês, Identidade Paper Light e Segunda Passada — o salto que transformou o MangAI Translator em um estúdio editorial completo.
+                Hotfixes de estabilidade e segurança: ajuste de zoom da prancheta para páginas e spreads, proteção anti-inglês no Gemini, 38 alertas do Dependabot zerados e launcher Windows sem CMD.
               </p>
               <a
-                href={LINKS.v041}
+                href={LINKS.v042}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-7 inline-block border-[3px] border-ink px-5 py-3 font-display text-base tracking-wide text-ink transition-all duration-200 hover:bg-ink hover:text-paper"

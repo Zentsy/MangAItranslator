@@ -11,8 +11,8 @@ Desktop app para localização assistida de mangá e quadrinhos. Conheça a demo
   <a href="https://github.com/Zentsy/MangAItranslator/releases/latest">
     <img alt="Baixar para Windows x64" src="https://img.shields.io/badge/Baixar-Windows%20x64-00A884?style=for-the-badge&logo=windows&logoColor=white">
   </a>
-  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.1">
-    <img alt="Release atual v0.4.1" src="https://img.shields.io/badge/Release-v0.4.1-2F3342?style=for-the-badge">
+  <a href="https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.2">
+    <img alt="Release atual v0.4.2" src="https://img.shields.io/badge/Release-v0.4.2-2F3342?style=for-the-badge">
   </a>
   <a href="https://ko-fi.com/zentsy">
     <img alt="Apoiar no Ko-fi" src="https://img.shields.io/badge/Apoiar-Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white">
@@ -30,7 +30,7 @@ O MangAI Translator ajuda você a importar um capítulo, gerar um rascunho com I
 
 - **Site Oficial**: [zentsy.github.io/MangAItranslator](https://zentsy.github.io/MangAItranslator/) — Apresentação visual detalhada, fluxo de trabalho, galeria e download rápido.
 - **Baixar a versão mais recente**: [GitHub Releases (Instalador Windows x64)](https://github.com/Zentsy/MangAItranslator/releases/latest)
-- **Release atual**: [v0.4.1](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.1)
+- **Release atual**: [v0.4.2](https://github.com/Zentsy/MangAItranslator/releases/tag/v0.4.2)
 
 Se o projeto te ajudar e você quiser apoiar o desenvolvimento contínuo, você pode contribuir no [Ko-fi](https://ko-fi.com/zentsy).
 
@@ -78,6 +78,15 @@ Se você baixou o app deste repositório oficial e quiser testar mesmo assim, re
 ### Importante sobre modelos grátis
 
 No OpenRouter, a qualidade depende do modelo gratuito disponível no momento. O app tenta corrigir respostas duplicadas, vazias ou mal formatadas, filtra automaticamente blocos internos de raciocínio (`<think>`) e tem fallback inteligente, mas alguns modelos pequenos podem apenas transcrever o texto em vez de traduzir.
+
+## 🛠️ Novidades da Versão 0.4.2
+
+Esta atualização de manutenção reúne correções críticas de estabilidade, segurança e experiência de uso:
+
+- **Ajuste de Zoom na Prancheta do Editor**: correção no cálculo responsivo do visualizador (`ResizeObserver` + limites explícitos por altura/largura) para que páginas verticais e páginas duplas apareçam inteiras em `100%` (e no botão *Ajustar à Tela*), preservando o alinhamento das caixas de balões (`bbox`) e mantendo largura legível em tiras webtoon longas.
+- **Proteção Anti-Transcrição em Inglês (Gemini & Prompts)**: integração com `systemInstruction` nativo no Gemini, preservação do `TranslationProfile` nas retentativas, prompts diretos para traduzir até mesmo falas ou notas (`T/N:`) em inglês para o idioma-alvo e reparo automático pós-OCR caso modelos leves (como o `Gemini 3.5 Flash-Lite`) devolvam blocos sem traduzir.
+- **Correções de Segurança (38 Alertas do Dependabot Zerados)**: atualização das dependências Rust/Tauri (`tauri` 2.12.7, `tauri-plugin-updater` 2.14.1, `zip` 9.7.3, `rustls` 0.23.46, `quinn-proto` 0.11.19, `serde_with` 3.24.0, `tar` 0.4.46) e dos pacotes npm do app principal e da landing page (`npm audit` com 0 vulnerabilidades), mantendo paridade completa entre Rust e `@tauri-apps/*`.
+- **Atalho Sem CMD para Desenvolvimento (`Abrir-MangAI.vbs`)**: adicionado launcher na raiz do projeto para iniciar o modo DEV no Windows sem janela preta de terminal e sem rodar `npm install` a cada abertura.
 
 ## ✒️ Novidades da Versão 0.4.1
 
@@ -177,6 +186,14 @@ O editor é o coração do app, agora com monitor de tradução em lote em tempo
 - Dependências de compilação do Tauri instaladas no sistema
 
 ### Rodando em desenvolvimento
+
+**Atalho rápido no Windows (sem abrir CMD):**
+
+Dê dois cliques no arquivo [`Abrir-MangAI.vbs`](Abrir-MangAI.vbs) na raiz do repositório (ou execute `wscript Abrir-MangAI.vbs`). Ele inicia o ambiente `tauri dev` com o console oculto, pula reinstalações repetidas quando `node_modules` já existe (rodando `npm ci` automaticamente apenas se faltar) e aproveita o cache incremental do Cargo.
+
+> **Dica:** o servidor de desenvolvimento usa a porta fixa `1420`; se já houver uma instância aberta, feche-a antes de abrir novamente pelo atalho.
+
+**Via terminal (manual):**
 
 ```bash
 npm install

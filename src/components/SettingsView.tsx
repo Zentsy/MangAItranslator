@@ -95,8 +95,19 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string; kicker: s
 
 const CHANGELOG_ITEMS = [
   {
-    version: "v0.4.1",
+    version: "v0.4.2",
     badge: "Atual",
+    title: "Hotfixes de Segurança, Zoom no Editor & Anti-Inglês no Gemini",
+    items: [
+      "Ajuste de zoom e encaixe da página no Editor: páginas verticais e spreads duplos agora cabem por completo na prancheta em 100% (e no botão Reset), mantendo alinhamento exato das caixas de balões e rolagem adequada em tiras longas.",
+      "Correção no pipeline Gemini (incluindo Gemini 3.5 Flash-Lite): envio via systemInstruction nativo, preservação do perfil editorial em retries, prompts reforçados contra transcrição em inglês e reparo automático pós-OCR para blocos não traduzidos.",
+      "Atualização de segurança para zerar os 38 alertas do Dependabot (tauri 2.12.7, tauri-plugin-updater 2.14.1, zip 9.7.3, rustls 0.23.46 e pacotes npm do app e landing page) com paridade total entre crates Rust e JS.",
+      "Adicionado atalho Abrir-MangAI.vbs para iniciar o modo desenvolvimento no Windows sem abrir janela de terminal CMD.",
+    ],
+  },
+  {
+    version: "v0.4.1",
+    badge: "Anterior",
     title: "Atualização de Modelos & System Prompts em Inglês",
     items: [
       "Integração do Gemini 4 Hydrogen (novo padrão recomendado), Gemini 4 Argon, Claude Fable 5.2, Claude Sonnet 5.5, GPT-6 Astra e Qwen 4 Max.",
