@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import { TransformWrapper, TransformComponent, useControls } from "react-zoom-pan-pinch";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { TransformWrapper, TransformComponent, useControls, useTransformComponent } from "react-zoom-pan-pinch";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useMangaStore, BlockType } from "@/store/useMangaStore";
@@ -108,10 +108,13 @@ const optimizeImageForAi = async (dataUrl: string) => {
 
 const ZoomControls = () => {
   const { zoomIn, zoomOut, resetTransform } = useControls();
+  const zoomPercent = useTransformComponent(
+    useCallback(({ state }) => Math.round(state.scale * 100), [])
+  );
   return (
     <div className="absolute bottom-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1.5 border-2 border-app-border bg-app-card/95 px-2 py-1 shadow-ink opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:-translate-y-1">
-      <span className="font-pixel text-[9px] font-bold text-app-text-secondary/60 px-1 select-none">
-        ZOOM
+      <span className="font-pixel text-[9px] font-bold text-app-text-secondary/70 px-1 select-none">
+        ZOOM {zoomPercent}%
       </span>
       <button
         type="button"
@@ -211,6 +214,45 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<"ai" | "tools" | "export" | null>(null);
   const menuContainerRef = useRef<HTMLDivElement>(null);
+  const [canvasElement, setCanvasElement] = useState<HTMLDivElement | null>(null);
+  const [canvasSize, setCanvasSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!canvasElement) {
+      return;
+    }
+
+    const updateSize = () => {
+      setCanvasSize({
+        width: canvasElement.clientWidth,
+        height: canvasElement.clientHeight,
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+
+      const nextWidth = Math.round(entry.contentRect.width);
+      const nextHeight = Math.round(entry.contentRect.height);
+      setCanvasSize((prev) =>
+        prev.width === nextWidth && prev.height === nextHeight
+          ? prev
+          : { width: nextWidth, height: nextHeight }
+      );
+    });
+
+    observer.observe(canvasElement);
+    return () => observer.disconnect();
+  }, [canvasElement]);
+
+  useEffect(() => {
+    setImageAspectRatio(null);
+  }, [currentPageIndex, currentPage?.id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -360,19 +402,9 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPageIndex, currentPage?.id, isTranslating, apiKey, imgBase64, translationEngine, geminiModel]);
 
-  if (!currentPage) return null;
-
-  const pageImageSrc = currentPage.url || "";
-  const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
-  const currentOpenAiApiKey =
-    openAiCompatibleProvider === "openrouter"
-      ? openRouterApiKey
-      : openAiCompatibleProvider === "groq"
-        ? groqApiKey
-        : customApiKey;
-
+  const currentPageBlocks = currentPage?.blocks;
   const displayedBubbles = useMemo(() => {
-    return (currentPage?.blocks || [])
+    return (currentPageBlocks || [])
       .filter((b) => b.bbox != null)
       .map((b, idx) => ({
         id: b.id,
@@ -384,7 +416,22 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         height: b.bbox!.height,
         text: b.text,
       }));
-  }, [currentPage?.blocks]);
+  }, [currentPageBlocks]);
+
+  if (!currentPage) return null;
+
+  const pageImageSrc = currentPage.url || "";
+  const hasCanvasMeasurements = canvasSize.width > 0 && canvasSize.height > 0;
+  const maxFitWidth = hasCanvasMeasurements ? Math.max(160, canvasSize.width - 36) : undefined;
+  const maxFitHeight = hasCanvasMeasurements ? Math.max(160, canvasSize.height - 56) : undefined;
+  const isLongVerticalStrip = imageAspectRatio !== null && imageAspectRatio > 2.6;
+  const selectedOpenAiProvider = getOpenAiCompatibleProvider(openAiCompatibleProvider);
+  const currentOpenAiApiKey =
+    openAiCompatibleProvider === "openrouter"
+      ? openRouterApiKey
+      : openAiCompatibleProvider === "groq"
+        ? groqApiKey
+        : customApiKey;
 
   const handleBubbleClick = (bubble: { id: string; blockId?: string | null }) => {
     const targetBlockId = bubble.blockId || bubble.id;
@@ -1114,9 +1161,12 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       </header>
 
       {/* Mesa Central de Edição: Imagem + Painel de Blocos */}
-      <div className="flex flex-1 overflow-hidden z-10 relative">
+      <div className="flex flex-1 min-h-0 overflow-hidden z-10 relative">
         {/* Canvas da Imagem (Prancheta Mangaka) */}
-        <div className="group relative flex-1 overflow-hidden border-r-2 border-app-border bg-app-bg/60">
+        <div
+          ref={setCanvasElement}
+          className="group relative flex-1 min-w-0 min-h-0 overflow-hidden border-r-2 border-app-border bg-app-bg/60"
+        >
           {/* Marcas de Registro / Tonbo (Cantoneiras Editoriais) */}
           <div className="absolute top-2 left-2 text-app-border font-pixel text-xs pointer-events-none select-none z-10">┌</div>
           <div className="absolute top-2 right-2 text-app-border font-pixel text-xs pointer-events-none select-none z-10">┐</div>
@@ -1125,10 +1175,11 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
           <TransformWrapper
             initialScale={1}
-            minScale={0.1}
+            minScale={0.4}
             maxScale={8}
             centerOnInit
-            limitToBounds={false}
+            centerZoomedOut={false}
+            limitToBounds
             key={currentPage.id}
           >
             <React.Fragment>
@@ -1137,18 +1188,34 @@ const EditorView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 wrapperStyle={{ width: "100%", height: "100%" }}
                 contentStyle={{
                   width: "100%",
-                  height: "100%",
+                  height: isLongVerticalStrip ? "auto" : "100%",
+                  minHeight: "100%",
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: isLongVerticalStrip ? "flex-start" : "center",
                   justifyContent: "center",
+                  padding: isLongVerticalStrip ? "24px 18px 64px" : undefined,
                 }}
               >
                 {pageImageSrc ? (
-                  <div className="relative inline-block select-none max-h-full max-w-full">
+                  <div className="relative inline-block select-none">
                     <img
                       src={pageImageSrc}
-                      className="block h-auto max-h-full w-auto max-w-full object-contain border-2 border-app-border shadow-ink-lg transition-transform"
+                      onLoad={(event) => {
+                        const { naturalWidth, naturalHeight } = event.currentTarget;
+                        if (naturalWidth > 0 && naturalHeight > 0) {
+                          setImageAspectRatio(naturalHeight / naturalWidth);
+                        }
+                      }}
+                      style={
+                        maxFitWidth && maxFitHeight
+                          ? isLongVerticalStrip
+                            ? { maxWidth: `${maxFitWidth}px` }
+                            : { maxWidth: `${maxFitWidth}px`, maxHeight: `${maxFitHeight}px` }
+                          : { maxWidth: "100%", maxHeight: "100%" }
+                      }
+                      className="block h-auto w-auto select-none border-2 border-app-border shadow-ink-lg"
                       alt="Página de mangá sob edição"
+                      draggable={false}
                     />
 
                     {/* Overlay de Bounding Boxes de Balões */}
