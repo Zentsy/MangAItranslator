@@ -327,8 +327,8 @@ export const ROADMAP = [
     tone: "ghost" as const,
     items: [
       "Limpeza inteligente de balões e redraw automático assistido",
-      "Modo leitor mobile para acompanhamento e revisão remota de capítulos",
-      "A sua ideia aqui — abra uma issue no GitHub e entre pro projeto",
+      "Importação e exportação de glossários em CSV/JSON",
+      "Modo leitor mobile para revisão remota · abra uma issue no GitHub",
     ],
   },
 ];
